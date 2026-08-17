@@ -4,7 +4,7 @@
 
 A Next.js study app that turns personal AWS certification notes into flip-style memory cards. The source material is the Notion export `random notes 35199f70bc56802a8800fbb944e0c856.html`, collected while preparing for the AWS Solutions Architect Associate exam.
 
-The app is for private revision: short exam-style questions on the front, condensed notes on the back, with optional full original explanations. Progress is saved to `data/progress.json` in the project folder via a local API route, so it travels with the code. There is no login or database.
+The app is for private revision: short exam-style questions on the front, condensed notes on the back, with optional full original explanations. Progress is stored as one MongoDB document and read/written through `GET`/`PUT /api/progress`.
 
 ## Goals
 
@@ -55,7 +55,7 @@ Expect roughly 310+ cards after cleanup. Counts shift if notes are re-imported.
 - Keyboard: Space to flip, arrows to move, `1` still learning, `2` I know this.
 - Card back shows a short summary first, with a toggle for the full note.
 - Browse + search across paraphrased questions and original notes.
-- Progress is written to `data/progress.json` and can be reset from the home page.
+- Progress is written to MongoDB (`progress` collection) and can be reset from the home page.
 
 ## Tech stack
 
@@ -63,7 +63,7 @@ Expect roughly 310+ cards after cleanup. Counts shift if notes are re-imported.
 - React client components for study/browse interactions
 - Tailwind CSS
 - Static JSON card deck (`src/data/cards.json`)
-- File-backed progress (`data/progress.json`) through `GET`/`PUT /api/progress`
+- MongoDB progress document through `GET`/`PUT /api/progress`
 
 ## Data model
 
@@ -77,14 +77,20 @@ Each card in `src/data/cards.json`:
 - `sourceQuestion`: original toggle title from the HTML notes
 - `images`: optional list of `/notes/...` screenshot paths shown on the card back
 
-Progress map in `data/progress.json`:
+Progress document in MongoDB collection `progress` (`_id: "default"`):
 
+- `cards`: map of card id → `{ status, seen }`
 - `status`: `unseen` | `learning` | `known`
 - `seen`: how many times the card was rated
+- `updatedAt`: ISO timestamp of the last write
 
-If an older browser `localStorage` copy exists and the file is still empty, the app migrates it once into `data/progress.json`.
+If MongoDB has no cards yet and `data/progress.json` still has local data, the API copies that file into MongoDB once. An older browser `localStorage` copy is also migrated once if the database document is empty.
 
 ## How to run
+
+1. Create a free [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) M0 cluster.
+2. Add a database user, then allow your IP (and `0.0.0.0/0` if you will deploy to Vercel).
+3. Copy `.env.example` to `.env.local` and paste the connection string into `MONGODB_URI`.
 
 From `aws-flashcards/`:
 
@@ -93,31 +99,36 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:3000`.
+Open `http://localhost:3000`. The first progress load will seed MongoDB from `data/progress.json` if that file still has data.
 
 ```bash
 npm run build
 npm start
 ```
 
+On Vercel, set the same `MONGODB_URI` (and optional `MONGODB_DB`) environment variables.
+
 ## Project layout
 
 ```text
 aws-flashcards/
   project_description.md
-  data/progress.json       # known / learning state
+  .env.example             # MONGODB_URI template
+  data/progress.json       # legacy local file, migrated once into MongoDB
   public/notes/            # screenshots from the original notes
   src/app/                 # routes: /, /study, /browse, /api/progress
   src/components/          # home, study, browse, flip card
   src/data/cards.json      # imported deck
   src/data/categories.ts   # topic metadata
+  src/lib/mongo.ts         # MongoDB client
   src/lib/progress.ts      # client progress hook
-  src/lib/progress-file.ts # reads/writes progress.json
+  src/lib/progress-db.ts   # reads/writes the progress document
+  src/lib/progress-file.ts # one-time file migration helper
 ```
 
 ## Out of scope (unless requested later)
 
-- User accounts, cloud sync, or a database (progress is a local JSON file)
+- User accounts or sharing decks (progress is one MongoDB document)
 - Spaced-repetition algorithm (SM-2 / Anki)
 - Importing new Notion exports from the UI
 - Official AWS practice-exam scoring

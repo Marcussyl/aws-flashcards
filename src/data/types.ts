@@ -16,3 +16,9 @@ export type ProgressEntry = {
 }
 
 export type ProgressMap = Record<string, ProgressEntry>
+
+export type ProgressDocument = {
+  _id: 'default'
+  cards: ProgressMap
+  updatedAt: string
+}

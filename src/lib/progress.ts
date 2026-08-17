@@ -43,7 +43,7 @@ export function useProgress() {
     writes.current = writes.current
       .then(() => saveProgress(next))
       .catch((error) => {
-        console.error('Failed to save progress.json', error)
+        console.error('Failed to save progress', error)
       })
   }, [])
 
