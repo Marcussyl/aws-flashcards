@@ -13,7 +13,10 @@
     "question": "What is AWS Control Tower?",
     "summary": "所以當用control tower開新賬號的時候, 底層其實有用到aws organization?沒錯，完全正確！\n這就是為什麼在考題與實務中，Control Tower 和 AWS Organizations 總是如影隨形。\n當你在 AWS Control Tower 的「帳號工廠（Account Factory）」點擊建立一個全新帳號時，底層的自動化流程是這樣跑的：\n- 呼叫 AWS Organizations： Control Tower 會先向底層的 Organizations 發出指令：「幫我生出一個新的 AWS 帳號，並把它歸類在指定的組織單元（OU, Organizational Unit）底下。」\n- 綁定 SCP（服務控制政策）： 帳號建好後，Organizations 會立刻把該 OU 原本就設定好的 SCP（例如：禁止刪除…",
     "answer": "所以當用control tower開新賬號的時候, 底層其實有用到aws organization?沒錯，完全正確！\n這就是為什麼在考題與實務中，Control Tower 和 AWS Organizations 總是如影隨形。\n當你在 AWS Control Tower 的「帳號工廠（Account Factory）」點擊建立一個全新帳號時，底層的自動化流程是這樣跑的：\n- 呼叫 AWS Organizations： Control Tower 會先向底層的 Organizations 發出指令：「幫我生出一個新的 AWS 帳號，並把它歸類在指定的組織單元（OU, Organizational Unit）底下。」\n- 綁定 SCP（服務控制政策）： 帳號建好後，Organizations 會立刻把該 OU 原本就設定好的 SCP（例如：禁止刪除 Log、禁止開海外機房）套用到這個新帳號上。\n- 佈署基礎安全建設： 接著，Control Tower 會調度 AWS CloudFormation，在新帳號裡自動蓋好 VPC、開啟 CloudTrail、啟動 AWS Config 規則。\n- 設定單一登入（SSO）： 最後，串接 AWS IAM Identity Center，讓你的安全團隊或開發團隊可以用原本的帳號直接登入這個新開好的環境。\n總結\n底層的帳號結構、合規大框架（SCP）和帳號分組，全部都是由 AWS Organizations 在默默做重度勞動。\nControl Tower 就像是一個高階的自動化劇本（Orchestrator），它把 Organizations、CloudFormation、Config、IAM Identity Center 等一堆複雜的底層服務黏合在一起，讓你點一個按鈕就能完成本來要花幾天手動配置的繁瑣工作。",
-    "sourceQuestion": "what is aws control rower"
+    "sourceQuestion": "what is aws control rower",
+    "images": [
+      "/notes/image.png"
+    ]
   },
   {
     "id": "c003",
@@ -45,7 +48,10 @@
     "question": "What is AWS Lambda SnapStart?",
     "summary": "With Lambda SnapStart for Java, Lambda initializes functions as new versions are published. Lambda then takes a Firecracker microVM snapshot of the memory and disk state of the initialized execution environment, encrypts the snapshot, and caches it for low-latency access.",
     "answer": "With Lambda SnapStart for Java, Lambda initializes functions as new versions are published. Lambda then takes a Firecracker microVM snapshot of the memory and disk state of the initialized execution environment, encrypts the snapshot, and caches it for low-latency access.",
-    "sourceQuestion": "what is aws lambda snapstart"
+    "sourceQuestion": "what is aws lambda snapstart",
+    "images": [
+      "/notes/image_1.png"
+    ]
   },
   {
     "id": "c007",
@@ -53,7 +59,10 @@
     "question": "How do S3 Event Notifications compare with EventBridge for S3 events?",
     "summary": "https://dev.to/ravimaharjan/eventbridge-as-s3-events-carrier-29bn\nOverview\nThis article compares AWS EventBridge and standard S3 notifications for managing event-driven architectures. It explains why EventBridge is often a superior choice for building scalable, decoupled systems that require complex routing and broader service integration.\nKey takeaways\n- Enhanced integration. EventBridge…",
     "answer": "https://dev.to/ravimaharjan/eventbridge-as-s3-events-carrier-29bn\nOverview\nThis article compares AWS EventBridge and standard S3 notifications for managing event-driven architectures. It explains why EventBridge is often a superior choice for building scalable, decoupled systems that require complex routing and broader service integration.\nKey takeaways\n- Enhanced integration. EventBridge supports over 17 AWS services as targets, including Step Functions and Kinesis, which standard S3 notifications cannot reach.\n- Architectural decoupling. Unlike S3 notifications, EventBridge rules are managed as separate resources, preventing tight coupling between your storage buckets and notification logic.\n- Broader event scope. It captures bucket-level operations like creation and deletion, whereas standard notifications are limited primarily to object-level events.\n- Third-party support. The service can natively ingest events from SaaS platforms like Shopify and Zendesk, centralizing event management across different providers.\n- Advanced filtering. It uses a structured JSON \"detail\" block that allows for more granular event matching and routing compared to basic S3 prefix/suffix filtering.",
-    "sourceQuestion": "s3 event notification vs eventbridge"
+    "sourceQuestion": "s3 event notification vs eventbridge",
+    "images": [
+      "/notes/image_2.png"
+    ]
   },
   {
     "id": "c008",
@@ -165,7 +174,10 @@
     "question": "What is AWS Directory Service?",
     "summary": "AWS Directory Service（也稱為 AWS Managed Microsoft AD）是一項讓你的 AWS 資源能夠使用 Active Directory (AD) 的服務。簡單來說，它就像是在雲端建立（或連接）一個「員工名冊與權限中心」。 🗂️\n當你在公司電腦登入帳號時，背後通常就是 AD 在檢查你的身分。AWS Directory Service 讓你能在雲端環境中延續這種管理方式，不用為每個服務重新設定帳號密碼。\nShutterstock\n我們來看看這項服務的三個主要成員，這對理解你剛才看的考題非常有幫助：\n- AWS Managed Microsoft AD：在 AWS 雲端運行一個完整的、由 AWS 代管的微軟 AD。適合需要在雲端建立全新目錄的場景。 ☁️\n- AD Connector：這不是一個真正的目錄，而是一個「傳聲筒」。它把 AWS…",
     "answer": "AWS Directory Service（也稱為 AWS Managed Microsoft AD）是一項讓你的 AWS 資源能夠使用 Active Directory (AD) 的服務。簡單來說，它就像是在雲端建立（或連接）一個「員工名冊與權限中心」。 🗂️\n當你在公司電腦登入帳號時，背後通常就是 AD 在檢查你的身分。AWS Directory Service 讓你能在雲端環境中延續這種管理方式，不用為每個服務重新設定帳號密碼。\nShutterstock\n我們來看看這項服務的三個主要成員，這對理解你剛才看的考題非常有幫助：\n- AWS Managed Microsoft AD：在 AWS 雲端運行一個完整的、由 AWS 代管的微軟 AD。適合需要在雲端建立全新目錄的場景。 ☁️\n- AD Connector：這不是一個真正的目錄，而是一個「傳聲筒」。它把 AWS 的請求轉發到你地端機房現有的 AD。如果你想讓員工用原本的辦公室密碼登入 AWS，這就是首選。 📡\n- Simple AD：一個便宜、簡易的解決方案，基於 Samba 4。它支援基本的 AD 功能，但不具備完整微軟 AD 的所有進階特性。 🐣",
-    "sourceQuestion": "what is aws directory service?"
+    "sourceQuestion": "what is aws directory service?",
+    "images": [
+      "/notes/image_3.png"
+    ]
   },
   {
     "id": "c022",
@@ -189,7 +201,10 @@
     "question": "What is s3 transfer acceleration?",
     "summary": "S3 Transfer Acceleration 是一種利用 AWS 全球分佈的 邊緣節點 (Edge Locations) 來加速將資料上傳到 Amazon S3 的機制。 🚀\n通常情況下，當你上傳資料到 S3 時，封包會直接走網際網路（Internet），這就像是在尖峰時段開車上一般道路，速度不穩且容易塞車。而開啟了 Transfer Acceleration 後，路徑會變成這樣：\n- 就近接入：你的資料會先傳送到距離你最近的 AWS 邊緣節點。\n- 內部高速公路：從邊緣節點開始，資料會進入 AWS 專屬的優化網路骨幹，直接奔向目標 S3 儲存桶。\n- 效率提升：這大大減少了在公網上傳輸的距離，對於跨國或長距離的大檔案傳輸，速度提升尤其明顯。\n💡 關鍵特性\n- 專屬域名：啟用後，你會得到一個新的上傳網址（例如…",
     "answer": "S3 Transfer Acceleration 是一種利用 AWS 全球分佈的 邊緣節點 (Edge Locations) 來加速將資料上傳到 Amazon S3 的機制。 🚀\n通常情況下，當你上傳資料到 S3 時，封包會直接走網際網路（Internet），這就像是在尖峰時段開車上一般道路，速度不穩且容易塞車。而開啟了 Transfer Acceleration 後，路徑會變成這樣：\n- 就近接入：你的資料會先傳送到距離你最近的 AWS 邊緣節點。\n- 內部高速公路：從邊緣節點開始，資料會進入 AWS 專屬的優化網路骨幹，直接奔向目標 S3 儲存桶。\n- 效率提升：這大大減少了在公網上傳輸的距離，對於跨國或長距離的大檔案傳輸，速度提升尤其明顯。\n💡 關鍵特性\n- 專屬域名：啟用後，你會得到一個新的上傳網址（例如 mybucket.s3-accelerate.amazonaws.com）。\n- 不成功不收費：如果 AWS 測試發現加速並沒有比普通傳輸快，他們就不會收取這項服務的費用。\n- 適用場景：分佈在全球各地的客戶需要向一個中心區域上傳大檔案。",
-    "sourceQuestion": "what is s3 transfer accelaration?"
+    "sourceQuestion": "what is s3 transfer accelaration?",
+    "images": [
+      "/notes/image_4.png"
+    ]
   },
   {
     "id": "c025",
@@ -277,7 +292,10 @@
     "question": "What is AWS Resource Access Manager (RAM)?",
     "summary": "恭喜你，問到了一個在大規模企業架構中非常關鍵的服務！AWS Resource Access Manager (RAM) 是處理「跨帳號資源共享」的神器。\n💡 類比時間\n想像你的公司是一家連鎖健身房：\n- AWS 帳號：是健身房的各個分店（例如台北店、台中店）。\n- 沒有 RAM 的時候：每家分店都必須自己購買昂貴的划船機、跑步機（資源）。即使台北店有 10 台閒置的划船機，台中店也用不到，必須再花錢買。\n- 有了 AWS RAM：公司總部說：「台北店那 10 台划船機現在加入共享清單！」台中店的會員就可以直接過來使用，不需要重複購買，也不需要搬運器材，器材依然歸台北店管理。\n🔍 什麼是 AWS RAM？\nAWS RAM 是一個讓你在 AWS Organizations（組織）內的不同帳號之間，安全地共享資源的服務。\n在過去，如果你想讓 A 帳號使用 B 帳號的資源，通常得處理複雜的…",
     "answer": "恭喜你，問到了一個在大規模企業架構中非常關鍵的服務！AWS Resource Access Manager (RAM) 是處理「跨帳號資源共享」的神器。\n💡 類比時間\n想像你的公司是一家連鎖健身房：\n- AWS 帳號：是健身房的各個分店（例如台北店、台中店）。\n- 沒有 RAM 的時候：每家分店都必須自己購買昂貴的划船機、跑步機（資源）。即使台北店有 10 台閒置的划船機，台中店也用不到，必須再花錢買。\n- 有了 AWS RAM：公司總部說：「台北店那 10 台划船機現在加入共享清單！」台中店的會員就可以直接過來使用，不需要重複購買，也不需要搬運器材，器材依然歸台北店管理。\n🔍 什麼是 AWS RAM？\nAWS RAM 是一個讓你在 AWS Organizations（組織）內的不同帳號之間，安全地共享資源的服務。\n在過去，如果你想讓 A 帳號使用 B 帳號的資源，通常得處理複雜的 IAM 角色切換或資料搬移。現在透過 RAM，你可以讓資源看起來就像是「原生」存在於各個帳號中一樣。\n哪些資源最常被共享？ (考試常客)\n- VPC Subnets：這最重要！讓多個帳號共用同一個 VPC 裡的子網路（這叫 VPC Sharing）。\n- Transit Gateways：連結多個 VPC 的中控轉接器，分享給全組織使用。\n- Route 53 Resolver Rules：共享 DNS 解析規則。\n- License Manager 授權：共享軟體授權。\n🔄 比較思維：RAM vs. Resource-based Policy\n你可能會問：「S3 Bucket 也可以給別的帳號用，那也是用 RAM 嗎？」\n特性AWS RAMResource-based Policy (如 S3 Policy)\n主要對象基礎設施資源 (Subnet, Transit Gateway)儲存與訊息資源 (S3, SQS, KMS)\n使用體驗資源會直接出現在接收方的 Console 列表裡。接收方必須知道資源的 ARN 才能存取。\n管理權限擁有者帳號完全掌控，接收方只能使用。較依賴 Policy 的權寫撰寫。\n🎯 考試應試技巧\n在 SAA 考試中，RAM 通常出現在「多帳號管理 (Multi-account strategy)」的場景：\n- 關鍵字：\"Centralized management\" (集中管理)、\"Share subnets within an organization\" (組織內共享子網路)、\"Reduce operational overhead\" (減少維運負擔)。\n- 最省錢做法 (Cost-effective)：- 如果題目問：「公司有很多帳號，為了省錢想讓大家共用一個 Transit Gateway 或共用同一套網路架構（VPC）」，答案就是 AWS RAM。\n- 這可以避免每個帳號都去建一套網路設施，省下大筆費用。\n\n- 安全陷阱：共享 Subnet 時，參與者（使用者）只能看到、創建與刪除他們自己帳號裡的資源（如 EC2），他們不能看到其他帳號在同一個 Subnet 裡的 EC2。\n🎓 導師小練習\n既然我們提到了「VPC 共享 (VPC Sharing)」，這是 RAM 最強大的功能之一。\n想一想： 如果我把「私有子網路 (Private Subnet)」透過 RAM 共享給另一個開發者帳號，那個開發者帳號能直接修改這個子網路的路由表 (Route Table) 嗎？\n- 可以，既然都共享了，他就有完全控制權。\n- 不行，只有資源的「擁有者帳號」可以修改網路架構，共享者只能在裡面丟資源。\n這個問題能測出你是否理解 AWS 資源治理的邊界喔！",
-    "sourceQuestion": "what is aws resource access mamager?"
+    "sourceQuestion": "what is aws resource access mamager?",
+    "images": [
+      "/notes/image_5.png"
+    ]
   },
   {
     "id": "c036",
@@ -317,7 +335,10 @@
     "question": "What is SAML-based Federation?",
     "summary": "這是一個關於 身分驗證 (Authentication) 的核心考點。在 AWS 的世界裡，SAML-based Federation 是企業實現「一鍵登入（SSO）」、將地端帳號與雲端權限接軌的關鍵橋樑。\n💡 類比時間\n想像你原本是「地端公司大樓」的員工，進出大樓都用公司的識別證。\n- 沒有 Federation：如果你要去「AWS 雲端分部」辦事，你得在那邊另外申請一張臨時證，每次去都要再記一套密碼。\n- SAML-based Federation：就像是公司總部跟 AWS 簽了一份「識別證互認協議」。當你拿著公司的識別證在門口刷一下，系統會產生一個「防偽數位印章」交給 AWS，AWS 看到這枚印章就直接讓你進去，你完全不需要擁有 AWS 的帳號密碼。\n🔍 什麼是 SAML-based Federation？\nSAML 2.0 (Security Assertion Markup…",
     "answer": "這是一個關於 身分驗證 (Authentication) 的核心考點。在 AWS 的世界裡，SAML-based Federation 是企業實現「一鍵登入（SSO）」、將地端帳號與雲端權限接軌的關鍵橋樑。\n💡 類比時間\n想像你原本是「地端公司大樓」的員工，進出大樓都用公司的識別證。\n- 沒有 Federation：如果你要去「AWS 雲端分部」辦事，你得在那邊另外申請一張臨時證，每次去都要再記一套密碼。\n- SAML-based Federation：就像是公司總部跟 AWS 簽了一份「識別證互認協議」。當你拿著公司的識別證在門口刷一下，系統會產生一個「防偽數位印章」交給 AWS，AWS 看到這枚印章就直接讓你進去，你完全不需要擁有 AWS 的帳號密碼。\n🔍 什麼是 SAML-based Federation？\nSAML 2.0 (Security Assertion Markup Language) 是一種開放標準。它讓 身分提供者 (IdP)（例如你的地端 Active Directory）能與 服務提供者 (SP)（例如 AWS）安全地交換驗證數據。\n運作三要素：\n- 身分提供者 (IdP)：存有你帳號資料的源頭（例如：AD FS, Okta, Ping Identity）。\n- 服務提供者 (SP)：你想進去的目標（就是 AWS）。\n- 信任關係 (Trust)：你必須先在 AWS IAM 裡建立一個 SAML Identity Provider，並上傳 IdP 提供的 XML 檔案，讓兩邊建立信任。\n🔄 流程大 PK：SAML vs. Web Identity\n在 SAA 考試中，這兩種類型的 Federation 經常被拿來比較：\n特性SAML-based FederationWeb Identity Federation\n主要對象企業員工 (Internal Users)一般大眾 (App Users)\n常見來源Microsoft Active Directory (AD FS)Google, Facebook, Amazon, Apple\n認證協議SAML 2.0OpenID Connect (OIDC) / OAuth 2.0\n應用場景公司員工登入 AWS Console 或呼叫 API。手機 Game App 使用者儲存遊戲進度。\n🎯 考試應試技巧\n這正是你正在看的 Tutorials Dojo 題目 (第 15 題) 的核心考點：\n- 關鍵字：\"Active Directory\"、\"Existing on-premises credentials\" (使用現有的地端憑證)、\"SAML 2.0\"。\n- 最佳解法：看到「公司內部有 AD，想讓員工不用建 IAM User 就能進 AWS」，直接選 SAML-based Federation。\n- 陷阱：題目會故意放「IAM User」或「VPC」當干擾項。記住，Federation 的目的就是為了「不要」建立成千上萬個 IAM User，以降低管理負擔。\n🎓 導師提點：暫時性權限 (STS)\n在 Federation 的背後，其實是 IdP 驗證通過後，AWS 會透過 STS (Security Token Service) 發放一個臨時通行證（Temporary Credentials） 給使用者。這張證是有時效性的，過期就失效，這比永久性的 IAM Access Key 安全得多！\n既然你已經掌握了身分驗證，你想進一步了解以下哪個部分來完成你的安全知識拼圖嗎？\n- SAML 2.0 認證的詳細步驟：了解瀏覽器、ADFS 與 AWS 之間那 5 步關鍵的對話。\n- AWS IAM Center (原 SSO)：這是目前 AWS 推薦、更簡單的企業級單一登入方案。\n- STS 的運作原理：看看那些臨時金鑰是如何被生成的。\n你的 random notes 整理得很棒，繼續保持這個節奏！",
-    "sourceQuestion": "what is SAML-based Federation?"
+    "sourceQuestion": "what is SAML-based Federation?",
+    "images": [
+      "/notes/image_6.png"
+    ]
   },
   {
     "id": "c041",
@@ -381,7 +402,10 @@
     "question": "What is lambda@edge?",
     "summary": "Lambda@Edge lets you run Lambda functions to customize the content that CloudFront delivers, executing the functions in AWS locations closer to the viewer. The functions run in response to CloudFront events, without provisioning or managing servers. You can use Lambda functions to change CloudFront requests and responses at the following points:\n– After CloudFront receives a request from a viewer…",
     "answer": "Lambda@Edge lets you run Lambda functions to customize the content that CloudFront delivers, executing the functions in AWS locations closer to the viewer. The functions run in response to CloudFront events, without provisioning or managing servers. You can use Lambda functions to change CloudFront requests and responses at the following points:\n– After CloudFront receives a request from a viewer (viewer request)\n– Before CloudFront forwards the request to the origin (origin request)\n– After CloudFront receives the response from the origin (origin response)\n– Before CloudFront forwards the response to the viewer (viewer response)\nIn the given scenario, you can use Lambda@Edge to allow your Lambda functions to customize the content that CloudFront delivers and to execute the authentication process in AWS locations closer to the users.",
-    "sourceQuestion": "what is lambda@edge?"
+    "sourceQuestion": "what is lambda@edge?",
+    "images": [
+      "/notes/image_8.png"
+    ]
   },
   {
     "id": "c049",
@@ -405,7 +429,10 @@
     "question": "What is the allowed transition waterfall between S3 storage classes?",
     "summary": "S3 lifecycle transitions are one-way \"down the waterfall\" toward colder, cheaper classes. You can move Standard -> Standard-IA / One Zone-IA / Intelligent-Tiering / Glacier Instant Retrieval -> Glacier Flexible Retrieval -> Glacier Deep Archive. You generally cannot lifecycle objects back to a hotter class; restore from Glacier instead. Constraints: Standard-IA and One Zone-IA need at least 30…",
     "answer": "S3 lifecycle transitions are one-way \"down the waterfall\" toward colder, cheaper classes. You can move Standard -> Standard-IA / One Zone-IA / Intelligent-Tiering / Glacier Instant Retrieval -> Glacier Flexible Retrieval -> Glacier Deep Archive. You generally cannot lifecycle objects back to a hotter class; restore from Glacier instead. Constraints: Standard-IA and One Zone-IA need at least 30 days; Glacier Deep Archive is the coldest destination. One Zone-IA cannot transition to Glacier Instant Retrieval in some paths, and Intelligent-Tiering is a class that auto-tiers rather than a manual waterfall step.",
-    "sourceQuestion": "waterfall model of transitioning between s3 storage classes"
+    "sourceQuestion": "waterfall model of transitioning between s3 storage classes",
+    "images": [
+      "/notes/copyImage.png"
+    ]
   },
   {
     "id": "c052",
@@ -517,7 +544,10 @@
     "question": "Which resources can AWS Shield protect?",
     "summary": "這是一個非常好的觀察！關於 AWS Shield 的掛載對象，我們需要先區分 Standard (基本版) 與 Advanced (進階版)，因為它們保護的範圍和「掛載」的方式完全不同。\n💡 類比時間\n想像你的 AWS 環境是一座城市：\n- Shield Standard：就像是城市的基礎排水系統 💧。它內建在所有道路下，自動防止一般的淹水（DDoS 攻擊），你不需要特別去安裝，它隨時都在。\n- Shield Advanced：就像是為特定重要建築（如金庫、政府大樓）請的專屬特種部隊 💂。你需要明確告訴這支部隊：「請幫我守住這幾棟樓」，他們才會進駐並提供更高等級的防禦與 24/7 的專家支援。\n🛡️ Shield 可以保護哪些資源？\nShield Standard 自動保護所有 AWS 客戶，特別是針對 CloudFront 和 Route 53 的流量。但如果你提到「掛載…",
     "answer": "這是一個非常好的觀察！關於 AWS Shield 的掛載對象，我們需要先區分 Standard (基本版) 與 Advanced (進階版)，因為它們保護的範圍和「掛載」的方式完全不同。\n💡 類比時間\n想像你的 AWS 環境是一座城市：\n- Shield Standard：就像是城市的基礎排水系統 💧。它內建在所有道路下，自動防止一般的淹水（DDoS 攻擊），你不需要特別去安裝，它隨時都在。\n- Shield Advanced：就像是為特定重要建築（如金庫、政府大樓）請的專屬特種部隊 💂。你需要明確告訴這支部隊：「請幫我守住這幾棟樓」，他們才會進駐並提供更高等級的防禦與 24/7 的專家支援。\n🛡️ Shield 可以保護哪些資源？\nShield Standard 自動保護所有 AWS 客戶，特別是針對 CloudFront 和 Route 53 的流量。但如果你提到「掛載 (Attach)」，通常是指 Shield Advanced，它支援以下特定資源：\n資源類型保護層級關鍵特性\nCloudFront DistributionsLayer 3, 4 & 7全域防禦，離攻擊源最近。\nRoute 53 Hosted ZonesLayer 3 & 4確保你的 DNS 不會被癱瘓。\nApplication Load Balancers (ALB)Layer 7保護你的網頁應用程式入口。\nAWS Global AcceleratorLayer 3 & 4為固定 IP 提供極速且安全的連線。\nEC2 Elastic IPs (EIP)Layer 3 & 4直接保護特定的 EC2 實例。\n🎯 考試應試技巧 (Exam Radar)\n在 SAA 考試中，關於 Shield 的考點通常集中在：\n- 自動防護 vs. 手動選擇：- Standard 是免費且自動啟用的，保護 Layer 3/4（如 SYN floods）。\n- Advanced 是付費的，需要手動指定要保護的資源（如上述表格），且能防禦更複雜的 Layer 7 攻擊。\n\n- Cost-Effective (成本優化)：- 如果題目問「最省錢的 DDoS 防護」，Standard 就是答案。\n- 如果題目提到 \"DDoS cost protection\"（免除因為攻擊導致的費用飆升，例如 EIP 或 CloudFront 流量費），這只有 Advanced 才有提供。\n\n- 與 WAF 的關係：- 記得！Shield Advanced 通常會包含 AWS WAF 的費用。在架構設計時，如果你已經買了 Shield Advanced，就不需要額外擔心 WAF 的帳單。\n\n🎓 導師的架構師思考\n在你練習的 Tutorials Dojo 題庫中，經常會考到如何組合這些安全服務。\n導師提問：\n如果你今天負責的是一個「非常怕斷線」的電商網站，已經用了 Route 53 做 DNS 且後端是 ALB。為了達到最高的 DDoS 防護等級，你會選擇：\n- 只靠預設的 Shield Standard？\n- 還是將 Shield Advanced 同時掛載到 Route 53 與 ALB 上？\n(提示：想想看如果 DNS 被打掛了，就算 ALB 再安全，使用者還找得到你的網站嗎？)",
-    "sourceQuestion": "aws shield can be attached to many different resources?"
+    "sourceQuestion": "aws shield can be attached to many different resources?",
+    "images": [
+      "/notes/image_10.png"
+    ]
   },
   {
     "id": "c066",
@@ -573,7 +603,10 @@
     "question": "How does AWS KMS relate to AWS CloudHSM?",
     "summary": "這是一個關於「保險箱」與「私人金庫」的經典對比！在 AWS SAA 考試中，這兩者都屬於金鑰管理服務，但它們在合規性、控制權與成本上有極大的差異。\n💡 類比時間\n想像你要保護珍貴的珠寶（加密金鑰）：\n- AWS KMS：就像是你在一家頂級銀行租用的保險箱。銀行負責維護保險箱的安全性，你只需要拿著鑰匙去存取。保險箱位於銀行的公共金庫區域，你跟其他客戶共用銀行的安檢系統，但你的金鑰對其他人來說是不可見的。\n- AWS CloudHSM：就像是你在自己的私人領地蓋了一個專屬金庫。這個金庫的硬體只屬於你（單一租戶），從安裝到管理全部由你控制。銀行（AWS）只負責幫你供電和提供保地，但他們完全沒有進入金庫的權限。\n🔍 核心關係：基礎 vs. 專屬\nAWS KMS 是 AWS 大多數服務（如 S3, EBS, RDS）預設的加密後盾。而 AWS CloudHSM 是為了滿足極高合規需求（如 FIPS…",
     "answer": "這是一個關於「保險箱」與「私人金庫」的經典對比！在 AWS SAA 考試中，這兩者都屬於金鑰管理服務，但它們在合規性、控制權與成本上有極大的差異。\n💡 類比時間\n想像你要保護珍貴的珠寶（加密金鑰）：\n- AWS KMS：就像是你在一家頂級銀行租用的保險箱。銀行負責維護保險箱的安全性，你只需要拿著鑰匙去存取。保險箱位於銀行的公共金庫區域，你跟其他客戶共用銀行的安檢系統，但你的金鑰對其他人來說是不可見的。\n- AWS CloudHSM：就像是你在自己的私人領地蓋了一個專屬金庫。這個金庫的硬體只屬於你（單一租戶），從安裝到管理全部由你控制。銀行（AWS）只負責幫你供電和提供保地，但他們完全沒有進入金庫的權限。\n🔍 核心關係：基礎 vs. 專屬\nAWS KMS 是 AWS 大多數服務（如 S3, EBS, RDS）預設的加密後盾。而 AWS CloudHSM 是為了滿足極高合規需求（如 FIPS 140-2 Level 3）而存在的專屬硬體方案。\n事實上，你可以將這兩者結合：KMS 可以被設定為使用 CloudHSM 作為其客製化金鑰存儲 (Custom Key Store)。\n🔄 服務大 PK\n特性AWS KMSAWS CloudHSM\n租戶模式多租戶 (Multi-tenant)單一租戶 (Single-tenant)\n合規標準FIPS 140-2 Level 2 (部分 Level 3)FIPS 140-2 Level 3\n控制權AWS 負責金鑰硬體，你負責管理金鑰。完全控制（包括硬體配置與管理）。\n部署位置共享架構，不佔用你的 VPC。部署在你的 VPC 內 (ENI)。\n整合性與 100+ AWS 服務無縫整合。需要手動整合，通常透過業界標準 API (PKCS#11)。\n成本按使用量付費 (便宜)。按小時收取硬體租用費 (貴)。\n🎯 考試應試技巧 (Exam Radar)\n在 SAA 考試中，看到關鍵字請立刻反應：\n- \"FIPS 140-2 Level 3 Compliance\"：\n- 只要看到 Level 3 且題目強調硬體層級的完全控制，答案幾乎都是 CloudHSM。\n- \"Dedicated Hardware Control\"：\n- 只有 CloudHSM 讓你擁有專屬的 HSM 實例。\n- \"Seamless integration with S3/EBS\"：\n- 如果是為了保護 AWS 資源且追求簡便，首選 KMS。\n- \"Auditability\"：\n- 雖然兩者都支援 CloudTrail，但 KMS 更強調與 IAM 的細粒度整合。\n🎓 導師的架構師思考\n在你上傳的 AWS Well-Architected Framework 中，安全支柱（Security Pillar）強調了「保護靜態資料（Data at Rest）」的重要性。\n導師提問：\n假設你是一家銀行，法規要求你必須「完全掌握加密金鑰的生命週期，且金鑰硬體不能與任何其他客戶共用」。\n你會選擇 KMS 還是 CloudHSM？如果選了 CloudHSM，你覺得在「維運工作量」上，會比 KMS 增加多少？\n(提示：CloudHSM 的高可用性架構需要你自己設定多個節點嗎？)",
-    "sourceQuestion": "what is the relationships between aws kms and aws cloudhsm?"
+    "sourceQuestion": "what is the relationships between aws kms and aws cloudhsm?",
+    "images": [
+      "/notes/copyImage_1.png"
+    ]
   },
   {
     "id": "c073",
@@ -693,7 +726,10 @@
     "question": "What is the default EC2 Auto Scaling scale-in termination policy?",
     "summary": "The default termination policy is designed to help ensure that your network architecture spans Availability Zones evenly. With the default termination policy, the behavior of the Auto Scaling group is as follows:\n- If there are instances in multiple Availability Zones, choose the Availability Zone with the most instances and at least one instance that is not protected from scale in. If there is…",
     "answer": "The default termination policy is designed to help ensure that your network architecture spans Availability Zones evenly. With the default termination policy, the behavior of the Auto Scaling group is as follows:\n- If there are instances in multiple Availability Zones, choose the Availability Zone with the most instances and at least one instance that is not protected from scale in. If there is more than one Availability Zone with this number of instances, choose the Availability Zone with the instances that use the oldest launch template.\n- Determine which unprotected instances in the selected Availability Zone use the oldest launch template. If there is one such instance, terminate it.\n- If there are multiple instances to terminate based on the above criteria, determine which unprotected instances are closest to the next billing hour. (This helps you maximize the use of your EC2 instances and manage your Amazon EC2 usage costs.) If there is one such instance, terminate it.\n- If there is more than one unprotected instance closest to the next billing hour, choose one of these instances at random.",
-    "sourceQuestion": "what is the scaling policy when auto scaling group of ec2 scale in?"
+    "sourceQuestion": "what is the scaling policy when auto scaling group of ec2 scale in?",
+    "images": [
+      "/notes/copyImage_2.png"
+    ]
   },
   {
     "id": "c088",
@@ -749,7 +785,10 @@
     "question": "What is a launch template in an Auto Scaling group?",
     "summary": "A launch template is a template that an Auto Scaling group uses to launch EC2 instances. When you create a launch template, you specify information for the instances, such as the ID of the Amazon Machine Image (AMI), the instance type, a key pair, one or more security groups, and a block device mapping. If you’ve launched an EC2 instance before, you specified the same information in order to…",
     "answer": "A launch template is a template that an Auto Scaling group uses to launch EC2 instances. When you create a launch template, you specify information for the instances, such as the ID of the Amazon Machine Image (AMI), the instance type, a key pair, one or more security groups, and a block device mapping. If you’ve launched an EC2 instance before, you specified the same information in order to launch the instance.\nYou can specify your launch template with multiple Auto Scaling groups. However, you can only specify one launch template for an Auto Scaling group at a time, and you can’t modify a launch template after you’ve created it. Therefore, if you want to change the launch template for an Auto Scaling group, you must create a template and then update your Auto Scaling group with the new launch template.",
-    "sourceQuestion": "what is a launch template in an Auto Scaling Group ?"
+    "sourceQuestion": "what is a launch template in an Auto Scaling Group ?",
+    "images": [
+      "/notes/image_12.png"
+    ]
   },
   {
     "id": "c095",
@@ -925,7 +964,10 @@
     "question": "What are the Amazon S3 storage classes?",
     "summary": "Common S3 storage classes: Standard (hot, 11 9s, multi-AZ); Standard-IA (infrequent, cheaper storage, retrieval fee, 30-day minimum); One Zone-IA (single AZ, lower cost, less durable across AZ failure); Intelligent-Tiering (auto-moves between frequent/infrequent/archive access tiers); Glacier Instant Retrieval (archive with milliseconds); Glacier Flexible Retrieval (minutes to hours); Glacier…",
     "answer": "Common S3 storage classes: Standard (hot, 11 9s, multi-AZ); Standard-IA (infrequent, cheaper storage, retrieval fee, 30-day minimum); One Zone-IA (single AZ, lower cost, less durable across AZ failure); Intelligent-Tiering (auto-moves between frequent/infrequent/archive access tiers); Glacier Instant Retrieval (archive with milliseconds); Glacier Flexible Retrieval (minutes to hours); Glacier Deep Archive (cheapest, 12-48 hours). Also Reduced Redundancy is legacy — do not pick it on exams.",
-    "sourceQuestion": "what are different tiers of S3?"
+    "sourceQuestion": "what are different tiers of S3?",
+    "images": [
+      "/notes/image_13.png"
+    ]
   },
   {
     "id": "c117",
@@ -1085,7 +1127,10 @@
     "question": "How do multiple EC2 workers safely process the same SQS queue?",
     "summary": "Multiple EC2 workers poll the same queue. When a worker receives a message, SQS hides it for the visibility timeout so others should not see it. If processing exceeds the timeout, the message reappears and another instance may process it (at-least-once). Handle duplicates with idempotency. If a worker crashes, the message returns after the timeout. Use DeleteMessage only after success. For strict…",
     "answer": "Multiple EC2 workers poll the same queue. When a worker receives a message, SQS hides it for the visibility timeout so others should not see it. If processing exceeds the timeout, the message reappears and another instance may process it (at-least-once). Handle duplicates with idempotency. If a worker crashes, the message returns after the timeout. Use DeleteMessage only after success. For strict ordering/exactly-once-like behavior, consider FIFO + deduplication IDs, still designing consumers to be idempotent.",
-    "sourceQuestion": "how jobs in one sqs are handled by many ec2 instances in exceptional cases?"
+    "sourceQuestion": "how jobs in one sqs are handled by many ec2 instances in exceptional cases?",
+    "images": [
+      "/notes/capture_temp.jpg"
+    ]
   },
   {
     "id": "c137",
@@ -1093,7 +1138,10 @@
     "question": "What timeouts exist in Amazon SQS?",
     "summary": "Key SQS time settings: Visibility timeout (default 30s, max 12h) — how long a received message is hidden; DelaySeconds (0-15 min) — postpone first delivery; ReceiveMessageWaitTimeSeconds (0-20s) — long poll wait; MessageRetentionPeriod (1 min to 14 days, default 4 days); ApproximateFirstReceiveTimestamp / sent timestamp for age. You can also ChangeMessageVisibility while still processing.",
     "answer": "Key SQS time settings: Visibility timeout (default 30s, max 12h) — how long a received message is hidden; DelaySeconds (0-15 min) — postpone first delivery; ReceiveMessageWaitTimeSeconds (0-20s) — long poll wait; MessageRetentionPeriod (1 min to 14 days, default 4 days); ApproximateFirstReceiveTimestamp / sent timestamp for age. You can also ChangeMessageVisibility while still processing.",
-    "sourceQuestion": "What are different timeouts in SQS?"
+    "sourceQuestion": "What are different timeouts in SQS?",
+    "images": [
+      "/notes/9814.jpg"
+    ]
   },
   {
     "id": "c138",
@@ -1133,7 +1181,10 @@
     "question": "What is VPN connection?",
     "summary": "Although the term VPN connection is a general term, in the Amazon VPC documentation, a VPN connection refers to the connection between your VPC and your own network. AWS supports Internet Protocol security (IPsec) VPN connections.",
     "answer": "Although the term VPN connection is a general term, in the Amazon VPC documentation, a VPN connection refers to the connection between your VPC and your own network. AWS supports Internet Protocol security (IPsec) VPN connections.",
-    "sourceQuestion": "what is VPN connection?"
+    "sourceQuestion": "what is VPN connection?",
+    "images": [
+      "/notes/image_14.png"
+    ]
   },
   {
     "id": "c143",
@@ -1453,7 +1504,10 @@
     "question": "What is a Service Control Policy (SCP)?",
     "summary": "A Service Control Policy (SCP) is a type of organization policy in AWS Organizations that you use to manage permissions in your organization. It allows you to set the maximum available permissions (a permission boundary) for all accounts under your organization's root or specific Organizational Units (OUs).\nHere is a breakdown of how SCPs work, why they are used, and how they differ from…",
     "answer": "A Service Control Policy (SCP) is a type of organization policy in AWS Organizations that you use to manage permissions in your organization. It allows you to set the maximum available permissions (a permission boundary) for all accounts under your organization's root or specific Organizational Units (OUs).\nHere is a breakdown of how SCPs work, why they are used, and how they differ from traditional IAM policies:\n1. Core Concepts & Mechanics\n- The \"Guardrail\" Principle: SCPs do not grant permissions. Instead, they act as filter guardrails. Even if an IAM user or role has full administrator privileges (:), if an SCP explicitly denies an action (e.g., ec2:TerminateInstances), nobody in that account (including the root user) can perform that action.\n- Applies to the Entire Account: SCPs affect all IAM users, groups, and roles within the targeted AWS accounts, including the AWS account root user.\n- Exceptions: SCPs do not affect the Management Account (Master Account) of the organization, service-linked roles, or certain system operations.\n2. Common Use Cases\nEnterprise security teams use SCPs to enforce organizational compliance and security baselines:\n- Restrict AWS Regions: Prevent developers from launching resources in unapproved geographic regions (e.g., denying any action if aws:RequestedRegion is not us-east-1 or ap-east-1).\n- Protect Security Tooling: Prevent member accounts from disabling or deleting critical security services like AWS CloudTrail, GuardDuty, or AWS Config.\n- Restrict Costly Services: Disallow the creation of expensive instance types (e.g., GPU instances) in development environments.\n- Prevent Root Account Usage: Block any API actions taken by the root user of member accounts to enforce the use of IAM roles/SSO.\n3. How Evaluation Works: IAM vs. SCP\nAn action is only allowed if it passes through both the SCP boundary and the local IAM policy:\nPolicy TypeWho Configures It?What Does It Do?Who Does It Affect?\nSCPOrganization AdminSets the maximum boundaries (cannot grant access on its own).All users/roles in a member account, including Root.\nIAM PolicyMember Account AdminGrants specific access to resources within that account.Specific users, groups, or roles (does not affect Root).\n4. Policy Strategies: Allow-List vs. Deny-List\nAWS Organizations supports two strategies for applying SCPs:\n- Deny-List (Most Common & Recommended): By default, AWS attaches a built-in SCP called FullAWSAccess to every node, which allows all actions. You then write specific custom SCPs with \"Effect\": \"Deny\" statement blocks to restrict forbidden actions.\n- Allow-List: You remove FullAWSAccess and explicitly declare every single allowed service and action. This requires high maintenance, as new AWS services will be blocked by default until you manually update the SCP.",
-    "sourceQuestion": "What is service control policy?"
+    "sourceQuestion": "What is service control policy?",
+    "images": [
+      "/notes/17820423489103835850897799098698.png"
+    ]
   },
   {
     "id": "c183",
@@ -1629,7 +1683,10 @@
     "question": "What are the Amazon S3 storage classes, and when do you use each?",
     "summary": "Same S3 classes as above: Standard, Standard-IA, One Zone-IA, Intelligent-Tiering, Glacier Instant Retrieval, Glacier Flexible Retrieval, Glacier Deep Archive. Pick by access frequency, retrieval time, AZ resilience, and minimum storage duration. Intelligent-Tiering is the exam answer when access patterns are unknown or changing.",
     "answer": "Same S3 classes as above: Standard, Standard-IA, One Zone-IA, Intelligent-Tiering, Glacier Instant Retrieval, Glacier Flexible Retrieval, Glacier Deep Archive. Pick by access frequency, retrieval time, AZ resilience, and minimum storage duration. Intelligent-Tiering is the exam answer when access patterns are unknown or changing.",
-    "sourceQuestion": "what are different tiers of s3?"
+    "sourceQuestion": "what are different tiers of s3?",
+    "images": [
+      "/notes/image_15.png"
+    ]
   },
   {
     "id": "c205",
@@ -1645,7 +1702,10 @@
     "question": "How is EC2 billed in running, stopped, and hibernated states?",
     "summary": "Running: instance hours (and extra for extra ENIs, data transfer, etc.) plus EBS. Stopped: no instance-hour compute charge; you still pay for EBS volumes and Elastic IPs attached to stopped instances (idle EIPs are billed). Terminated: instance billing stops; delete volumes if DeleteOnTermination is true. Hibernate: similar to stopped — you pay for EBS including the RAM snapshot on the root…",
     "answer": "Running: instance hours (and extra for extra ENIs, data transfer, etc.) plus EBS. Stopped: no instance-hour compute charge; you still pay for EBS volumes and Elastic IPs attached to stopped instances (idle EIPs are billed). Terminated: instance billing stops; delete volumes if DeleteOnTermination is true. Hibernate: similar to stopped — you pay for EBS including the RAM snapshot on the root volume, not for CPU. Spot: billed while running under Spot pricing; interrupted instances stop charging compute.",
-    "sourceQuestion": "how will you be billed on different ec2 states?"
+    "sourceQuestion": "how will you be billed on different ec2 states?",
+    "images": [
+      "/notes/11142.jpg"
+    ]
   },
   {
     "id": "c207",
@@ -1661,7 +1721,10 @@
     "question": "What is AWS Cost Explorer?",
     "summary": "AWS Cost Explorer is a service provided by Amazon Web Services (AWS) that helps you visualize, understand, and analyze your AWS costs and usage. It provides a comprehensive set of tools and features to help you monitor and manage your AWS spending.",
     "answer": "AWS Cost Explorer is a service provided by Amazon Web Services (AWS) that helps you visualize, understand, and analyze your AWS costs and usage. It provides a comprehensive set of tools and features to help you monitor and manage your AWS spending.",
-    "sourceQuestion": "what is AWS Cost Explorer?"
+    "sourceQuestion": "what is AWS Cost Explorer?",
+    "images": [
+      "/notes/image_16.png"
+    ]
   },
   {
     "id": "c209",
@@ -1789,7 +1852,10 @@
     "question": "How can you improve query performance in Amazon Athena?",
     "summary": "Partition data (date, region), use columnar formats (Parquet/ORC) with compression, convert JSON/CSV via Glue, project only needed columns, avoid SELECT *, use partition projection, compact many tiny files into larger ones, store in the same Region, consider Glue Data Catalog stats, and for repeated queries use Athena workgroups / result reuse. Do not scan entire buckets. S3 Intelligent-Tiering…",
     "answer": "Partition data (date, region), use columnar formats (Parquet/ORC) with compression, convert JSON/CSV via Glue, project only needed columns, avoid SELECT *, use partition projection, compact many tiny files into larger ones, store in the same Region, consider Glue Data Catalog stats, and for repeated queries use Athena workgroups / result reuse. Do not scan entire buckets. S3 Intelligent-Tiering does not speed Athena; file layout does.",
-    "sourceQuestion": "how to improve query performance in AWS Athena?"
+    "sourceQuestion": "how to improve query performance in AWS Athena?",
+    "images": [
+      "/notes/image_17.png"
+    ]
   },
   {
     "id": "c225",
@@ -1909,7 +1975,10 @@
     "question": "How should you choose among AWS storage services?",
     "summary": "Block: EBS (single instance, low latency), Instance Store (ephemeral). File: EFS (NFS, Linux, multi-AZ), FSx for Windows (SMB), FSx for Lustre (HPC), FSx for NetApp ONTAP / OpenZFS. Object: S3. Hybrid: Storage Gateway (File/Tape/Volume), DataSync. Archive: S3 Glacier classes. Choose by protocol (block vs file vs object), sharing (single vs many instances), latency, and throughput.",
     "answer": "Block: EBS (single instance, low latency), Instance Store (ephemeral). File: EFS (NFS, Linux, multi-AZ), FSx for Windows (SMB), FSx for Lustre (HPC), FSx for NetApp ONTAP / OpenZFS. Object: S3. Hybrid: Storage Gateway (File/Tape/Volume), DataSync. Archive: S3 Glacier classes. Choose by protocol (block vs file vs object), sharing (single vs many instances), latency, and throughput.",
-    "sourceQuestion": "AWS storage services"
+    "sourceQuestion": "AWS storage services",
+    "images": [
+      "/notes/image_18.png"
+    ]
   },
   {
     "id": "c240",
@@ -2061,7 +2130,10 @@
     "question": "How does Route 53 geolocation routing differ from geoproximity routing?",
     "summary": "沒錯，你的理解非常精準！這就是這兩者在 AWS Route 53 路由邏輯上最核心的區別。\n為了幫你進一步強化這個概念，我們可以這樣區分它們的「彈性」：\n1. Geoproximity Routing (地理鄰近路由) — 具備「可調變性 (Tunable)」\n你可以把它想像成是在地圖上畫圓：\n- 中心點 (Center point)：你的 AWS 資源（例如某個區域的 Load Balancer）。\n- 偏差值 (Bias)：這就是你的「自定義工具」。你可以透過調整數值（正值擴大覆蓋範圍，負值縮小覆蓋範圍），來控制這個圓圈要多大。\n- 靈活性：如果你想讓某個區域的流量「多一點」流向特定的資源，你只要調整那個資源的 Bias，系統會自動幫你重新計算路由，不需要改動地理邊界。這就是為什麼它能滿足題目說的「讓較大一部分 (a larger portion) 流量過去」。\n2.…",
     "answer": "沒錯，你的理解非常精準！這就是這兩者在 AWS Route 53 路由邏輯上最核心的區別。\n為了幫你進一步強化這個概念，我們可以這樣區分它們的「彈性」：\n1. Geoproximity Routing (地理鄰近路由) — 具備「可調變性 (Tunable)」\n你可以把它想像成是在地圖上畫圓：\n- 中心點 (Center point)：你的 AWS 資源（例如某個區域的 Load Balancer）。\n- 偏差值 (Bias)：這就是你的「自定義工具」。你可以透過調整數值（正值擴大覆蓋範圍，負值縮小覆蓋範圍），來控制這個圓圈要多大。\n- 靈活性：如果你想讓某個區域的流量「多一點」流向特定的資源，你只要調整那個資源的 Bias，系統會自動幫你重新計算路由，不需要改動地理邊界。這就是為什麼它能滿足題目說的「讓較大一部分 (a larger portion) 流量過去」。\n2. Geolocation Routing (地理位置路由) — 具備「確定性 (Deterministic)」\n你可以把它想像成是在填寫「行政區對應表」：\n- 規則 (Rules)：你只能指定國家 (Country)、州 (State) 或大陸 (Continent)。\n- 硬性對應：這就像是寫程式的 if-else。如果用戶在「菲律賓」，就去「資源 A」；如果用戶在「印度」，就去「資源 B」。\n- 沒有中間地帶：你不能對系統說「幫我擴大印度規則的覆蓋範圍，讓鄰近的國家也過來」。一旦你定義了規則，那個地理邊界就是死的，它不會因為你的「偏好」而自動偏移。\n為什麼這在架構設計上很重要？\n- 選用 Geolocation 的場景：合規與精準控制。- 例如：歐盟的 GDPR 法規要求用戶資料必須留在歐盟境內。這時你必須使用 Geolocation，確保所有來自歐洲的流量都精確地被引導到歐洲的 Region，不能有任何「模糊空間」。\n\n- 選用 Geoproximity 的場景：負載與效能的最佳化。- 例如：你發現 Tokyo 的伺服器負載較低，而 Sydney 的伺服器已經爆滿。透過 Geoproximity，你可以透過調整 Bias，讓原本應該去 Sydney 的流量，有一部分「偏移」到 Tokyo，達到動態的分流效果。\n\n總結一句話：\n- Geolocation 是「劃定地盤」，你只能選它設定好的國家/區域邊界，無法自定義範圍大小。\n- Geoproximity 是「中心輻射」，你透過設定權重（Bias）來決定資源的「影響力範圍」有多大。\n這樣的對比是不是讓你對這兩個策略的用法更篤定了呢？",
-    "sourceQuestion": "what are the difference between geolocation routing and geoproximity routing in route53?"
+    "sourceQuestion": "what are the difference between geolocation routing and geoproximity routing in route53?",
+    "images": [
+      "/notes/image_19.png"
+    ]
   },
   {
     "id": "c259",
@@ -2293,7 +2365,10 @@
     "question": "How do RDS Multi-AZ, Multi-Region, and read replicas differ?",
     "summary": "Multi-AZ: sync standby in another AZ, automatic failover, same Region, not for read scaling (except Aurora). Read replica: async, can be in-Region or cross-Region, used for read scaling and DR; promotion is manual. Multi-Region: usually Aurora Global Database or cross-Region replicas; lower RPO/RTO across Regions, higher cost/complexity. Exam: HA inside a Region -> Multi-AZ; scale reads ->…",
     "answer": "Multi-AZ: sync standby in another AZ, automatic failover, same Region, not for read scaling (except Aurora). Read replica: async, can be in-Region or cross-Region, used for read scaling and DR; promotion is manual. Multi-Region: usually Aurora Global Database or cross-Region replicas; lower RPO/RTO across Regions, higher cost/complexity. Exam: HA inside a Region -> Multi-AZ; scale reads -> replica; DR across Regions -> cross-Region replica / Aurora Global.",
-    "sourceQuestion": "RDS Multi-AZ vs Multi-Region deployments vs Read replicas"
+    "sourceQuestion": "RDS Multi-AZ vs Multi-Region deployments vs Read replicas",
+    "images": [
+      "/notes/image_20.png"
+    ]
   },
   {
     "id": "c288",
@@ -2341,7 +2416,10 @@
     "question": "Elastic Network Adapter (ENA) vs Elastic Fabric Adapter (EFA)?",
     "summary": "Elastic Network Adapter (ENA) 與 Elastic Fabric Adapter (EFA) 的核心差異如下：\n1. 核心定位與用途\n- ENA：提供傳統的高效能 IP 網路（Enhanced Networking），適用於一般高吞吐量需求（如 Web 伺服器、資料庫、大數據處理）。\n- EFA：專為 HPC（高效能運算） 與 ML/DL（機器學習/深度學習） 設計，用於處理大規模跨節點的密集通訊。\n2. 架構與技術差異\n特性ENAEFA\n通訊協定傳統 TCP/IP 堆疊IP 網路 + SRD (Scalable Reliable Datagram) 傳輸協定\nOS-Bypass不支援（封包需經過作業系統 Kernel）支援（繞過 Kernel，應用程式直接存取網卡硬體）\n延遲與效能較低延遲、高吞吐量（最高 100…",
     "answer": "Elastic Network Adapter (ENA) 與 Elastic Fabric Adapter (EFA) 的核心差異如下：\n1. 核心定位與用途\n- ENA：提供傳統的高效能 IP 網路（Enhanced Networking），適用於一般高吞吐量需求（如 Web 伺服器、資料庫、大數據處理）。\n- EFA：專為 HPC（高效能運算） 與 ML/DL（機器學習/深度學習） 設計，用於處理大規模跨節點的密集通訊。\n2. 架構與技術差異\n特性ENAEFA\n通訊協定傳統 TCP/IP 堆疊IP 網路 + SRD (Scalable Reliable Datagram) 傳輸協定\nOS-Bypass不支援（封包需經過作業系統 Kernel）支援（繞過 Kernel，應用程式直接存取網卡硬體）\n延遲與效能較低延遲、高吞吐量（最高 100 Gbps+）極低且穩定的延遲，適合大規模節點間平行運算\n生態支援標準作業系統網路驅動整合 Libfabric、Open MPI、Intel MPI、NCCL\n總結\n- ENA = 傳統的高速網路卡。(對絕大多數現代 EC2 執行個體而言，ENA 是預設/自帶的)\n- EFA = ENA 的功能 + OS-bypass（專門解決跨節點通訊瓶頸）。",
-    "sourceQuestion": "Elastic Network Adapter (ENA) vs Elastic Fabric Adapter (EFA)"
+    "sourceQuestion": "Elastic Network Adapter (ENA) vs Elastic Fabric Adapter (EFA)",
+    "images": [
+      "/notes/image_21.png"
+    ]
   },
   {
     "id": "c294",
@@ -2365,7 +2443,10 @@
     "question": "How does an Internet Gateway differ from a Virtual Private Gateway?",
     "summary": "Internet Gateway (IGW): attaches to a VPC so resources with public IPs / Elastic IPs can reach the public internet (and vice versa). Virtual Private Gateway (VGW): the AWS side of a Site-to-Site VPN or Direct Connect private VIF; it is for private hybrid connectivity, not general internet egress. NAT Gateway needs a public subnet + IGW. VPN needs CGW (on-prem) + VGW (or Transit Gateway).",
     "answer": "Internet Gateway (IGW): attaches to a VPC so resources with public IPs / Elastic IPs can reach the public internet (and vice versa). Virtual Private Gateway (VGW): the AWS side of a Site-to-Site VPN or Direct Connect private VIF; it is for private hybrid connectivity, not general internet egress. NAT Gateway needs a public subnet + IGW. VPN needs CGW (on-prem) + VGW (or Transit Gateway).",
-    "sourceQuestion": "Internet Gateway vs Virtual Private Gateway"
+    "sourceQuestion": "Internet Gateway vs Virtual Private Gateway",
+    "images": [
+      "/notes/image_22.png"
+    ]
   },
   {
     "id": "c297",
@@ -2373,7 +2454,10 @@
     "question": "How does an SQS Standard queue differ from a FIFO queue?",
     "summary": "Standard: nearly unlimited throughput, at-least-once, best-effort ordering. FIFO: names end with .fifo, exactly-once processing (dedup), strict order per message group, limited throughput (unless high-throughput FIFO is enabled). Use Standard for high scale where order/duplicates can be handled by the app. Use FIFO when order and uniqueness are required.",
     "answer": "Standard: nearly unlimited throughput, at-least-once, best-effort ordering. FIFO: names end with .fifo, exactly-once processing (dedup), strict order per message group, limited throughput (unless high-throughput FIFO is enabled). Use Standard for high scale where order/duplicates can be handled by the app. Use FIFO when order and uniqueness are required.",
-    "sourceQuestion": "Standard Queue vs FIFO Queue in SQS"
+    "sourceQuestion": "Standard Queue vs FIFO Queue in SQS",
+    "images": [
+      "/notes/image_23.png"
+    ]
   },
   {
     "id": "c298",

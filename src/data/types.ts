@@ -7,6 +7,7 @@ export type Card = {
   summary: string
   answer: string
   sourceQuestion: string
+  images?: string[]
 }
 
 export type ProgressEntry = {

@@ -47,7 +47,7 @@ export function BrowseView() {
         <select
           value={category}
           onChange={(event) => setCategory(event.target.value)}
-          className="rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-sm"
+          className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-sm sm:w-auto"
         >
           <option value="All">All categories</option>
           {CATEGORIES.map((item) => (
@@ -84,6 +84,18 @@ export function BrowseView() {
               </button>
               {open && (
                 <div className="border-t border-white/10 p-5 text-sm leading-7 whitespace-pre-wrap text-slate-300">
+                  {(card.images?.length ?? 0) > 0 && (
+                    <div className="mb-4 space-y-3">
+                      {card.images?.map((src) => (
+                        <img
+                          key={src}
+                          src={src}
+                          alt=""
+                          className="max-h-80 w-full rounded-xl border border-white/10 object-contain bg-slate-950"
+                        />
+                      ))}
+                    </div>
+                  )}
                   {card.answer}
                 </div>
               )}

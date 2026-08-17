@@ -21,6 +21,7 @@ The app is for private revision: short exam-style questions on the front, conden
 4. Paraphrase many questions into clearer exam-style English. Original wording is stored as `sourceQuestion`.
 5. Assign each card to one study category using service keywords.
 6. Write `src/data/cards.json` for the app to load.
+7. Copy referenced Notion images into `public/notes/` and attach them as `images` on matching cards.
 
 Empty notes that were completed during import include S3 storage-class waterfall, SQS polling/timeouts/retention, SWF, S3 event-notification delivery semantics, EC2 billing by instance state, Athena performance, RDS Multi-AZ vs Multi-Region vs replicas, IGW vs VGW, and Standard vs FIFO SQS.
 
@@ -74,6 +75,7 @@ Each card in `src/data/cards.json`:
 - `summary`: short back-of-card text
 - `answer`: full explanation from notes (or a filled-in answer)
 - `sourceQuestion`: original toggle title from the HTML notes
+- `images`: optional list of `/notes/...` screenshot paths shown on the card back
 
 Progress map in `data/progress.json`:
 
@@ -104,6 +106,7 @@ npm start
 aws-flashcards/
   project_description.md
   data/progress.json       # known / learning state
+  public/notes/            # screenshots from the original notes
   src/app/                 # routes: /, /study, /browse, /api/progress
   src/components/          # home, study, browse, flip card
   src/data/cards.json      # imported deck

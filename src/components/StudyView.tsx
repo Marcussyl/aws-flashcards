@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { CelebrateBurst, type BurstKind } from '@/components/CelebrateBurst'
 import { FlashCard } from '@/components/FlashCard'
 import { cards, shuffleCards } from '@/lib/cards'
 import { useProgress } from '@/lib/progress'
@@ -15,6 +16,8 @@ export function StudyView() {
   const [index, setIndex] = useState(0)
   const [flipped, setFlipped] = useState(false)
   const [deck, setDeck] = useState<Card[] | null>(null)
+  const [burstId, setBurstId] = useState(0)
+  const [burstKind, setBurstKind] = useState<BurstKind>('known')
 
   const baseList = useMemo(() => {
     return category
@@ -46,6 +49,9 @@ export function StudyView() {
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
+      if (document.querySelector('[data-card-expanded]')) {
+        return
+      }
       if (event.key === ' ' || event.key === 'Enter') {
         event.preventDefault()
         setFlipped((value) => !value)
@@ -82,6 +88,8 @@ export function StudyView() {
       return
     }
     mark(card.id, status)
+    setBurstKind(status)
+    setBurstId((value) => value + 1)
     go(1)
   }
 
@@ -102,14 +110,14 @@ export function StudyView() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <div className="flex items-end justify-between gap-4">
-        <div>
-          <p className="text-sm text-amber-300">
+      <div className="flex items-end justify-between gap-3">
+        <div className="min-w-0">
+          <p className="truncate text-sm text-amber-300">
             {category ?? 'All topics'} {mode ? `· ${mode}` : ''}
           </p>
-          <h1 className="mt-1 text-2xl font-semibold">Study session</h1>
+          <h1 className="mt-1 text-xl font-semibold sm:text-2xl">Study session</h1>
         </div>
-        <p className="text-sm text-slate-400">
+        <p className="shrink-0 text-sm text-slate-400">
           {index + 1} / {total}
         </p>
       </div>
@@ -121,41 +129,40 @@ export function StudyView() {
         onFlip={() => setFlipped((value) => !value)}
       />
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-[auto_1fr_1fr_auto] sm:items-center">
         <button
           type="button"
-          className="rounded-full border border-white/15 px-4 py-2 text-sm hover:border-white/40"
+          className="order-3 rounded-full border border-white/15 px-4 py-3 text-sm hover:border-white/40 sm:order-1"
           onClick={() => go(-1)}
         >
           Previous
         </button>
-        <div className="flex gap-3">
-          <button
-            type="button"
-            className="rounded-full border border-rose-400/40 bg-rose-500/10 px-4 py-2 text-sm font-medium text-rose-100 hover:bg-rose-500/20"
-            onClick={() => markCurrent('learning')}
-          >
-            Still learning (1)
-          </button>
-          <button
-            type="button"
-            className="rounded-full bg-emerald-400 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-emerald-300"
-            onClick={() => markCurrent('known')}
-          >
-            I know this (2)
-          </button>
-        </div>
         <button
           type="button"
-          className="rounded-full border border-white/15 px-4 py-2 text-sm hover:border-white/40"
+          className="order-1 rounded-full border border-rose-400/40 bg-rose-500/10 px-4 py-3 text-sm font-medium text-rose-100 hover:bg-rose-500/20"
+          onClick={() => markCurrent('learning')}
+        >
+          Still learning
+        </button>
+        <button
+          type="button"
+          className="order-2 rounded-full bg-emerald-400 px-4 py-3 text-sm font-semibold text-slate-950 hover:bg-emerald-300"
+          onClick={() => markCurrent('known')}
+        >
+          I know this
+        </button>
+        <button
+          type="button"
+          className="order-4 rounded-full border border-white/15 px-4 py-3 text-sm hover:border-white/40"
           onClick={() => go(1)}
         >
           Next
         </button>
       </div>
-      <p className="text-center text-xs text-slate-500">
+      <p className="hidden text-center text-xs text-slate-500 sm:block">
         Space = flip · arrows = navigate · 1 = learning · 2 = known
       </p>
+      <CelebrateBurst burstId={burstId} kind={burstKind} />
     </div>
   )
 }
