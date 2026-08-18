@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import { CATEGORIES } from '@/data/categories'
 import { cards } from '@/lib/cards'
+import { MarkdownContent } from '@/components/MarkdownContent'
 import { useProgress } from '@/lib/progress'
 
 export function BrowseView() {
@@ -83,7 +84,7 @@ export function BrowseView() {
                 </span>
               </button>
               {open && (
-                <div className="border-t border-white/10 p-5 text-sm leading-7 whitespace-pre-wrap text-slate-300">
+                <div className="border-t border-white/10 p-5 text-slate-300">
                   {(card.images?.length ?? 0) > 0 && (
                     <div className="mb-4 space-y-3">
                       {card.images?.map((src) => (
@@ -96,7 +97,7 @@ export function BrowseView() {
                       ))}
                     </div>
                   )}
-                  {card.answer}
+                  <MarkdownContent className="prose-sm" content={card.answer} />
                 </div>
               )}
             </article>

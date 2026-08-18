@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { MarkdownContent } from '@/components/MarkdownContent'
 import type { Card } from '@/data/types'
 
 type FlashCardProps = {
@@ -156,9 +157,7 @@ function CardBody({
           ))}
         </div>
       )}
-      <p className="whitespace-pre-wrap text-base leading-7">
-        {showFull ? card.answer : card.summary || card.answer}
-      </p>
+      <MarkdownContent content={showFull ? card.answer : card.summary || card.answer} />
       {card.answer !== card.summary && card.summary && (
         <button
           type="button"
