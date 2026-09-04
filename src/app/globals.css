@@ -5,8 +5,8 @@
   --background: #020617;
   --foreground: #e2e8f0;
   --scrollbar-size: 0.5rem;
-  --scrollbar-thumb: rgba(148, 163, 184, 0.34);
-  --scrollbar-thumb-hover: rgba(125, 211, 252, 0.55);
+  --scrollbar-thumb: rgba(148, 163, 184, 0.42);
+  --scrollbar-thumb-hover: rgba(125, 211, 252, 0.72);
   --scrollbar-track: transparent;
 }
 
@@ -26,9 +26,12 @@ body {
   height: 100dvh;
 }
 
-* {
-  scrollbar-width: thin;
-  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+/* Firefox only — Chromium ignores ::-webkit-scrollbar when these are set. */
+@supports (-moz-appearance: none) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  }
 }
 
 *::-webkit-scrollbar {
@@ -38,6 +41,8 @@ body {
 
 *::-webkit-scrollbar-track {
   background: var(--scrollbar-track);
+  margin-block: 0.4rem;
+  margin-inline: 0.4rem;
 }
 
 *::-webkit-scrollbar-thumb {
