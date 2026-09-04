@@ -21,12 +21,9 @@ function isActivePath(pathname: string, href: string) {
 
 export function SiteNav() {
   const pathname = usePathname()
-  const [open, setOpen] = useState(false)
+  const [openPath, setOpenPath] = useState<string | null>(null)
+  const open = openPath === pathname
   const menuId = useId()
-
-  useEffect(() => {
-    setOpen(false)
-  }, [pathname])
 
   useEffect(() => {
     if (!open) {
@@ -35,7 +32,7 @@ export function SiteNav() {
 
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') {
-        setOpen(false)
+        setOpenPath(null)
       }
     }
 
@@ -65,7 +62,7 @@ export function SiteNav() {
         aria-expanded={open}
         aria-controls={menuId}
         aria-label={open ? 'Close menu' : 'Open menu'}
-        onClick={() => setOpen((value) => !value)}
+        onClick={() => setOpenPath((current) => (current === pathname ? null : pathname))}
       >
         <MenuIcon open={open} />
       </button>
@@ -76,7 +73,7 @@ export function SiteNav() {
               type="button"
               className="fixed inset-0 z-40 bg-slate-950/50 sm:hidden"
               aria-label="Close menu"
-              onClick={() => setOpen(false)}
+              onClick={() => setOpenPath(null)}
             />,
             document.body,
           )
