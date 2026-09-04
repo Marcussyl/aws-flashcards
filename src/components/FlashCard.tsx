@@ -69,12 +69,12 @@ export function FlashCard({ card, flipped, onFlip }: FlashCardProps) {
               </p>
               <ExpandButton onClick={openExpanded} />
             </div>
-            <div className="mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain">
-              <h2 className="text-xl font-semibold leading-snug text-white sm:text-3xl">
+            <div className="mt-4 flex min-h-0 flex-1 overflow-y-auto overscroll-contain">
+              <h2 className="m-auto w-full text-center text-xl font-semibold leading-snug text-white sm:text-3xl">
                 {card.question}
               </h2>
             </div>
-            <p className="shrink-0 pt-4 text-sm text-slate-400 sm:pt-6">
+            <p className="shrink-0 pt-4 text-center text-sm text-slate-400 sm:pt-6">
               Tap the card to flip
             </p>
           </div>
@@ -123,7 +123,7 @@ export function FlashCard({ card, flipped, onFlip }: FlashCardProps) {
                 {flipped ? (
                   <CardBody card={card} showFull={true} setShowFull={setShowFull} />
                 ) : (
-                  <h2 className="text-2xl font-semibold leading-snug text-white sm:text-3xl">
+                  <h2 className="text-center text-2xl font-semibold leading-snug text-white sm:text-3xl">
                     {card.question}
                   </h2>
                 )}
