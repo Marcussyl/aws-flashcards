@@ -27,8 +27,14 @@ import {
   tapSpring,
 } from '@/lib/motion'
 import { useProgress } from '@/lib/progress'
-import { selectStudyCards, studySessionHint } from '@/lib/study-deck'
+import { advanceStudyDeck, selectStudyCards, studySessionHint } from '@/lib/study-deck'
 import type { Card } from '@/data/types'
+
+type StudySession = {
+  key: string
+  deck: Card[] | null
+  original: Card[]
+}
 
 const MODE_LABELS: Record<string, string> = {
   due: 'Due cards',
@@ -67,16 +73,18 @@ export function StudyView() {
     ? studySessionHint(baseList, map, { category, mode })
     : null
 
-  const [session, setSession] = useState<{ key: string; deck: Card[] | null } | null>(
-    null,
-  )
+  const [session, setSession] = useState<StudySession | null>(null)
 
   if (session?.key !== sessionKey) {
     const nextDeck =
       usesProgress && !ready
         ? null
         : shuffleCards(selectStudyCards(baseList, map, { category, mode }))
-    setSession({ key: sessionKey, deck: nextDeck })
+    setSession({
+      key: sessionKey,
+      deck: nextDeck,
+      original: nextDeck ? [...nextDeck] : [],
+    })
     setIndex(0)
     setFlipped(false)
     setSwipe({ dir: 1, exit: 'next' })
@@ -89,6 +97,9 @@ export function StudyView() {
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (document.querySelector('[data-card-expanded]')) {
+        return
+      }
+      if (!deck?.length) {
         return
       }
       if (event.key === ' ' || event.key === 'Enter') {
@@ -131,17 +142,51 @@ export function StudyView() {
   }
 
   function markCurrent(status: 'learning' | 'known') {
-    if (!card) {
+    if (!card || !deck) {
       return
     }
     mark(card.id, status)
     setBurstKind(status)
     setBurstId((value) => value + 1)
-    advance({ dir: 1, exit: status })
+    const next = advanceStudyDeck(deck, index, status)
+    setSwipe({ dir: 1, exit: status })
+    setSession((current) =>
+      current ? { ...current, deck: next.deck } : current,
+    )
+    setIndex(next.index)
+    setFlipped(false)
+  }
+
+  function startOver() {
+    const original = session?.original ?? []
+    if (!original.length) {
+      return
+    }
+    setSession((current) =>
+      current
+        ? { ...current, deck: shuffleCards(original) }
+        : current,
+    )
+    setIndex(0)
+    setFlipped(false)
+    setSwipe({ dir: 1, exit: 'next' })
   }
 
   if (deck === null) {
     return <StudyLoading category={category} mode={mode} />
+  }
+
+  if (deck.length === 0 && (session?.original.length ?? 0) > 0) {
+    return (
+      <SessionComplete
+        count={session?.original.length ?? 0}
+        category={category}
+        mode={mode}
+        burstId={burstId}
+        burstKind={burstKind}
+        onStartOver={startOver}
+      />
+    )
   }
 
   if (!card) {
@@ -330,6 +375,74 @@ function StudyLoading({
         Preparing your session
       </div>
     </div>
+  )
+}
+
+function SessionComplete({
+  count,
+  category,
+  mode,
+  burstId,
+  burstKind,
+  onStartOver,
+}: {
+  count: number
+  category: string | null
+  mode: string | null
+  burstId: number
+  burstKind: BurstKind
+  onStartOver: () => void
+}) {
+  const reduce = useReducedMotion()
+  const topic = category ?? 'All topics'
+  const modeLabel = mode ? MODE_LABELS[mode] ?? mode : 'Shuffled'
+
+  return (
+    <motion.div
+      className="mx-auto flex h-full w-full max-w-lg flex-1 flex-col items-center justify-center text-center"
+      initial={reduce ? false : { opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+    >
+      <motion.div
+        className="flex size-16 items-center justify-center rounded-2xl border border-emerald-400/30 bg-emerald-400/10 text-emerald-300"
+        initial={reduce ? false : { scale: 0.88 }}
+        animate={{ scale: 1 }}
+        transition={{ type: 'spring', stiffness: 380, damping: 22 }}
+      >
+        <IconCheck className="h-8 w-8" />
+      </motion.div>
+      <span className="mt-5 inline-flex items-center gap-1.5 rounded-full border border-amber-300/20 bg-amber-400/10 px-2.5 py-1 text-xs font-medium text-amber-200">
+        <span aria-hidden="true">{getCategoryEmoji(category ?? '')}</span>
+        {topic}
+        <span className="text-slate-500">·</span>
+        {modeLabel}
+      </span>
+      <h1 className="mt-4 text-2xl font-semibold">You have finished the session</h1>
+      <p className="mt-3 max-w-sm text-sm leading-6 text-slate-400">
+        You marked all {count} {count === 1 ? 'card' : 'cards'} as known. Would you
+        like to start over with this round, or head back home?
+      </p>
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+        <motion.button
+          type="button"
+          onClick={onStartOver}
+          className="inline-flex items-center justify-center gap-2 rounded-full bg-amber-400 px-5 py-3 text-sm font-semibold text-slate-950 hover:bg-amber-300"
+          whileHover={reduce ? undefined : { scale: 1.03 }}
+          whileTap={reduce ? undefined : { scale: 0.97 }}
+          transition={tapSpring}
+        >
+          <IconRefresh className="h-4 w-4" />
+          Start over
+        </motion.button>
+        <Link
+          href="/"
+          className="inline-flex items-center justify-center gap-2 rounded-full border border-white/15 px-5 py-3 text-sm font-semibold text-white hover:border-amber-300/60"
+        >
+          Back home
+        </Link>
+      </div>
+      <CelebrateBurst burstId={burstId} kind={burstKind} />
+    </motion.div>
   )
 }
 

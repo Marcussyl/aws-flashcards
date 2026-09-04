@@ -48,3 +48,36 @@ export function studySessionHint(
 
   return null
 }
+
+export function advanceStudyDeck(
+  deck: Card[],
+  index: number,
+  status: 'learning' | 'known',
+): { deck: Card[]; index: number } {
+  const current = deck[index]
+  if (!current) {
+    return { deck, index }
+  }
+
+  if (status === 'known') {
+    const nextDeck = deck.filter((_, itemIndex) => itemIndex !== index)
+    return {
+      deck: nextDeck,
+      index: nextIndexAfterRemoval(nextDeck.length, index),
+    }
+  }
+
+  const nextDeck = [...deck.slice(0, index), ...deck.slice(index + 1), current]
+  const wasLast = index >= deck.length - 1
+  return {
+    deck: nextDeck,
+    index: wasLast ? 0 : index,
+  }
+}
+
+function nextIndexAfterRemoval(length: number, index: number) {
+  if (length <= 0) {
+    return 0
+  }
+  return index >= length ? 0 : index
+}
