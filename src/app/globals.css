@@ -201,3 +201,55 @@ body {
     opacity: 0;
   }
 }
+
+.shuffle-stack {
+  position: relative;
+  width: 7.5rem;
+  height: 9.5rem;
+}
+
+.shuffle-card {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 1.15rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+}
+
+.shuffle-card-a,
+.shuffle-card-b,
+.shuffle-card-c {
+  animation: shuffle-float 1.8s ease-in-out infinite;
+}
+
+.shuffle-card-a {
+  background: linear-gradient(180deg, #1e293b, #0f172a);
+  transform: rotate(-10deg) translate(-12px, 8px);
+  animation-delay: 0s;
+}
+
+.shuffle-card-b {
+  background: linear-gradient(180deg, #1d4ed8, #0f172a);
+  transform: rotate(8deg) translate(14px, 6px);
+  animation-delay: 0.15s;
+}
+
+.shuffle-card-c {
+  background:
+    radial-gradient(circle at top right, rgba(251, 191, 36, 0.28), transparent 40%),
+    linear-gradient(180deg, #0f172a, #111827);
+  animation-delay: 0.3s;
+}
+
+@keyframes shuffle-float {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -8px;
+  }
+}

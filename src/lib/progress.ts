@@ -5,12 +5,25 @@ import type { CardStatus, ProgressMap } from '@/data/types'
 
 const LEGACY_STORAGE_KEY = 'aws-flashcards-progress-v1'
 
+const PROGRESS_TIMEOUT_MS = 4000
+
 async function fetchProgress(): Promise<ProgressMap> {
-  const response = await fetch('/api/progress', { cache: 'no-store' })
-  if (!response.ok) {
+  const controller = new AbortController()
+  const timer = window.setTimeout(() => controller.abort(), PROGRESS_TIMEOUT_MS)
+  try {
+    const response = await fetch('/api/progress', {
+      cache: 'no-store',
+      signal: controller.signal,
+    })
+    if (!response.ok) {
+      return {}
+    }
+    return (await response.json()) as ProgressMap
+  } catch {
     return {}
+  } finally {
+    window.clearTimeout(timer)
   }
-  return (await response.json()) as ProgressMap
 }
 
 async function saveProgress(map: ProgressMap) {
