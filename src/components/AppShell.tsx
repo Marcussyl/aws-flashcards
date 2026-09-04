@@ -4,8 +4,14 @@ import { SiteNav } from '@/components/SiteNav'
 
 export function AppShell({ children }: { children: ReactNode }) {
   return (
-    <div className="flex h-dvh flex-col bg-slate-950 text-slate-100">
-      <header className="relative z-50 shrink-0 border-b border-white/10 bg-slate-950/80 backdrop-blur">
+    <div className="relative flex h-dvh flex-col overflow-hidden bg-slate-950 text-slate-100">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+        <div className="absolute -left-24 -top-24 h-72 w-72 rounded-full bg-amber-400/12 blur-3xl" />
+        <div className="absolute -right-16 top-24 h-64 w-64 rounded-full bg-sky-500/10 blur-3xl" />
+        <div className="absolute bottom-0 left-1/3 h-56 w-80 rounded-full bg-violet-500/10 blur-3xl" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.06),transparent_42%)]" />
+      </div>
+      <header className="relative z-50 shrink-0 border-b border-white/10 bg-slate-950/70 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-3 py-3 sm:px-4 sm:py-4">
           <Link
             href="/"

@@ -4,6 +4,10 @@ export type CategoryMeta = {
   blurb: string
 }
 
+export function getCategoryEmoji(name: string) {
+  return CATEGORIES.find((item) => item.name === name)?.emoji ?? '⚡'
+}
+
 export const CATEGORIES: CategoryMeta[] = [
   {
     name: 'Exam & Architecture',

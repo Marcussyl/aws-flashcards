@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { IconFlip } from '@/components/icons'
 import { MarkdownContent } from '@/components/MarkdownContent'
+import { getCategoryEmoji } from '@/data/categories'
 import type { Card } from '@/data/types'
 
 type FlashCardProps = {
@@ -64,8 +66,9 @@ export function FlashCard({ card, flipped, onFlip }: FlashCardProps) {
         <div className={`card-inner ${flipped ? 'is-flipped' : ''}`}>
           <div className="card-face card-front">
             <div className="flex h-8 shrink-0 items-center justify-between gap-3">
-              <p className="leading-none text-xs font-semibold uppercase tracking-[0.2em] text-amber-300/80">
-                {card.category}
+              <p className="flex min-w-0 items-center gap-2 leading-none text-xs font-semibold uppercase tracking-[0.18em] text-amber-300/80">
+                <span aria-hidden="true">{getCategoryEmoji(card.category)}</span>
+                <span className="truncate">{card.category}</span>
               </p>
               <ExpandButton onClick={openExpanded} />
             </div>
@@ -74,7 +77,8 @@ export function FlashCard({ card, flipped, onFlip }: FlashCardProps) {
                 {card.question}
               </h2>
             </div>
-            <p className="shrink-0 pt-4 text-sm text-slate-400 sm:pt-6">
+            <p className="flex shrink-0 items-center gap-2 pt-4 text-sm text-slate-400 sm:pt-6">
+              <IconFlip className="h-4 w-4 text-amber-300/80" />
               Tap the card to flip
             </p>
           </div>
