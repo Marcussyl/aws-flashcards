@@ -14,7 +14,6 @@ type FlashCardProps = {
 }
 
 export function FlashCard({ card, flipped, onFlip }: FlashCardProps) {
-  const [showFull, setShowFull] = useState(false)
   const [expanded, setExpanded] = useState(false)
   const [mounted, setMounted] = useState(false)
 
@@ -42,7 +41,6 @@ export function FlashCard({ card, flipped, onFlip }: FlashCardProps) {
 
   function openExpanded(event: React.MouseEvent) {
     event.stopPropagation()
-    setShowFull(true)
     setExpanded(true)
   }
 
@@ -72,12 +70,12 @@ export function FlashCard({ card, flipped, onFlip }: FlashCardProps) {
               </p>
               <ExpandButton onClick={openExpanded} />
             </div>
-            <div className="mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain">
-              <h2 className="text-xl font-semibold leading-snug text-white sm:text-3xl">
+            <div className="mt-4 flex min-h-0 flex-1 overflow-y-auto overscroll-contain">
+              <h2 className="m-auto w-full text-center text-xl font-semibold leading-snug text-white sm:text-3xl">
                 {card.question}
               </h2>
             </div>
-            <p className="flex shrink-0 items-center gap-2 pt-4 text-sm text-slate-400 sm:pt-6">
+            <p className="flex shrink-0 items-center justify-center gap-2 pt-4 text-sm text-slate-400 sm:pt-6">
               <IconFlip className="h-4 w-4 text-amber-300/80" />
               Tap the card to flip
             </p>
@@ -93,7 +91,7 @@ export function FlashCard({ card, flipped, onFlip }: FlashCardProps) {
               className="mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain pr-2 text-left text-slate-100"
               onClick={(event) => event.stopPropagation()}
             >
-              <CardBody card={card} showFull={showFull} setShowFull={setShowFull} />
+              <CardBody card={card} />
             </div>
           </div>
         </div>
@@ -125,9 +123,9 @@ export function FlashCard({ card, flipped, onFlip }: FlashCardProps) {
               </div>
               <div className="overflow-y-auto pr-1 text-slate-100">
                 {flipped ? (
-                  <CardBody card={card} showFull={true} setShowFull={setShowFull} />
+                  <CardBody card={card} />
                 ) : (
-                  <h2 className="text-2xl font-semibold leading-snug text-white sm:text-3xl">
+                  <h2 className="text-center text-2xl font-semibold leading-snug text-white sm:text-3xl">
                     {card.question}
                   </h2>
                 )}
@@ -140,15 +138,7 @@ export function FlashCard({ card, flipped, onFlip }: FlashCardProps) {
   )
 }
 
-function CardBody({
-  card,
-  showFull,
-  setShowFull,
-}: {
-  card: Card
-  showFull: boolean
-  setShowFull: (value: boolean | ((current: boolean) => boolean)) => void
-}) {
+function CardBody({ card }: { card: Card }) {
   return (
     <>
       {(card.images?.length ?? 0) > 0 && (
@@ -163,19 +153,7 @@ function CardBody({
           ))}
         </div>
       )}
-      <MarkdownContent content={showFull ? card.answer : card.summary || card.answer} />
-      {card.answer !== card.summary && card.summary && (
-        <button
-          type="button"
-          className="mt-4 text-sm font-medium text-amber-300 hover:text-amber-200"
-          onClick={(event) => {
-            event.stopPropagation()
-            setShowFull((value) => !value)
-          }}
-        >
-          {showFull ? 'Show summary' : 'Show full notes'}
-        </button>
-      )}
+      <MarkdownContent content={card.answer} />
     </>
   )
 }
