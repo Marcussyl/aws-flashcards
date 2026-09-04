@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -23,7 +23,6 @@ export function SiteNav() {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const menuId = useId()
-  const rootRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     setOpen(false)
@@ -40,25 +39,12 @@ export function SiteNav() {
       }
     }
 
-    function onPointerDown(event: PointerEvent) {
-      const target = event.target as Node
-      if (rootRef.current?.contains(target)) {
-        return
-      }
-
-      setOpen(false)
-    }
-
     document.addEventListener('keydown', onKeyDown)
-    document.addEventListener('pointerdown', onPointerDown)
-    return () => {
-      document.removeEventListener('keydown', onKeyDown)
-      document.removeEventListener('pointerdown', onPointerDown)
-    }
+    return () => document.removeEventListener('keydown', onKeyDown)
   }, [open])
 
   return (
-    <div className="relative" ref={rootRef}>
+    <div className="relative">
       <nav className="hidden text-sm text-slate-300 sm:flex sm:gap-1" aria-label="Main">
         {navItems.map((item) => (
           <Link
@@ -86,7 +72,12 @@ export function SiteNav() {
 
       {open
         ? createPortal(
-            <div className="fixed inset-0 z-40 bg-slate-950/50 sm:hidden" aria-hidden="true" />,
+            <button
+              type="button"
+              className="fixed inset-0 z-40 bg-slate-950/50 sm:hidden"
+              aria-label="Close menu"
+              onClick={() => setOpen(false)}
+            />,
             document.body,
           )
         : null}
