@@ -50,22 +50,17 @@ body {
 
 .card-scene {
   perspective: 1400px;
-  min-height: 280px;
+  height: 100%;
+  min-height: 220px;
 }
 
 .card-inner {
   position: relative;
   width: 100%;
-  min-height: 280px;
+  height: 100%;
+  min-height: 220px;
   transform-style: preserve-3d;
   transition: transform 0.55s cubic-bezier(0.4, 0.2, 0.2, 1);
-}
-
-@media (min-width: 640px) {
-  .card-scene,
-  .card-inner {
-    min-height: 420px;
-  }
 }
 
 .card-inner.is-flipped {
@@ -77,6 +72,7 @@ body {
   inset: 0;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
   border-radius: 1.5rem;
   border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 1.25rem;

@@ -109,8 +109,8 @@ export function StudyView() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      <div className="flex items-end justify-between gap-3">
+    <div className="mx-auto flex min-h-0 w-full max-w-3xl flex-1 flex-col gap-3 sm:gap-4">
+      <div className="flex shrink-0 items-end justify-between gap-3">
         <div className="min-w-0">
           <p className="truncate text-sm text-amber-300">
             {category ?? 'All topics'} {mode ? `· ${mode}` : ''}
@@ -122,14 +122,16 @@ export function StudyView() {
         </p>
       </div>
 
-      <FlashCard
-        key={card.id}
-        card={card}
-        flipped={flipped}
-        onFlip={() => setFlipped((value) => !value)}
-      />
+      <div className="min-h-0 flex-1">
+        <FlashCard
+          key={card.id}
+          card={card}
+          flipped={flipped}
+          onFlip={() => setFlipped((value) => !value)}
+        />
+      </div>
 
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-[auto_1fr_1fr_auto] sm:items-center">
+      <div className="grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-[auto_1fr_1fr_auto] sm:items-center">
         <button
           type="button"
           className="order-3 rounded-full border border-white/15 px-4 py-3 text-sm hover:border-white/40 sm:order-1"
@@ -159,7 +161,7 @@ export function StudyView() {
           Next
         </button>
       </div>
-      <p className="hidden text-center text-xs text-slate-500 sm:block">
+      <p className="hidden shrink-0 text-center text-xs text-slate-500 sm:block">
         Space = flip · arrows = navigate · 1 = learning · 2 = known
       </p>
       <CelebrateBurst burstId={burstId} kind={burstKind} />
