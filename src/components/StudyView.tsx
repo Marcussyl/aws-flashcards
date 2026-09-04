@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { CelebrateBurst, type BurstKind } from '@/components/CelebrateBurst'
 import { FlashCard } from '@/components/FlashCard'
 import {
@@ -18,6 +19,13 @@ import {
 } from '@/components/icons'
 import { getCategoryEmoji } from '@/data/categories'
 import { cards, shuffleCards } from '@/lib/cards'
+import {
+  cardExitKnown,
+  cardExitLearning,
+  cardSwipe,
+  easeOutExpo,
+  tapSpring,
+} from '@/lib/motion'
 import { useProgress } from '@/lib/progress'
 import { selectStudyCards, studySessionHint } from '@/lib/study-deck'
 import type { Card } from '@/data/types'
@@ -26,6 +34,11 @@ const MODE_LABELS: Record<string, string> = {
   due: 'Due cards',
   known: 'Known',
   learning: 'Still learning',
+}
+
+type Swipe = {
+  dir: 1 | -1
+  exit: 'next' | 'prev' | 'known' | 'learning'
 }
 
 export function StudyView() {
@@ -37,6 +50,8 @@ export function StudyView() {
   const [flipped, setFlipped] = useState(false)
   const [burstId, setBurstId] = useState(0)
   const [burstKind, setBurstKind] = useState<BurstKind>('known')
+  const [swipe, setSwipe] = useState<Swipe>({ dir: 1, exit: 'next' })
+  const reduce = useReducedMotion()
 
   const baseList = useMemo(() => {
     return category
@@ -64,6 +79,7 @@ export function StudyView() {
     setSession({ key: sessionKey, deck: nextDeck })
     setIndex(0)
     setFlipped(false)
+    setSwipe({ dir: 1, exit: 'next' })
   }
 
   const deck = session?.key === sessionKey ? session.deck : null
@@ -92,9 +108,10 @@ export function StudyView() {
     return () => window.removeEventListener('keydown', onKey)
   })
 
-  function go(step: number) {
+  function advance(nextSwipe: Swipe) {
+    setSwipe(nextSwipe)
     setIndex((current) => {
-      const next = current + step
+      const next = current + nextSwipe.dir
       if (next < 0) {
         return total ? total - 1 : 0
       }
@@ -106,6 +123,13 @@ export function StudyView() {
     setFlipped(false)
   }
 
+  function go(step: number) {
+    advance({
+      dir: step > 0 ? 1 : -1,
+      exit: step > 0 ? 'next' : 'prev',
+    })
+  }
+
   function markCurrent(status: 'learning' | 'known') {
     if (!card) {
       return
@@ -113,7 +137,7 @@ export function StudyView() {
     mark(card.id, status)
     setBurstKind(status)
     setBurstId((value) => value + 1)
-    go(1)
+    advance({ dir: 1, exit: status })
   }
 
   if (deck === null) {
@@ -162,55 +186,88 @@ export function StudyView() {
           </div>
         </div>
         <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
-          <div
-            className="h-full rounded-full bg-gradient-to-r from-amber-300 to-sky-400 transition-[width] duration-300"
-            style={{ width: `${progressPct}%` }}
+          <motion.div
+            className="h-full rounded-full bg-gradient-to-r from-amber-300 to-sky-400"
+            animate={{ width: `${progressPct}%` }}
+            transition={reduce ? { duration: 0 } : { type: 'spring', stiffness: 180, damping: 24 }}
           />
         </div>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col">
-        <FlashCard
-          key={card.id}
-          card={card}
-          flipped={flipped}
-          onFlip={() => setFlipped((value) => !value)}
-        />
+      <div className="relative min-h-0 flex-1">
+        <AnimatePresence initial={false} custom={swipe.dir}>
+          <motion.div
+            key={card.id}
+            className="absolute inset-0"
+            custom={swipe.dir}
+            variants={cardSwipe}
+            initial={reduce ? false : 'enter'}
+            animate="center"
+            exit={
+              reduce
+                ? undefined
+                : swipe.exit === 'known'
+                  ? cardExitKnown
+                  : swipe.exit === 'learning'
+                    ? cardExitLearning
+                    : 'exit'
+            }
+            transition={reduce ? { duration: 0 } : { duration: 0.28, ease: easeOutExpo }}
+          >
+            <FlashCard
+              card={card}
+              flipped={flipped}
+              onFlip={() => setFlipped((value) => !value)}
+            />
+          </motion.div>
+        </AnimatePresence>
       </div>
 
       <div className="grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-[auto_1fr_1fr_auto] sm:items-center">
-        <button
+        <motion.button
           type="button"
           className="order-3 inline-flex items-center justify-center gap-1.5 rounded-full border border-white/15 px-4 py-3 text-sm hover:border-white/40 sm:order-1"
           onClick={() => go(-1)}
+          whileHover={reduce ? undefined : { scale: 1.02 }}
+          whileTap={reduce ? undefined : { scale: 0.96 }}
+          transition={tapSpring}
         >
           <IconChevronLeft className="h-4 w-4" />
           Previous
-        </button>
-        <button
+        </motion.button>
+        <motion.button
           type="button"
           className="order-1 inline-flex items-center justify-center gap-1.5 rounded-full border border-rose-400/40 bg-rose-500/10 px-4 py-3 text-sm font-medium text-rose-100 hover:bg-rose-500/20"
           onClick={() => markCurrent('learning')}
+          whileHover={reduce ? undefined : { scale: 1.02 }}
+          whileTap={reduce ? undefined : { scale: 0.96, x: [0, -3, 3, -2, 0] }}
+          transition={tapSpring}
         >
           <IconRefresh className="h-4 w-4" />
           Still learning
-        </button>
-        <button
+        </motion.button>
+        <motion.button
           type="button"
           className="order-2 inline-flex items-center justify-center gap-1.5 rounded-full bg-emerald-400 px-4 py-3 text-sm font-semibold text-slate-950 hover:bg-emerald-300"
           onClick={() => markCurrent('known')}
+          whileHover={reduce ? undefined : { scale: 1.03 }}
+          whileTap={reduce ? undefined : { scale: 0.95 }}
+          transition={tapSpring}
         >
           <IconCheck className="h-4 w-4" />
           I know this
-        </button>
-        <button
+        </motion.button>
+        <motion.button
           type="button"
           className="order-4 inline-flex items-center justify-center gap-1.5 rounded-full border border-white/15 px-4 py-3 text-sm hover:border-white/40"
           onClick={() => go(1)}
+          whileHover={reduce ? undefined : { scale: 1.02 }}
+          whileTap={reduce ? undefined : { scale: 0.96 }}
+          transition={tapSpring}
         >
           Next
           <IconChevronRight className="h-4 w-4" />
-        </button>
+        </motion.button>
       </div>
       <p className="hidden shrink-0 text-center text-xs text-slate-500 sm:block">
         Space = flip · arrows = navigate · 1 = learning · 2 = known
@@ -229,15 +286,36 @@ function StudyLoading({
 }) {
   const topic = category ?? 'All topics'
   const modeLabel = mode ? MODE_LABELS[mode] ?? mode : 'Shuffled deck'
+  const reduce = useReducedMotion()
 
   return (
     <div className="mx-auto flex h-full min-h-0 w-full max-w-lg flex-1 flex-col items-center justify-center px-2 text-center">
-      <div className="shuffle-stack" aria-hidden="true">
-        <span className="shuffle-card shuffle-card-a" />
-        <span className="shuffle-card shuffle-card-b" />
-        <span className="shuffle-card shuffle-card-c">
+      <div className="relative h-[9.5rem] w-[7.5rem]" aria-hidden="true">
+        <motion.span
+          className="absolute inset-0 rounded-[1.15rem] border border-white/12 shadow-[0_18px_40px_rgba(0,0,0,0.35)]"
+          style={{ background: 'linear-gradient(180deg, #1e293b, #0f172a)' }}
+          initial={{ rotate: -10, x: -12, y: 8 }}
+          animate={reduce ? undefined : { y: [8, 0, 8] }}
+          transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+        />
+        <motion.span
+          className="absolute inset-0 rounded-[1.15rem] border border-white/12 shadow-[0_18px_40px_rgba(0,0,0,0.35)]"
+          style={{ background: 'linear-gradient(180deg, #1d4ed8, #0f172a)' }}
+          initial={{ rotate: 8, x: 14, y: 6 }}
+          animate={reduce ? undefined : { y: [6, -2, 6] }}
+          transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut', delay: 0.15 }}
+        />
+        <motion.span
+          className="absolute inset-0 flex items-center justify-center rounded-[1.15rem] border border-white/12 shadow-[0_18px_40px_rgba(0,0,0,0.35)]"
+          style={{
+            background:
+              'radial-gradient(circle at top right, rgba(251, 191, 36, 0.28), transparent 40%), linear-gradient(180deg, #0f172a, #111827)',
+          }}
+          animate={reduce ? undefined : { y: [0, -8, 0] }}
+          transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut', delay: 0.3 }}
+        >
           <IconLayers className="h-8 w-8 text-amber-200" />
-        </span>
+        </motion.span>
       </div>
       <span className="mt-8 inline-flex items-center gap-2 rounded-full border border-amber-300/20 bg-amber-400/10 px-3 py-1 text-xs font-medium text-amber-200">
         <IconShuffle className="h-3.5 w-3.5" />
@@ -262,11 +340,22 @@ function EmptyDeck({
   category: string | null
   mode: string | null
 }) {
+  const reduce = useReducedMotion()
+
   return (
-    <div className="mx-auto flex h-full w-full max-w-lg flex-1 flex-col items-center justify-center text-center">
-      <div className="flex size-16 items-center justify-center rounded-2xl border border-white/10 bg-slate-900/80 text-amber-300">
+    <motion.div
+      className="mx-auto flex h-full w-full max-w-lg flex-1 flex-col items-center justify-center text-center"
+      initial={reduce ? false : { opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+    >
+      <motion.div
+        className="flex size-16 items-center justify-center rounded-2xl border border-white/10 bg-slate-900/80 text-amber-300"
+        initial={reduce ? false : { scale: 0.88 }}
+        animate={{ scale: 1 }}
+        transition={{ type: 'spring', stiffness: 380, damping: 22 }}
+      >
         <IconInbox className="h-8 w-8" />
-      </div>
+      </motion.div>
       <h1 className="mt-5 text-2xl font-semibold">No cards in this filter</h1>
       <p className="mt-3 max-w-sm text-sm leading-6 text-slate-400">
         {category ? `${category} ` : 'This '}
@@ -288,6 +377,6 @@ function EmptyDeck({
           Back home
         </Link>
       </div>
-    </div>
+    </motion.div>
   )
 }

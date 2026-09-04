@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { IconFlip } from '@/components/icons'
 import { MarkdownContent } from '@/components/MarkdownContent'
 import { getCategoryEmoji } from '@/data/categories'
+import { useIsClient } from '@/lib/use-is-client'
 import type { Card } from '@/data/types'
 
 type FlashCardProps = {
@@ -15,11 +17,8 @@ type FlashCardProps = {
 
 export function FlashCard({ card, flipped, onFlip }: FlashCardProps) {
   const [expanded, setExpanded] = useState(false)
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+  const isClient = useIsClient()
+  const reduce = useReducedMotion()
 
   useEffect(() => {
     if (!expanded) {
@@ -96,44 +95,56 @@ export function FlashCard({ card, flipped, onFlip }: FlashCardProps) {
           </div>
         </div>
       </div>
-      {mounted &&
-        expanded &&
-        createPortal(
-          <div
-            className="fixed inset-0 z-50 flex items-end bg-black/70 p-3 sm:items-center sm:p-8"
-            data-card-expanded="true"
-            onClick={() => setExpanded(false)}
-          >
-            <div
-              className="flex max-h-[92vh] w-full max-w-3xl flex-col rounded-3xl border border-white/10 bg-slate-900 p-5 shadow-2xl sm:mx-auto sm:max-h-[88vh] sm:p-8"
-              onClick={(event) => event.stopPropagation()}
-            >
-              <div className="mb-4 flex h-8 items-center justify-between gap-3">
-                <p className="leading-none text-xs font-semibold uppercase tracking-[0.2em] text-sky-300/80">
-                  {flipped ? 'Answer' : card.category}
-                </p>
-                <button
-                  type="button"
-                  className="flex size-8 shrink-0 items-center justify-center rounded-lg text-slate-300 hover:bg-white/10 hover:text-white"
+      {isClient
+        ? createPortal(
+            <AnimatePresence>
+              {expanded ? (
+                <motion.div
+                  key="card-modal"
+                  className="fixed inset-0 z-50 flex items-end bg-black/70 p-3 sm:items-center sm:p-8"
+                  data-card-expanded="true"
+                  initial={reduce ? false : { opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={reduce ? undefined : { opacity: 0 }}
                   onClick={() => setExpanded(false)}
-                  aria-label="Close expanded card"
                 >
-                  <CollapseIcon />
-                </button>
-              </div>
-              <div className="overflow-y-auto pr-1 text-slate-100">
-                {flipped ? (
-                  <CardBody card={card} />
-                ) : (
-                  <h2 className="text-center text-2xl font-semibold leading-snug text-white sm:text-3xl">
-                    {card.question}
-                  </h2>
-                )}
-              </div>
-            </div>
-          </div>,
-          document.body,
-        )}
+                  <motion.div
+                    className="flex max-h-[92vh] w-full max-w-3xl flex-col rounded-3xl border border-white/10 bg-slate-900 p-5 shadow-2xl sm:mx-auto sm:max-h-[88vh] sm:p-8"
+                    initial={reduce ? false : { y: 28, opacity: 0, scale: 0.98 }}
+                    animate={{ y: 0, opacity: 1, scale: 1 }}
+                    exit={reduce ? undefined : { y: 16, opacity: 0, scale: 0.98 }}
+                    transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    <div className="mb-4 flex h-8 items-center justify-between gap-3">
+                      <p className="leading-none text-xs font-semibold uppercase tracking-[0.2em] text-sky-300/80">
+                        {flipped ? 'Answer' : card.category}
+                      </p>
+                      <button
+                        type="button"
+                        className="flex size-8 shrink-0 items-center justify-center rounded-lg text-slate-300 hover:bg-white/10 hover:text-white"
+                        onClick={() => setExpanded(false)}
+                        aria-label="Close expanded card"
+                      >
+                        <CollapseIcon />
+                      </button>
+                    </div>
+                    <div className="overflow-y-auto pr-1 text-slate-100">
+                      {flipped ? (
+                        <CardBody card={card} />
+                      ) : (
+                        <h2 className="text-center text-2xl font-semibold leading-snug text-white sm:text-3xl">
+                          {card.question}
+                        </h2>
+                      )}
+                    </div>
+                  </motion.div>
+                </motion.div>
+              ) : null}
+            </AnimatePresence>,
+            document.body,
+          )
+        : null}
     </>
   )
 }
