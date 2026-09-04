@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useId, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
@@ -22,6 +23,7 @@ export function SiteNav() {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const menuId = useId()
+  const rootRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     setOpen(false)
@@ -38,12 +40,25 @@ export function SiteNav() {
       }
     }
 
+    function onPointerDown(event: PointerEvent) {
+      const target = event.target as Node
+      if (rootRef.current?.contains(target)) {
+        return
+      }
+
+      setOpen(false)
+    }
+
     document.addEventListener('keydown', onKeyDown)
-    return () => document.removeEventListener('keydown', onKeyDown)
+    document.addEventListener('pointerdown', onPointerDown)
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      document.removeEventListener('pointerdown', onPointerDown)
+    }
   }, [open])
 
   return (
-    <div className="relative">
+    <div className="relative" ref={rootRef}>
       <nav className="hidden text-sm text-slate-300 sm:flex sm:gap-1" aria-label="Main">
         {navItems.map((item) => (
           <Link
@@ -69,32 +84,31 @@ export function SiteNav() {
         <MenuIcon open={open} />
       </button>
 
+      {open
+        ? createPortal(
+            <div className="fixed inset-0 z-40 bg-slate-950/50 sm:hidden" aria-hidden="true" />,
+            document.body,
+          )
+        : null}
+
       {open ? (
-        <>
-          <button
-            type="button"
-            className="fixed inset-0 z-40 bg-slate-950/50 sm:hidden"
-            aria-label="Close menu"
-            onClick={() => setOpen(false)}
-          />
-          <nav
-            id={menuId}
-            className="absolute right-0 top-full z-50 mt-2 w-48 rounded-xl border border-white/10 bg-slate-900 p-1 text-sm text-slate-300 shadow-xl sm:hidden"
-            aria-label="Main"
-          >
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`block rounded-lg px-3 py-2.5 hover:bg-white/10 hover:text-amber-300 ${
-                  isActivePath(pathname, item.href) ? 'bg-white/10 text-amber-300' : ''
-                }`}
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
-        </>
+        <nav
+          id={menuId}
+          className="absolute right-0 top-full z-50 mt-2 w-48 rounded-xl border border-white/10 bg-slate-900 p-1 text-sm text-slate-300 shadow-xl sm:hidden"
+          aria-label="Main"
+        >
+          {navItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`block rounded-lg px-3 py-2.5 hover:bg-white/10 hover:text-amber-300 ${
+                isActivePath(pathname, item.href) ? 'bg-white/10 text-amber-300' : ''
+              }`}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
       ) : null}
     </div>
   )
