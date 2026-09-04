@@ -51,7 +51,7 @@ Expect roughly 310+ cards after cleanup. Counts shift if notes are re-imported.
 ## Product features
 
 - Home dashboard with category tiles and known / learning / unseen counts.
-- Study mode: flip cards, shuffle, filter by category, or study only due cards.
+- Study mode: flip cards, shuffle, filter by category, or study only due cards. Category and due sessions skip known cards until every card in that set is known.
 - Keyboard: Space to flip, arrows to move, `1` still learning, `2` I know this.
 - Card back shows a short summary first, with a toggle for the full note.
 - Browse + search across paraphrased questions and original notes.

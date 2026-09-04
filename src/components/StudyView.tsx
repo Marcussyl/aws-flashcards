@@ -6,6 +6,7 @@ import { CelebrateBurst, type BurstKind } from '@/components/CelebrateBurst'
 import { FlashCard } from '@/components/FlashCard'
 import { cards, shuffleCards } from '@/lib/cards'
 import { useProgress } from '@/lib/progress'
+import { selectStudyCards, studySessionHint } from '@/lib/study-deck'
 import type { Card } from '@/data/types'
 
 export function StudyView() {
@@ -15,7 +16,6 @@ export function StudyView() {
   const { map, ready, mark } = useProgress()
   const [index, setIndex] = useState(0)
   const [flipped, setFlipped] = useState(false)
-  const [deck, setDeck] = useState<Card[] | null>(null)
   const [burstId, setBurstId] = useState(0)
   const [burstKind, setBurstKind] = useState<BurstKind>('known')
 
@@ -25,25 +25,29 @@ export function StudyView() {
       : cards
   }, [category])
 
-  useEffect(() => {
-    if (mode && !ready) {
-      return
-    }
-    let list = baseList
-    if (mode === 'due') {
-      list = list.filter((item) => map[item.id]?.status !== 'known')
-    } else if (mode === 'known') {
-      list = list.filter((item) => map[item.id]?.status === 'known')
-    } else if (mode === 'learning') {
-      list = list.filter((item) => map[item.id]?.status === 'learning')
-    }
-    setDeck(shuffleCards(list))
+  const usesProgress = Boolean(mode) || Boolean(category)
+  const sessionKey = usesProgress
+    ? `${category ?? ''}|${mode ?? ''}|${ready ? 'ready' : 'pending'}`
+    : `all|${category ?? ''}|${mode ?? ''}`
+  const sessionHint = ready
+    ? studySessionHint(baseList, map, { category, mode })
+    : null
+
+  const [session, setSession] = useState<{ key: string; deck: Card[] | null } | null>(
+    null,
+  )
+
+  if (session?.key !== sessionKey) {
+    const nextDeck =
+      usesProgress && !ready
+        ? null
+        : shuffleCards(selectStudyCards(baseList, map, { category, mode }))
+    setSession({ key: sessionKey, deck: nextDeck })
     setIndex(0)
     setFlipped(false)
-    // Snapshot progress when the session starts, not on every mark.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [baseList, mode, ready])
+  }
 
+  const deck = session?.key === sessionKey ? session.deck : null
   const card = deck?.[index]
   const total = deck?.length ?? 0
 
@@ -113,7 +117,8 @@ export function StudyView() {
       <div className="flex items-end justify-between gap-3">
         <div className="min-w-0">
           <p className="truncate text-sm text-amber-300">
-            {category ?? 'All topics'} {mode ? `· ${mode}` : ''}
+            {category ?? 'All topics'}
+            {sessionHint ? ` · ${sessionHint}` : ''}
           </p>
           <h1 className="mt-1 text-xl font-semibold sm:text-2xl">Study session</h1>
         </div>
