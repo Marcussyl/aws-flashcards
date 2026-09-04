@@ -47,7 +47,7 @@ export function FlashCard({ card, flipped, onFlip }: FlashCardProps) {
   return (
     <>
       <div
-        className="card-scene w-full text-left"
+        className="card-scene h-full w-full text-left"
         onClick={onFlip}
         onKeyDown={(event) => {
           if (event.key === 'Enter') {
@@ -63,28 +63,30 @@ export function FlashCard({ card, flipped, onFlip }: FlashCardProps) {
       >
         <div className={`card-inner ${flipped ? 'is-flipped' : ''}`}>
           <div className="card-face card-front">
-            <div className="flex h-8 items-center justify-between gap-3">
+            <div className="flex h-8 shrink-0 items-center justify-between gap-3">
               <p className="leading-none text-xs font-semibold uppercase tracking-[0.2em] text-amber-300/80">
                 {card.category}
               </p>
               <ExpandButton onClick={openExpanded} />
             </div>
-            <h2 className="mt-4 text-xl font-semibold leading-snug text-white sm:mt-6 sm:text-3xl">
-              {card.question}
-            </h2>
-            <p className="mt-auto pt-6 text-sm text-slate-400 sm:pt-10">
+            <div className="mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain">
+              <h2 className="text-xl font-semibold leading-snug text-white sm:text-3xl">
+                {card.question}
+              </h2>
+            </div>
+            <p className="shrink-0 pt-4 text-sm text-slate-400 sm:pt-6">
               Tap the card to flip
             </p>
           </div>
           <div className="card-face card-back">
-            <div className="flex h-8 items-center justify-between gap-3">
+            <div className="flex h-8 shrink-0 items-center justify-between gap-3">
               <p className="leading-none text-xs font-semibold uppercase tracking-[0.2em] text-sky-300/80">
                 Answer
               </p>
               <ExpandButton onClick={openExpanded} />
             </div>
             <div
-              className="mt-4 max-h-[42vh] overflow-y-auto pr-2 text-left text-slate-100"
+              className="mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain pr-2 text-left text-slate-100"
               onClick={(event) => event.stopPropagation()}
             >
               <CardBody card={card} showFull={showFull} setShowFull={setShowFull} />
