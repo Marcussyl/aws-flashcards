@@ -109,7 +109,7 @@ export function StudyView() {
   }
 
   return (
-    <div className="mx-auto flex min-h-0 w-full max-w-3xl flex-1 flex-col gap-3 sm:gap-4">
+    <div className="mx-auto flex h-full min-h-0 w-full max-w-3xl flex-1 flex-col gap-3 sm:gap-4">
       <div className="flex shrink-0 items-end justify-between gap-3">
         <div className="min-w-0">
           <p className="truncate text-sm text-amber-300">
@@ -122,7 +122,7 @@ export function StudyView() {
         </p>
       </div>
 
-      <div className="min-h-0 flex-1">
+      <div className="flex min-h-0 flex-1 flex-col">
         <FlashCard
           key={card.id}
           card={card}
