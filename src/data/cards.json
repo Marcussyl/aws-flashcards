@@ -2586,5 +2586,408 @@
     "summary": "AWS Trusted Advisor draws upon best practices learned from serving hundreds of thousands of AWS customers. Trusted Advisor inspects your AWS environment and then makes recommendations when opportunities exist to save money, improve system availability and performance, or help close security gaps. If you have a Basic or Developer Support plan, you can use the Trusted Advisor console to access all…",
     "answer": "AWS Trusted Advisor draws upon best practices learned from serving hundreds of thousands of AWS customers. Trusted Advisor inspects your AWS environment and then makes recommendations when opportunities exist to save money, improve system availability and performance, or help close security gaps. If you have a Basic or Developer Support plan, you can use the Trusted Advisor console to access all checks in the Service Limits category and six checks in the Security category.",
     "sourceQuestion": "AWS Trusted Advisor是什麽?"
+  },
+  {
+    "id": "c314",
+    "category": "Integration & Messaging",
+    "question": "What is AWS AppSync?",
+    "summary": "**AWS AppSync** 是 AWS 提供的託管式 API 服務，主要用於協助開發者建立 **GraphQL API**，讓前端應用程式（Web、Mobile）能透過單一端點，高效且彈性地存取多個後端資料源。\n**核心功能與特點**\n- **簡化多資料源整合**：允許客戶端在單一 GraphQL 請求中，同時從不同資料源（如 Amazon DynamoDB、AWS Lambda、Amazon OpenSearch 或 HTTP APIs）獲取或寫入資料。\n- Pipeline Resolvers（管道解析器）：支援將多個操作邏輯串聯在一起。例如：先從 DynamoDB 驗證使用者權限，再從另一個 DynamoDB 資料表抓取病人資料，全程無需額外呼叫或編寫多餘的 API 代碼。…",
+    "answer": "**AWS AppSync** 是 AWS 提供的託管式 API 服務，主要用於協助開發者建立 **GraphQL API**，讓前端應用程式（Web、Mobile）能透過單一端點，高效且彈性地存取多個後端資料源。\n**核心功能與特點**\n- **簡化多資料源整合**：允許客戶端在單一 GraphQL 請求中，同時從不同資料源（如 Amazon DynamoDB、AWS Lambda、Amazon OpenSearch 或 HTTP APIs）獲取或寫入資料。\n- Pipeline Resolvers（管道解析器）：支援將多個操作邏輯串聯在一起。例如：先從 DynamoDB 驗證使用者權限，再從另一個 DynamoDB 資料表抓取病人資料，全程無需額外呼叫或編寫多餘的 API 代碼。\n- **即時資料同步（Real-time Data）**：內建 WebSocket 支援（GraphQL Subscriptions），能自動向所有連接的客戶端推送資料變更 updates（常見於聊天室、即時數據儀表板）。\n- **離線資料支援（Offline Sync）**：配合 AWS Amplify SDK，可以在裝置離線時存取本地快取，並在恢復連線時自動與雲端同步與解決資料衝突。\n- **細粒度安全控管**：支援 AWS IAM、Amazon Cognito、API Keys 及 OpenID Connect，可精細控制到「欄位層級（Field-level）」的存取權限。\n**適用場景**\n- 需要同時跨多個 DynamoDB 資料表或跨服務整合資料的微服務與 Serverless 架構。\n- 需要即時更新數據的應用（如通訊軟體、協作工具、即時比分看板）。\n- 跨平臺（iOS、Android、React Native、Web）共用單一彈性 API 的情境。",
+    "sourceQuestion": "AWS AppSync是什麽?"
+  },
+  {
+    "id": "c315",
+    "category": "Databases",
+    "question": "What is a DynamoDB connector?",
+    "summary": "**DynamoDB Connector**（DynamoDB 連接器）是一種軟體模組或驅動程式，用於在 **Amazon DynamoDB** 與**其他系統/服務**（如大數據分析工具、資料湖、ETL 工具或其他資料庫）之間建立資料傳輸與查詢的橋樑。\n**常見應用場景**\n- **Amazon Athena Federated Query**：透過 DynamoDB Connector，你可以直接使用標準 SQL 語法查詢儲存在 DynamoDB 裡面的資料，甚至將其與 S3 上的資料進行跨來源 JOIN 查詢（僅支援讀取，不支援寫入）。\n- **Apache Spark / Hadoop**：讓 Spark 或 MapReduce 作業能夠高效地批量讀取或寫入 DynamoDB 裡面的資料，常用於大規模數據分析與機器學習前處理。…",
+    "answer": "**DynamoDB Connector**（DynamoDB 連接器）是一種軟體模組或驅動程式，用於在 **Amazon DynamoDB** 與**其他系統/服務**（如大數據分析工具、資料湖、ETL 工具或其他資料庫）之間建立資料傳輸與查詢的橋樑。\n**常見應用場景**\n- **Amazon Athena Federated Query**：透過 DynamoDB Connector，你可以直接使用標準 SQL 語法查詢儲存在 DynamoDB 裡面的資料，甚至將其與 S3 上的資料進行跨來源 JOIN 查詢（僅支援讀取，不支援寫入）。\n- **Apache Spark / Hadoop**：讓 Spark 或 MapReduce 作業能夠高效地批量讀取或寫入 DynamoDB 裡面的資料，常用於大規模數據分析與機器學習前處理。\n- **資料整合與 ETL（例如 AWS Glue, Presto）**：作為數據管道（Data Pipeline）的一環，將 DynamoDB 的 NoSQL 資料抽取並轉換後匯入資料倉庫（如 Redshift）。\n**主要優點**\n- **無需資料遷移**：讓其他分析服務可以直接「原位查詢（Query in-place）」DynamoDB 的資料。\n- **無縫整合**：打破 NoSQL 與傳統 SQL / 大數據工具之間的隔閡，免去手動寫 API 抓取並解析資料的麻煩。",
+    "sourceQuestion": "DynamoDB connector是什麽?"
+  },
+  {
+    "id": "c316",
+    "category": "Containers & Kubernetes",
+    "question": "How does the AWS IAM Authenticator work with EKS?",
+    "summary": ">\nAmazon EKS uses IAM to provide authentication to your Kubernetes cluster, but it still relies on native Kubernetes Role-Based Access Control (RBAC) for authorization. This means that IAM is only used for the authentication of valid IAM entities. All permissions for interacting with your Amazon EKS cluster’s Kubernetes API are managed through the native Kubernetes RBAC system.…",
+    "answer": ">\nAmazon EKS uses IAM to provide authentication to your Kubernetes cluster, but it still relies on native Kubernetes Role-Based Access Control (RBAC) for authorization. This means that IAM is only used for the authentication of valid IAM entities. All permissions for interacting with your Amazon EKS cluster’s Kubernetes API are managed through the native Kubernetes RBAC system.\nAccess to your cluster using AWS Identity and Access Management (IAM) entities is enabled by the [AWS IAM Authenticator for Kubernetes](https://github.com/kubernetes-sigs/aws-iam-authenticator#aws-iam-authenticator-for-kubernetes), which runs on the Amazon EKS control plane. The authenticator gets its configuration information from the  `aws-auth` `ConfigMap` (AWS authenticator configuration map).\nThe `aws-auth` `ConfigMap` is automatically created and applied to your cluster when you create a managed node group or when you create a node group using `eksctl`. It is initially created to allow nodes to join your cluster, but you also use this `ConfigMap` to add role-based access control (RBAC) access to IAM users and roles.\nAWS IAM Authenticator 是一個讓 **Kubernetes 叢集使用 AWS IAM 身分驗證**的工具。它使 IAM user 或 IAM role 可透過既有的 AWS 憑證取得短期 token，向 Kubernetes API Server（例如 EKS）證明身分，而不用另行管理 Kubernetes 使用者憑證。[github](https://github.com/kubernetes-sigs/aws-iam-authenticator)\n## 運作流程\n1. 你執行 `kubectl`，客戶端以目前的 AWS credentials 產生一個短期驗證 token。\n2. Kubernetes API Server 將 token 交給 IAM Authenticator 的 webhook 驗證。\n3. Authenticator 透過 AWS STS 的 `GetCallerIdentity` 確認這個請求實際對應的 IAM principal（user 或 role）。[github](https://github.com/kubernetes-sigs/aws-iam-authenticator)\n4. 叢集將該 IAM principal 映射到 Kubernetes 的 user/group，最後由 Kubernetes RBAC 的 `Role`、`ClusterRole`、`RoleBinding`、`ClusterRoleBinding` 決定它能做什麼。[docs.aws.amazon](https://docs.aws.amazon.com/eks/latest/best-practices/identity-and-access-management.html)\n換句話說：**IAM Authenticator 解決「你是誰」（authentication），Kubernetes RBAC 解決「你可以做什麼」（authorization）。**[docs.aws.amazon](https://docs.aws.amazon.com/eks/latest/best-practices/identity-and-access-management.html)\n## 在 EKS 的位置\n在傳統 EKS 配置中，IAM role/user 與 Kubernetes 群組的對應通常放在 `kube-system` namespace 的 `aws-auth` ConfigMap；它可將 IAM identities 映射至 Kubernetes RBAC 權限。[docs.aws.amazon](https://docs.aws.amazon.com/eks/latest/best-practices/identity-and-access-management.html)\n不過，對於 EKS 1.23 以上的叢集，AWS 較推薦使用 **EKS access entries** 管理 IAM principal 到叢集權限的存取設定。這能減少手動編輯 `aws-auth` ConfigMap 和混用 AWS/Kubernetes API 所造成的操作負擔與配置風險。[docs.aws.amazon](https://docs.aws.amazon.com/eks/latest/userguide/cluster-auth.html)\n## 簡化例子\n假設你的本機 AWS profile 以某個 role 登入：\n```plain text\nbashaws eks update-kubeconfig --region ap-southeast-1 --name my-clusterkubectl get pods -A\n```\n`kubectl` 會經由 AWS CLI 或 `aws-iam-authenticator` 產生 IAM 驗證 token；如果該 IAM role 已在 EKS access entry 或 `aws-auth` 映射中取得適當的 Kubernetes RBAC 權限，指令才會成功。AWS 的 EKS 存取控制可使用 access entries、`aws-auth` ConfigMap，或外部 OIDC provider。[docs.aws.amazon](https://docs.aws.amazon.com/eks/latest/userguide/cluster-auth.html)\n## 何時會看到它\n你通常會在這些情況看到 `aws-iam-authenticator`：\n- 自建 Kubernetes on AWS，想用 IAM role 管理 Kubernetes 存取\n- EKS Anywhere，需部署 authenticator server 作為 API Server 的 token webhook\n- 舊版 EKS kubeconfig、Terraform `aws_eks_cluster_auth` 或其他工具產生相容的 IAM token[anywhere.eks.amazonaws](https://anywhere.eks.amazonaws.com/docs/clustermgmt/security/cluster-iam-auth/)\n若你考 AWS SAA，可記成：**EKS 可以讓 IAM 身分進入叢集，但真正的 Kubernetes 資源權限仍要靠 RBAC 或 EKS access policy 管理。**[docs.aws.amazon](https://docs.aws.amazon.com/eks/latest/userguide/cluster-auth.html)",
+    "sourceQuestion": "aws iam connector是什麼？"
+  },
+  {
+    "id": "c317",
+    "category": "Networking & Hybrid",
+    "question": "What are AWS Wavelength Zones?",
+    "summary": "**AWS Wavelength Zones** 是部署在電信商（CSP）5G／行動網路邊緣的 AWS 基礎設施區域，讓你把需要極低延遲的運算放得更接近手機和行動裝置使用者。它是某個 AWS Region 的邏輯延伸，而不是一個獨立 Region。[docs.aws.amazon](https://docs.aws.amazon.com/wavelength/latest/developerguide/what-is-wavelength.html)\n## 核心概念…",
+    "answer": "**AWS Wavelength Zones** 是部署在電信商（CSP）5G／行動網路邊緣的 AWS 基礎設施區域，讓你把需要極低延遲的運算放得更接近手機和行動裝置使用者。它是某個 AWS Region 的邏輯延伸，而不是一個獨立 Region。[docs.aws.amazon](https://docs.aws.amazon.com/wavelength/latest/developerguide/what-is-wavelength.html)\n## 核心概念\n一般情況下，手機請求可能要經過電信網路、網際網路與多個網路節點，才到達 AWS Region 裡的 EC2 或後端服務。Wavelength Zone 將部分 AWS compute 與 storage 放到電信商網路內或其邊緣，減少封包距離與 hops，從而降低行動裝置到應用程式的延遲。[aws.amazon](https://aws.amazon.com/blogs/industries/lower-access-latency-for-your-apps-with-aws-wavelength-and-our-telco-partners/)\n你可以把它想成：\n```plain text\ntext手機 / 5G 裝置   → 電信商 5G 網路      → Wavelength Zone（低延遲 EC2 / 應用）         → Parent AWS Region（RDS、S3、其他後端服務）\n```\nWavelength Zone 中的工作負載仍可與其所屬（parent）AWS Region 的服務無縫溝通。[docs.aws.amazon](https://docs.aws.amazon.com/wavelength/latest/developerguide/what-is-wavelength.html)\n## 如何使用\n你可將既有 VPC 延伸到一個或多個 Wavelength Zone，然後在該 Zone 建立 **Wavelength subnet**，並把例如 EC2 instance 的低延遲服務部署進去。控制平面仍由 parent Region 管理，因此可沿用 AWS 常見的 API、工具與操作模式。[docs.aws.amazon](https://docs.aws.amazon.com/wavelength/latest/developerguide/what-is-wavelength.html)\n常見架構是：\n- **Wavelength Zone：** API gateway、即時遊戲伺服器、影像推論服務、IoT 控制邏輯等延遲敏感部分\n- **AWS Region：** 資料庫、物件儲存、批次處理、長期資料分析等不必貼近行動網路的部分[docs.aws.amazon](https://docs.aws.amazon.com/wavelength/latest/developerguide/what-is-wavelength.html)\n## 適用情境\nWavelength 主要面向需要低延遲連接 **行動端／5G 裝置**的 edge computing 工作負載，例如：\n- 雲端遊戲與互動直播\n- AR／VR 與即時影音處理\n- 聯網車輛、智慧城市與工業自動化\n- IoT 裝置控制與邊緣 ML inference\n- 需要較低 jitter、較即時回應的行動應用[youtube](https://www.youtube.com/watch?v=_UHNoxoyv6A)[press.aboutamazon](https://press.aboutamazon.com/2020/8/aws-announces-general-availability-of-aws-wavelength-in-boston-and-the-san-francisco-bay-area)\n## 與 Local Zones 的差別\n\n| 面向 | Wavelength Zones | AWS Local Zones |\n| --- | --- | --- |\n| 主要接近誰 | 5G／行動網路上的終端使用者 | 某個都會區或本地資料中心客戶 |\n| 部署位置 | 電信商網路邊緣 | AWS 靠近特定城市的延伸基礎設施 |\n| 最適合情境 | 超低延遲 mobile edge workload | 本地低延遲、資料在地性、媒體與混合式部署 |\n| Region 關係 | 延伸 VPC，並受 parent Region 控制平面管理 | 同樣是 Region 延伸，但不是專為電信網路設計 |\n\n考試記憶法：看到 **「5G、mobile user、telecom provider、ultra-low latency」**，優先想到 **AWS Wavelength Zones**。[docs.aws.amazon](https://docs.aws.amazon.com/wavelength/latest/developerguide/what-is-wavelength.html)",
+    "sourceQuestion": "AWS Wavelength Zones是什麼？"
+  },
+  {
+    "id": "c318",
+    "category": "Databases",
+    "question": "What is ElastiCache for Memcached Auto Discovery?",
+    "summary": "For clusters running the Memcached engine, ElastiCache supports Auto Discovery—the ability for client programs to automatically identify all of the nodes in a cache cluster, and to initiate and maintain connections to all of these nodes.…",
+    "answer": "For clusters running the Memcached engine, ElastiCache supports Auto Discovery—the ability for client programs to automatically identify all of the nodes in a cache cluster, and to initiate and maintain connections to all of these nodes.\nWith Auto Discovery, your application does not need to manually connect to individual cache nodes; instead, your application connects to one Memcached node and retrieves the list of nodes. From that list, your application is aware of the rest of the nodes in the cluster and can connect to any of them. You do not need to hardcode the individual cache node endpoints in your application.\nCache node failures are automatically detected; failed nodes are automatically replaced.",
+    "sourceQuestion": "Amazon ElastiCache for Memcached with Auto Discovery是什麼？"
+  },
+  {
+    "id": "c319",
+    "category": "Networking & Hybrid",
+    "question": "What is Equal Cost Multipath Routing (ECMP) on AWS Site-to-Site VPN?",
+    "summary": "- 傳統單條 Site-to-Site VPN 隧道的頻寬上限通常是 **1.25 Gbps**。\n- 開啟 ECMR 後，網路流量可以在多條頻寬、成本相同的 VPN 隧道之間進行**負載平衡（Load Balancing）**。",
+    "answer": "- 傳統單條 Site-to-Site VPN 隧道的頻寬上限通常是 **1.25 Gbps**。\n- 開啟 ECMR 後，網路流量可以在多條頻寬、成本相同的 VPN 隧道之間進行**負載平衡（Load Balancing）**。",
+    "sourceQuestion": "Equal Cost Multipath Routing (ECMR)是什麽?"
+  },
+  {
+    "id": "c320",
+    "category": "Compute & Scaling",
+    "question": "Can a target tracking policy watch only one metric while step scaling watches many?",
+    "summary": "**這句話「前半句正確，後半句不完全精確」。**\n詳細說明如下：\n---\n### 1. 前半句：Target tracking scaling 只能追蹤一個 metric\n- **正確。**\n- 一個 Target Tracking Scaling Policy（目標追蹤動態擴展策略）**只能綁定單一指標（Metric）**（例如：將 CPU 使用率維持在 50%）。如果該指標高於或低於設定值，Auto Scaling 就會自動增減實體數量。\n---\n### 2. 後半句：Step scaling 可以追蹤多個 metric\n- **概念上不太精確。**\n- **一個 Step Scaling Policy 本身也是綁定一個 CloudWatch Alarm（單一 Metric）**。…",
+    "answer": "**這句話「前半句正確，後半句不完全精確」。**\n詳細說明如下：\n---\n### 1. 前半句：Target tracking scaling 只能追蹤一個 metric\n- **正確。**\n- 一個 Target Tracking Scaling Policy（目標追蹤動態擴展策略）**只能綁定單一指標（Metric）**（例如：將 CPU 使用率維持在 50%）。如果該指標高於或低於設定值，Auto Scaling 就會自動增減實體數量。\n---\n### 2. 後半句：Step scaling 可以追蹤多個 metric\n- **概念上不太精確。**\n- **一個 Step Scaling Policy 本身也是綁定一個 CloudWatch Alarm（單一 Metric）**。\n- **但它的彈性在於**：你可以針對同一個 Auto Scaling Group（ASG）**建立多個不同的 Step Scaling Policies**，分別綁定不同的 CloudWatch Alarms（例如：一個監控 CPU、一個監控 Network Out、一個監控 Custom Metric）。當**任意一個** Alarm 被觸發時，對應的 Step Scaling 策略就會生效。\n- 此外，Step Scaling 的核心特性是**根據指標超過閾值的程度「分階段（Step）」進行擴展**（例如：CPU \\> 60% 加 1 台，CPU \\> 80% 加 3 台）。\n---\n### 總結比較\n\n| **Scaling Policy** | **單一策略可否追蹤多個 Metric？** | **多策略組合方式** |\n| --- | --- | --- |\n| **Target Tracking** | 否（1 個策略 = 1 個 Metric） | 可建立多個 Policy，若衝突會優先選擇**擴展數量最多**的策略。 |\n| **Step Scaling** | 否（1 個策略 = 1 個 Alarm = 1 個 Metric） | 可建立多個 Policy，分別對應不同 Alarm，靈活度最高。 |",
+    "sourceQuestion": "Target tracking scaling只能追蹤一個metric, 而Step scaling可以追蹤多個. 這句話對嗎?"
+  },
+  {
+    "id": "c321",
+    "category": "Networking & Hybrid",
+    "question": "What is VPC Network Access Analyzer?",
+    "summary": "Network Access Analyzer is a feature of VPC that reports on unintended access to your AWS resources based on the security and compliance that you set. This service is not capable of performing deep packet inspection on traffic entering or leaving your VPC, unlike AWS Network Firewall.",
+    "answer": "Network Access Analyzer is a feature of VPC that reports on unintended access to your AWS resources based on the security and compliance that you set. This service is not capable of performing deep packet inspection on traffic entering or leaving your VPC, unlike AWS Network Firewall.",
+    "sourceQuestion": "Network Access Analyzer是什麽?"
+  },
+  {
+    "id": "c322",
+    "category": "Security & Encryption",
+    "question": "What is Amazon Detective?",
+    "summary": "Amazon Detective can’t be used to create a firewall. This service just automatically collects log data from your AWS resources to analyze, investigate, and quickly identify the root cause of potential security issues or suspicious activities in your AWS account.",
+    "answer": "Amazon Detective can’t be used to create a firewall. This service just automatically collects log data from your AWS resources to analyze, investigate, and quickly identify the root cause of potential security issues or suspicious activities in your AWS account.",
+    "sourceQuestion": "Amazon Detective是什麽?"
+  },
+  {
+    "id": "c323",
+    "category": "Storage & Transfer",
+    "question": "Is Amazon S3 Glacier the same thing as Amazon S3?",
+    "summary": "**不是，S3（Amazon S3）與 Glacier（Amazon S3 Glacier）是兩個獨立且定位完全不同的存取層級/服務類別。**\n雖然 Glacier 現在在名稱上被併入 Amazon S3 的品牌家族中（稱為 S3 Glacier Storage Classes），但在 AWS 的架構設計上，它們有顯著的核心差異：\n---\n### 1. 寫入機制不同（核心原因）\n- **Amazon S3**：提供**即時（Real-time）且標準的 API 操作（如 `PutObject`），AWS 的服務（例如 CloudTrail、VPC Flow Logs 等）可以直接將日誌檔即時原生寫入** S3 Bucket。…",
+    "answer": "**不是，S3（Amazon S3）與 Glacier（Amazon S3 Glacier）是兩個獨立且定位完全不同的存取層級/服務類別。**\n雖然 Glacier 現在在名稱上被併入 Amazon S3 的品牌家族中（稱為 S3 Glacier Storage Classes），但在 AWS 的架構設計上，它們有顯著的核心差異：\n---\n### 1. 寫入機制不同（核心原因）\n- **Amazon S3**：提供**即時（Real-time）且標準的 API 操作（如 `PutObject`），AWS 的服務（例如 CloudTrail、VPC Flow Logs 等）可以直接將日誌檔即時原生寫入** S3 Bucket。\n- **Amazon Glacier**：設計給**極少存取、長期歸檔（Archive）的資料使用。其他 AWS 服務無法直接**將 API 日誌或動態資料直接寫入 Glacier。你必須先將資料存入 S3，再透過 **S3 Lifecycle Rules（生命週期策略）** 將資料自動轉存（Transition）到 Glacier 儲存層。\n---\n### 2. 存取與讀取延遲不同\n\n| **比較項目** | **Standard Amazon S3** | **Amazon S3 Glacier** |\n| --- | --- | --- |\n| **主要定位** | 熱資料（Hot Data）、頻繁存取 | 冰資料（Cold Data）、長期備份歸檔 |\n| **讀取速度** | **毫秒級（Milliseconds）**，即時下載 | **幾分鐘到幾小時**（需要先提出 Restore 解凍申請） |\n| **服務直接寫入** | 支援（如 CloudTrail 直接寫入） | **不支援直接寫入**（須經由 S3 轉存） |\n\n---\n### 總結該題錯點\nCloudTrail 的原生運作機制是將 API 紀錄檔**直接產出並寫入 S3 Bucket**，它無法「直接指定 Glacier 作為輸出目的地」。\n因此選項中說「*configuring the destination Amazon Glacier archive*」在技術機制上就是錯誤的。",
+    "sourceQuestion": "Glacier不是s3嗎?"
+  },
+  {
+    "id": "c324",
+    "category": "Storage & Transfer",
+    "question": "What are the different types of AWS Storage Gateway?",
+    "summary": "AWS Storage Gateway 主要提供以下 **4 種** 不同類型的閘道服務，用來滿足不同的地端與雲端儲存整合需求：\n---\n### 1. S3 File Gateway（檔案閘道）\n- **資料格式**：以檔案（File）形式存取，地端掛載為 **NFS** 或 **SMB** 檔案系統。\n- **底層儲存**：背後直接轉存為 **Amazon S3 的物件（Objects）**。\n- **主要用途**：適合存放地端的檔案、圖片、影片或做為 S3 的地端快取（Cache），讓本地應用程式能用傳統檔案系統協定直接讀寫 S3 資料。\n---\n### 2. Volume Gateway（區塊儲存閘道）\n- **資料格式**：以區塊（Block）形式存取，地端透過 **iSCSI** 掛載為虛擬磁碟機。\n- **底層儲存**：背後備份到 **Amazon EBS Snapshots / Amazon S3**。…",
+    "answer": "AWS Storage Gateway 主要提供以下 **4 種** 不同類型的閘道服務，用來滿足不同的地端與雲端儲存整合需求：\n---\n### 1. S3 File Gateway（檔案閘道）\n- **資料格式**：以檔案（File）形式存取，地端掛載為 **NFS** 或 **SMB** 檔案系統。\n- **底層儲存**：背後直接轉存為 **Amazon S3 的物件（Objects）**。\n- **主要用途**：適合存放地端的檔案、圖片、影片或做為 S3 的地端快取（Cache），讓本地應用程式能用傳統檔案系統協定直接讀寫 S3 資料。\n---\n### 2. Volume Gateway（區塊儲存閘道）\n- **資料格式**：以區塊（Block）形式存取，地端透過 **iSCSI** 掛載為虛擬磁碟機。\n- **底層儲存**：背後備份到 **Amazon EBS Snapshots / Amazon S3**。\n- **模式分為兩種**：\n1. **Cached Volumes（快取模式）**：主要資料都放在 S3，地端只保留「近期常用（熱資料）」的快取。**適合用來節省地端硬碟空間**。\n2. **Stored Volumes（儲存模式）**：完整資料都存在地端本地硬碟，背景自動非同步備份 Snapshots 到 AWS。**適合需要低延遲存取完整資料集的場景**。\n---\n### 3. Tape Gateway（磁帶閘道）\n- **資料格式**：模擬地端的**虛擬磁帶庫（VTL - Virtual Tape Library）**，透過 **iSCSI** 連接。\n- **底層儲存**：Amazon S3, S3 Glacier, S3 Glacier Deep Archive。\n- **主要用途**：用來**替代地端的實體磁帶機/備份系統**，讓現有的備份軟體（如 NetBackup、Veeam 等）無縫轉移到雲端做長期歸檔。\n---\n### 4. Amazon FSx File Gateway（FSx 檔案閘道）\n- **資料格式**：地端透過 **SMB** 掛載。\n- **底層儲存**：直接連結雲端的 **Amazon FSx for Windows File Server**。\n- **主要用途**：專為 Windows 環境設計，地端可以低延遲存取雲端 FSx 上的全託管 Windows 檔案共享系統（支援完整 Active Directory 整合）。\n---\n### 總結快速對照表\n\n| **Gateway 類型** | **地端存取協定** | **背後 AWS 服務** | **典型應用場景** |\n| --- | --- | --- | --- |\n| **S3 File Gateway** | NFS / SMB | Amazon S3 | 地端檔案直接轉存/讀取 S3 物件 |\n| **Volume Gateway (Cached)** | iSCSI | Amazon S3 (Snapshots) | 本地硬碟不夠，只在本地快取熱資料 |\n| **Volume Gateway (Stored)** | iSCSI | EBS Snapshots | 資料全在本地，僅需雲端備份 |\n| **Tape Gateway** | iSCSI-VTL | S3 / Glacier | 替代實體磁帶備份 |\n| **FSx File Gateway** | SMB | FSx for Windows | Windows 企業檔案共享低延遲快取 |",
+    "sourceQuestion": "storage gateway有哪些不同類型?"
+  },
+  {
+    "id": "c325",
+    "category": "Compute & Scaling",
+    "question": "What is AWS Systems Manager Run Command?",
+    "summary": "**AWS Systems Manager Run Command** 是 AWS 提供的一項無代理（Agent-based）自動化維護工具，讓你不需要遠端登入，就能對大量 EC2 實體或地端伺服器進行安全的遠端管理。\n---\n### 核心特色與優勢\n1. **不需要開啟 22 (SSH) 或 3389 (RDP) 埠**：\n- 傳統管理需要開 Firewall/Security Group 的連線埠，容易產生資安漏洞。\n- Run Command 透過安裝在伺服器上的 **SSM Agent** 主動向 AWS 發起 Outbound 通訊，因此伺服器完全不需要開放任何 Inbound 連線埠。\n2. **無需 SSH Key / 管理員密碼**：\n- 所有權限都由 **AWS IAM** 統一控管。管理者只要有 IAM 權限，就能對指定 Target 執行指令，解決金鑰發放與維護的麻煩。\n3. **批量自動化操作**：…",
+    "answer": "**AWS Systems Manager Run Command** 是 AWS 提供的一項無代理（Agent-based）自動化維護工具，讓你不需要遠端登入，就能對大量 EC2 實體或地端伺服器進行安全的遠端管理。\n---\n### 核心特色與優勢\n1. **不需要開啟 22 (SSH) 或 3389 (RDP) 埠**：\n- 傳統管理需要開 Firewall/Security Group 的連線埠，容易產生資安漏洞。\n- Run Command 透過安裝在伺服器上的 **SSM Agent** 主動向 AWS 發起 Outbound 通訊，因此伺服器完全不需要開放任何 Inbound 連線埠。\n2. **無需 SSH Key / 管理員密碼**：\n- 所有權限都由 **AWS IAM** 統一控管。管理者只要有 IAM 權限，就能對指定 Target 執行指令，解決金鑰發放與維護的麻煩。\n3. **批量自動化操作**：\n- 支援透過標籤（Tags）、Auto Scaling Group 或手動選取，一次對成百上千台實體執行 Shell Script（Linux）或 PowerShell（Windows）。\n4. **完整稽核與紀錄**：\n- 誰在什麼時間執行了什麼指令、執行的輸出結果（stdout/stderr），都可以自動寫入 **Amazon S3** 或 **CloudWatch Logs**，符合企業資安合規需求。\n---\n### 常見應用場景\n- **系統維護與套件更新**：批量安裝軟體、更新 OS 安全補丁（Patching）。\n- **收集診斷資訊**：批次抓取伺服器 Log、檢查系統進程或磁碟空間。\n- **緊急應變（Incident Response）**：快速停止特定不安全的服務或重啟 daemon。",
+    "sourceQuestion": "AWS Systems Manager裏面的Run Command是什麽?"
+  },
+  {
+    "id": "c326",
+    "category": "Containers & Kubernetes",
+    "question": "What is AWS App Runner?",
+    "summary": "**AWS App Runner** 是一項全託管的**容器化應用程式部署服務**。\n簡單來說：**你只需要提供「原始碼（Source Code）」或「Docker 容器映像檔（Container Image）」，App Runner 就會自動幫你建置、部署、擴充，並處理所有背後的基礎設施與網路設定。**\n---\n### 核心特色與優勢\n1. **極致簡化部署（No Infrastructure to Manage）**：\n- 你不需要懂 Kubernetes (EKS)，也不需要手動設定 ECS、Fargate、ALB (Load Balancer) 或 Auto Scaling Group。\n- 直接連結 GitHub 儲存庫（支援 Node.js, Python, Java, Go 等）或 Amazon ECR 上的 Docker Image 即可完成部署。…",
+    "answer": "**AWS App Runner** 是一項全託管的**容器化應用程式部署服務**。\n簡單來說：**你只需要提供「原始碼（Source Code）」或「Docker 容器映像檔（Container Image）」，App Runner 就會自動幫你建置、部署、擴充，並處理所有背後的基礎設施與網路設定。**\n---\n### 核心特色與優勢\n1. **極致簡化部署（No Infrastructure to Manage）**：\n- 你不需要懂 Kubernetes (EKS)，也不需要手動設定 ECS、Fargate、ALB (Load Balancer) 或 Auto Scaling Group。\n- 直接連結 GitHub 儲存庫（支援 Node.js, Python, Java, Go 等）或 Amazon ECR 上的 Docker Image 即可完成部署。\n2. **自動負載平衡與彈性擴縮（Auto Scaling）**：\n- 內建 Load Balancer，預設自動根據傳入的 HTTP 請求流量**自動增減服務實體數量**（甚至在無流量時自動縮減到最低，節省成本）。\n3. **自動化 CI/CD 流水線**：\n- 當你提交程式碼到 GitHub 或是推送新的 Docker Image 到 ECR 時，App Runner 可以自動偵測並觸發**自動更新部署**。\n4. **原生 TLS/HTTPS 支援**：\n- 自動為你的應用程式分配預設的 HTTPS 網址，並支援自訂網域與免費 TLS 憑證設定。\n---\n### 常見應用場景\n- **Web 應用程式與 API 後端**：如 RESTful API、Microservices。\n- **快速驗證（PoC / MVP）**：開發團隊想要在幾分鐘之內把服務拉上雲端測試，不希望花時間搞雲端基礎設施（Infra）。\n---\n### 與其他 AWS 容器服務的比較\n\n| **服務** | **複雜度/控管度** | **適合對象與場景** |\n| --- | --- | --- |\n| **AWS App Runner** | **最低控管、極簡部署** | 想快速上線 Web/API、不想管任何 Infra 的開發者 |\n| **Amazon ECS + Fargate** | **中等控管、高彈性** | 需要複雜網路設定、微服務架構、微調容器配置的團隊 |\n| **Amazon EKS (Kubernetes)** | **最高控管、最高複雜度** | 原生使用 K8s 生態系、大規模跨雲與複雜微服務管理 |",
+    "sourceQuestion": "AWS App Runner是什麽?"
+  },
+  {
+    "id": "c327",
+    "category": "Monitoring & Operations",
+    "question": "What is AWS CodePipeline?",
+    "summary": "**AWS CodePipeline** 是一項全託管的 **CI/CD（持續整合與持續交付/部署）自動化服務**。\n簡單來說：**它是一條「自動化生產線」**。每當開發人員將新的程式碼推送（Push）到儲存庫（如 GitHub 或 CodeCommit）時，CodePipeline 就會自動觸發一連串的關卡，自動執行建置、測試，並最終將程式部署到正式環境（Production）。\n---\n### 1. CodePipeline 的核心運算流程 (Pipeline Stages)\n一條完整的 Pipeline 通常包含以下幾個主要階段（Stages）：\n1. **Source（來源）**：\n- 監控程式碼變更。支援 GitHub、AWS CodeCommit、Amazon S3、Bitbucket 等。\n2. **Build & Test（建置與測試）**：…",
+    "answer": "**AWS CodePipeline** 是一項全託管的 **CI/CD（持續整合與持續交付/部署）自動化服務**。\n簡單來說：**它是一條「自動化生產線」**。每當開發人員將新的程式碼推送（Push）到儲存庫（如 GitHub 或 CodeCommit）時，CodePipeline 就會自動觸發一連串的關卡，自動執行建置、測試，並最終將程式部署到正式環境（Production）。\n---\n### 1. CodePipeline 的核心運算流程 (Pipeline Stages)\n一條完整的 Pipeline 通常包含以下幾個主要階段（Stages）：\n1. **Source（來源）**：\n- 監控程式碼變更。支援 GitHub、AWS CodeCommit、Amazon S3、Bitbucket 等。\n2. **Build & Test（建置與測試）**：\n- 自動編譯程式碼、跑單元測試（Unit Test），並包裝成部署檔或 Docker Image。通常搭配 **AWS CodeBuild**。\n3. **Approval（人工審核 - 選填）**：\n- 在部署到正式環境前，可以設定「人工關卡」，發送通知（如 Email / Slack）給主管點擊同意後才繼續。\n4. **Deploy（部署）**：\n- 自動將最新的程式碼套用至目標環境。支援 **AWS CodeDeploy**、ECS、App Runner、S3（靜態網站）、Elastic Beanstalk 或 CloudFormation 等。\n---\n### 2. 核心優勢與特色\n- **全託管、免維護伺服器**：不需要像 Jenkins 一樣手動架設與維護 Master/Agent 伺服器，按使用次數計費。\n- **可視覺化工作流**：主控台提供圖形化介面，可以清晰看到目前程式碼跑到哪一個關卡（Pass 或 Fail）。\n- **高度彈性**：除了 AWS 自家工具，也能整合第三方工具（如 Jenkins、SonarQube、Datadog 等）。\n---\n### 3. AWS CI/CD 工具家族快速對照\n\n| **服務名稱** | **主要職責** | **角色比喻** |\n| --- | --- | --- |\n| **AWS CodeCommit** | 託管 Git 儲存庫 | 程式碼倉庫 |\n| **AWS CodeBuild** | 編譯、測試、打包程式碼 | 施工工人/測試員 |\n| **AWS CodeDeploy** | 將打包好的檔案部署到 EC2/ECS/Lambda | 搬運工/安裝員 |\n| **AWS CodePipeline** | **編排與串聯上述所有流程** | **總指揮/自動化流水線** |",
+    "sourceQuestion": "AWS CodePipeline是什麽?"
+  },
+  {
+    "id": "c328",
+    "category": "Compute & Scaling",
+    "question": "What is EC2Config, and what replaced it?",
+    "summary": "> **it only acts as an initialization service for older Windows-based EC2 instances, handling tasks such as setting administrator passwords and basic instance configuration. It does not support centralized command execution or remote configuration across multiple instances.**\n**EC2Config** 是早期 AWS 針對 **Windows 作業系統** 的 EC2 實體所提供的一個系統管理代理程式（Agent）。\n---\n### 1. 它的主要功能…",
+    "answer": "> **it only acts as an initialization service for older Windows-based EC2 instances, handling tasks such as setting administrator passwords and basic instance configuration. It does not support centralized command execution or remote configuration across multiple instances.**\n**EC2Config** 是早期 AWS 針對 **Windows 作業系統** 的 EC2 實體所提供的一個系統管理代理程式（Agent）。\n---\n### 1. 它的主要功能\n在舊版的 Windows EC2 實體中，EC2Config 負責處理開機時的初始設定與系統管理任務，例如：\n- **初始化設定**：在 Instance 第一次開機時設定隨機密碼、主機名稱（Hostname）、時區等。\n- **執行開機腳本**：處理 User Data 中傳入的 User Data 腳本（如 PowerShell 或 Batch 指令）。\n- **整合 CloudWatch**：將 Windows 的 Event Log 與效能計數器（Performance Counters）傳送到 CloudWatch Logs。\n- **整合 Systems Manager**：早期的 Systems Manager（SSM）指令也是透過它來執行。\n---\n### 2. 重要現況：已被替換（已停用/淘汰）\n**EC2Config 目前已經被新的 Agent 完全取代：**\n- **Windows Server 2016 及更高版本**：\n- 初始化作業改由 **EC2Launch** (v1/v2) 負責。\n- Systems Manager 功能改由獨立的 **SSM Agent** 負責。\n- 系統日誌與監控改由 **CloudWatch Agent** 負責。\n- **Windows Server 2012 R2 及更早版本**：\n- 舊版 AMI 雖然曾預設內建 EC2Config，但 AWS 目前均建議升級為 **EC2Launch** 與 **SSM Agent**。\n---\n### 總結（考試/實務考點）\n看到 **EC2Config** 只要記住：**「它是舊版 Windows EC2 專屬的初始化與管理工具，現在已被 EC2Launch + SSM Agent 取代。」**",
+    "sourceQuestion": "EC2Config是什麽?"
+  },
+  {
+    "id": "c329",
+    "category": "Monitoring & Operations",
+    "question": "What is the difference between CloudTrail management events and data events?",
+    "summary": "There are two types of events that you configure your CloudTrail for:\n– Management Events\n– Data Events\n**Management Events** provide visibility into management operations that are performed on resources in your AWS account. These are also known as control plane operations. Management events can also include non-API events that occur in your account.…",
+    "answer": "There are two types of events that you configure your CloudTrail for:\n– Management Events\n– Data Events\n**Management Events** provide visibility into management operations that are performed on resources in your AWS account. These are also known as control plane operations. Management events can also include non-API events that occur in your account.\n**Data Events**, on the other hand, provide visibility into the resource operations performed on or within a resource. These are also known as data plane operations. It allows granular control of data event logging with advanced event selectors. You can currently log data events on different resource types such as Amazon S3 object-level API activity (e.g. GetObject, DeleteObject, and PutObject API operations), AWS Lambda function execution activity (the Invoke API), DynamoDB Item actions, and many more.",
+    "sourceQuestion": "CloudTrail的兩種events"
+  },
+  {
+    "id": "c330",
+    "category": "Compute & Scaling",
+    "question": "What is an Auto Scaling lifecycle hook?",
+    "summary": "**Lifecycle Hook（生命週期勾子）** 是 **AWS Auto Scaling Group (ASG)** 提供的一個機制，讓你在 EC2 實體「**新增（Scale-out）**」或「**關閉（Scale-in）**」的過程中，**暫停**實體的狀態變更，以便有時間執行自訂的操作或自動化腳本。\n---\n### 1. 為什麼需要 Lifecycle Hook？\n預設情況下，Auto Scaling 在啟動或終縮實體時速度非常快：\n- **啟動時**：實體一建立完成，立刻納入 ALB 負載平衡器開始接收流量。\n- **關閉時**：實體一觸發縮容，立刻直接被關機/銷毀。\n**問題來了：**\n- 如果剛開好的實體需要 **1\\~2 分鐘下載並載入大量設定檔/程式碼**，還沒設定完流量就灌進來，使用者就會看到 500 錯誤。…",
+    "answer": "**Lifecycle Hook（生命週期勾子）** 是 **AWS Auto Scaling Group (ASG)** 提供的一個機制，讓你在 EC2 實體「**新增（Scale-out）**」或「**關閉（Scale-in）**」的過程中，**暫停**實體的狀態變更，以便有時間執行自訂的操作或自動化腳本。\n---\n### 1. 為什麼需要 Lifecycle Hook？\n預設情況下，Auto Scaling 在啟動或終縮實體時速度非常快：\n- **啟動時**：實體一建立完成，立刻納入 ALB 負載平衡器開始接收流量。\n- **關閉時**：實體一觸發縮容，立刻直接被關機/銷毀。\n**問題來了：**\n- 如果剛開好的實體需要 **1\\~2 分鐘下載並載入大量設定檔/程式碼**，還沒設定完流量就灌進來，使用者就會看到 500 錯誤。\n- 如果實體被關閉時，上面還有**暫存日誌（Logs）沒上傳**、或是**背景任務（Job）還沒執行完**，資料就會直接遺失。\nLifecycle Hook 就是為了解決這類需要「**攔截並等待**」的場景。\n---\n### 2. 運作原理與狀態切換\nLifecycle Hook 會在兩個時間點把 EC2「攔截並掛起（Wait）」：\n```plain text\n【Scale-out 啟動】\nPending ──> Pending:Wait (被 Hook 攔截，執行設定) ──> InService (正式上線)\n\n【Scale-in 終止】\nTerminating ──> Terminating:Wait (被 Hook 攔截，備份/清理) ──> Terminated (正式銷毀)\n```\n1. **進入 Wait 狀態**：實體會停留在 `Pending:Wait` 或 `Terminating:Wait`。\n2. **觸發自動化任務**：透過 EventBridge / Event Notification 觸發 Lambda、SSM Run Command 或 Step Functions 執行任務（例如：抓取日誌、註冊服務、下載資源）。\n3. **通知完成與繼續**：自訂任務完成後，發送 `CompleteLifecycleAction` 指令給 ASG，實體才會繼續走下一步（正式上線或正式銷毀）。\n---\n### 3. 常見應用場景\n- **Scale-in（關閉實體時）**：\n- **收集日誌**：在不健康或被關閉的 EC2 銷毀前，把本機的 Application Logs 上傳至 CloudWatch Logs 或 S3。\n- **優雅停機（Graceful Shutdown）**：等待長連接（WebSocket/現有交易處理）結束後再關機。\n- **Scale-out（新增實體時）**：\n- **環境預熱/初始化**：安裝複雜套件、預先下載大型模型檔案或數據庫快取，確定一切Ready才放流量進來。",
+    "sourceQuestion": "AWS ASG的Lifecycle hook是什麽?"
+  },
+  {
+    "id": "c331",
+    "category": "Monitoring & Operations",
+    "question": "What is Amazon CloudWatch Application Insights?",
+    "summary": "**Amazon CloudWatch Application Insights** facilitates observability for your applications and underlying AWS resources. It helps you set up the best monitors for your application resources to continuously analyze data for signs of problems with your applications.…",
+    "answer": "**Amazon CloudWatch Application Insights** facilitates observability for your applications and underlying AWS resources. It helps you set up the best monitors for your application resources to continuously analyze data for signs of problems with your applications. Application Insights, which is powered by SageMaker and other AWS technologies, provides automated dashboards that show potential problems with monitored applications, which help you to quickly isolate ongoing issues with your applications and infrastructure. The enhanced visibility into the health of your applications that Application Insights provides helps reduce the “mean time to repair” (MTTR) to troubleshoot your application issues.",
+    "sourceQuestion": "Amazon CloudWatch Application Insight是什麽?"
+  },
+  {
+    "id": "c332",
+    "category": "Storage & Transfer",
+    "question": "What are the minimum storage durations for S3 storage classes?",
+    "summary": "S3 storage classes (except S3 Standard) charge a minimum storage duration. If an object is deleted, overwritten, or transitioned before that window ends, you still pay a pro-rated charge for the remainder.\n\nTypical exam figures from the notes:\n- Most S3 classes have a 30-day minimum storage duration.\n- Objects archived to Glacier have a 90-day minimum.\n- A single Glacier archive can contain up to 40 TB of data.…",
+    "answer": "S3 storage classes (except S3 Standard) charge a minimum storage duration. If an object is deleted, overwritten, or transitioned before that window ends, you still pay a pro-rated charge for the remainder.\n\nTypical exam figures from the notes:\n- Most S3 classes have a 30-day minimum storage duration.\n- Objects archived to Glacier have a 90-day minimum.\n- A single Glacier archive can contain up to 40 TB of data.\n\nSee the screenshot for the class-by-class table.",
+    "sourceQuestion": "What are the min storage duration of different S3 classes?",
+    "images": [
+      "/notes/import_20260818_1.png"
+    ]
+  },
+  {
+    "id": "c333",
+    "category": "Monitoring & Operations",
+    "question": "What is Amazon CloudWatch Logs?",
+    "summary": "**CloudWatch Logs** enables you to centralize the logs from all of your systems, applications, and AWS services that you use, in a single, highly scalable service. You can then easily view them, search them for specific error codes or patterns, filter them based on specific fields, or archive them securely for future analysis.…",
+    "answer": "**CloudWatch Logs** enables you to centralize the logs from all of your systems, applications, and AWS services that you use, in a single, highly scalable service. You can then easily view them, search them for specific error codes or patterns, filter them based on specific fields, or archive them securely for future analysis. CloudWatch Logs enables you to see all of your logs, regardless of their source, as a single and consistent flow of events ordered by time, and you can query them and sort them based on other dimensions, group them by specific fields, create custom computations with a powerful query language, and visualize log data in dashboards.\nThe CloudWatch Logs agent is comprised of the following components:\n– A plug-in to the AWS CLI that pushes log data to CloudWatch Logs.\n– A script (daemon) that initiates the process to push data to CloudWatch Logs.\n– A cron job that ensures that the daemon is always running.\nCloudWatch Logs agent provides an automated way to send log data to CloudWatch Logs from Amazon EC2 instances hence, **CloudWatch Logs agent** is the correct answer.",
+    "sourceQuestion": "What is CloudWatch Logs?"
+  },
+  {
+    "id": "c334",
+    "category": "Analytics & AI",
+    "question": "What is Amazon OpenSearch Service?",
+    "summary": "**Amazon OpenSearch Service**（前身為 Amazon Elasticsearch Service）是 AWS 提供的一項全託管搜尋與分析引擎服務。\n它基於開源的 OpenSearch（從 Elasticsearch 衍生出來的分支），主要用來對海量的文字、日誌與數據進行**即時搜尋（Search）**、**日誌分析（Log Analytics）** 與 **數據視覺化（Visualization）**。\n---\n### 核心功能與優勢\n- **全文檢索與搜尋引擎（Full-Text Search）**：\n- 支援複雜的全文搜尋、自動補全（Autocomplete）、模糊搜尋（Fuzzy Search）與權重排序。非常適合用來做電子商務網站的商品搜尋欄或內容檢索。\n- **日誌與日誌分析（Log Analytics）**：…",
+    "answer": "**Amazon OpenSearch Service**（前身為 Amazon Elasticsearch Service）是 AWS 提供的一項全託管搜尋與分析引擎服務。\n它基於開源的 OpenSearch（從 Elasticsearch 衍生出來的分支），主要用來對海量的文字、日誌與數據進行**即時搜尋（Search）**、**日誌分析（Log Analytics）** 與 **數據視覺化（Visualization）**。\n---\n### 核心功能與優勢\n- **全文檢索與搜尋引擎（Full-Text Search）**：\n- 支援複雜的全文搜尋、自動補全（Autocomplete）、模糊搜尋（Fuzzy Search）與權重排序。非常適合用來做電子商務網站的商品搜尋欄或內容檢索。\n- **日誌與日誌分析（Log Analytics）**：\n- 搭配 Fluentd、Logstash 或 Amazon Data Firehose，可集中收集並分析伺服器 Application Logs、CloudTrail、VPC Flow Logs 等數據，即時監控系統異常。\n- **向量搜尋與 AI 應用（Vector Search / RAG）**：\n- 支援向量資料庫（Vector Database）功能，能將文本或圖片轉換為 Vector Embeddings，用於語意搜尋（Semantic Search）或生成式 AI (LLM) 的檢索增強生成（RAG）架構。\n- **視覺化工具（OpenSearch Dashboards）**：\n- 內建 OpenSearch Dashboards（類似 Kibana），能將數據繪製成即時圖表、儀表板（Dashboard）與地圖。\n- **全託管與自動擴充**：\n- AWS 負責處理叢集的部署、Patch 更新、備份（Snapshots）與硬體擴充，減少營運負擔。",
+    "sourceQuestion": "What is Amazon OpenSearch?"
+  },
+  {
+    "id": "c335",
+    "category": "Networking & Hybrid",
+    "question": "Is EC2 Enhanced Networking the same as ENA?",
+    "summary": "**是的，ENA（Elastic Network Adapter）就是實作 EC2 Enhanced Networking 的主要技術/驅動程式！**\n精確來說：**Enhanced Networking（增強型網路）是 AWS 的「功能名稱」**，而 **ENA 是實現這個功能的核心「技術/網卡驅動」**。\n---\n### 它們之間的關係\n1. **功能名稱（Feature Name）**：**Enhanced Networking**\n- AWS 官方稱這種「繞過虛擬化 Hypervisor、直接存取硬體」的網路加速技術為 Enhanced Networking。\n2. **技術與驅動（Implementation/Driver）**：…",
+    "answer": "**是的，ENA（Elastic Network Adapter）就是實作 EC2 Enhanced Networking 的主要技術/驅動程式！**\n精確來說：**Enhanced Networking（增強型網路）是 AWS 的「功能名稱」**，而 **ENA 是實現這個功能的核心「技術/網卡驅動」**。\n---\n### 它們之間的關係\n1. **功能名稱（Feature Name）**：**Enhanced Networking**\n- AWS 官方稱這種「繞過虛擬化 Hypervisor、直接存取硬體」的網路加速技術為 Enhanced Networking。\n2. **技術與驅動（Implementation/Driver）**：\n- **ENA（Elastic Network Adapter）**：AWS 自研的新一代網路介面技術，也是**目前所有現代 EC2 機型（如 C5/M5/R5/P4 等第 5、6、7 代）實現 Enhanced Networking 的唯一標準**（最高可支援到 100 Gbps / 200 Gbps+）。\n- **Intel 82599 VF**：初代舊架構（使用 Intel 驅動），最高只支援 10 Gbps，僅用於非常早期或舊世代的 EC2 機型（如 C3、R3 等）。\n---\n### 💡 總結\n你在考試或實務上記住：**「啟用 ENA ＝ 啟用了 Enhanced Networking」**。兩者在現代 AWS 架構中幾乎可以劃上等號！",
+    "sourceQuestion": "所以EC2 enhanced networking其實是ENA??"
+  },
+  {
+    "id": "c336",
+    "category": "Networking & Hybrid",
+    "question": "What is EC2 Enhanced Networking?",
+    "summary": "**EC2 Enhanced Networking（增強型網路）** 是 AWS 提供的一項硬體加速技術。\n簡單來說：**它繞過了傳統作業系統虛擬化的網路層，讓 EC2 實體直接對接實體網卡，從而達到「高頻寬、高 PPS（每秒封包數）、超低延遲與低抖動（Jitter）」的效果。**\n---\n### 1. 核心原理：SR-IOV（單根 I/O 虛擬化）\n傳統虛擬化（如 Xen/KVM）中，EC2 的封包要經過 **Hypervisor（虛擬化引擎）** 軟體模擬轉發才能到達實體網卡。\nEnhanced Networking 使用 **SR-IOV（Single Root I/O Virtualization）** 技術：\n- 直接將實體網卡分割成多個虛擬通道（VF, Virtual Functions）分配給 EC2。…",
+    "answer": "**EC2 Enhanced Networking（增強型網路）** 是 AWS 提供的一項硬體加速技術。\n簡單來說：**它繞過了傳統作業系統虛擬化的網路層，讓 EC2 實體直接對接實體網卡，從而達到「高頻寬、高 PPS（每秒封包數）、超低延遲與低抖動（Jitter）」的效果。**\n---\n### 1. 核心原理：SR-IOV（單根 I/O 虛擬化）\n傳統虛擬化（如 Xen/KVM）中，EC2 的封包要經過 **Hypervisor（虛擬化引擎）** 軟體模擬轉發才能到達實體網卡。\nEnhanced Networking 使用 **SR-IOV（Single Root I/O Virtualization）** 技術：\n- 直接將實體網卡分割成多個虛擬通道（VF, Virtual Functions）分配給 EC2。\n- **繞過 Hypervisor 的干預（Bypass Hypervisor）**，減少 CPU 負擔並大幅降低延遲。\n---\n### 2. AWS 提供的兩種實現方式（機型不同支援不同）\n1. **ENA（Elastic Network Adapter）**：\n- **AWS 自研的新一代網卡驅動**。\n- **支援最高頻寬**：最高可達 100 Gbps、200 Gbps 甚至更高（視實體機型而定）。\n- 適合目前絕大多數現代 EC2 機型（如 C5/M5/R5/P3/P4 等以及所有第 6/7 代機型）。\n2. **VF（Virtual Function）/ Intel 82599 VF**：\n- 較舊的架構，使用 Intel 10 GbE 驅動。\n- 最高支援 10 Gbps 頻寬，主要用於舊一代 EC2（如 C3、R3、I2 等）。\n---\n### 3. 常見應用場景與什麼時候使用？\n- **高效能運算 (HPC)**：需要節點間極低延遲的平行運算與分散式叢集。\n- **大流量 Web / 網關 API**：每秒需要處理巨量小封包（High Packets Per Second, PPS）的情境。\n- **大數據與資料庫叢集**：如 Cassandra、Redis、Elasticsearch、Kafka 等節點間需要頻繁大量同步資料的情境。\n> **提示**：現在多數主流的 HVM AMI（如 Amazon Linux 2 / 2023、Ubuntu 現代版本）與主流 EC2 規格都已預設啟用 ENA 驅動，無須額外手動設定。",
+    "sourceQuestion": "EC2 enhanced networking是什麽?"
+  },
+  {
+    "id": "c337",
+    "category": "CDN, DNS & Load Balancing",
+    "question": "Why can an Auto Scaling group not be a CloudFront origin?",
+    "summary": "**是的，不可以直接把 Auto Scaling Group (ASG) 當作 CloudFront 的 Origin。**\n這是因為 **CloudFront 與 ASG 在架構層級上「不相容」**，主要原因有以下兩點：\n---\n### 1. 識別方式不同（域名與端點限制）\n- **CloudFront Origin 需要一個「確定的域名（Domain Name）」或「固定 IP」**：\n- 當你在 CloudFront 新增 Custom Origin 時，它要求填入 **DNS 域名**（例如 `my-alb-1234.us-east-1.elb.amazonaws.com` 或 `ec2-xx-xx-xx-xx.compute-1.amazonaws.com`）。\n- **ASG 只是一個「邏輯管理群組」，沒有自己的 DNS 域名**：…",
+    "answer": "**是的，不可以直接把 Auto Scaling Group (ASG) 當作 CloudFront 的 Origin。**\n這是因為 **CloudFront 與 ASG 在架構層級上「不相容」**，主要原因有以下兩點：\n---\n### 1. 識別方式不同（域名與端點限制）\n- **CloudFront Origin 需要一個「確定的域名（Domain Name）」或「固定 IP」**：\n- 當你在 CloudFront 新增 Custom Origin 時，它要求填入 **DNS 域名**（例如 `my-alb-1234.us-east-1.elb.amazonaws.com` 或 `ec2-xx-xx-xx-xx.compute-1.amazonaws.com`）。\n- **ASG 只是一個「邏輯管理群組」，沒有自己的 DNS 域名**：\n- ASG 負責依據負載自動新增或減少 EC2 實體，但 **ASG 本身並沒有 IP，也沒有 DNS 端點**。你無法在 CloudFront 填入一個名為 `my-asg` 的 Origin。\n- 如果你直接填某台 EC2 的域名，當 ASG 把它替換掉或縮減掉（Scale-in）時，CloudFront 的 Origin 就會立刻失效。\n---\n### 2. 正確的架構做法：透過 Load Balancer (ALB) 銜接\n要在 CloudFront 後面搭配 ASG，標準做法是**將 Application Load Balancer (ALB) 作為中間層**：\n```plain text\n[使用者] ➔ [CloudFront Edge] ➔ [ALB (Origin)] ➔ [Auto Scaling Group (EC2s)]\n```\n- **ALB** 提供一個固定的 DNS 域名給 CloudFront 作為 **Origin**。\n- **ASG** 將動態長出來的 EC2 實體註冊到 **ALB 的 Target Group** 集中接收流量。\n---\n### 💡 關於 Origin Group 的補充\n題目解析提到的另一點是 **CloudFront Origin Group（原點群組）**：\n- 它是用來做 **Failover（故障轉移）** 的機制，結構規定 **「必須由 2 個獨立的 CloudFront Origins 組合而成」**（一個 Primary、一個 Secondary）。\n- 你不能把「單一」資源（無論是單台 EC2 或單個 ASG）直接設定成一個 Origin Group。",
+    "sourceQuestion": "爲什麽ASG不能當作Cloudfront的origin?"
+  },
+  {
+    "id": "c338",
+    "category": "Storage & Transfer",
+    "question": "What is an S3 Multi-Region Access Point?",
+    "summary": "**Amazon S3 Multi-Region Access Point（多區域存取點）** 是 AWS S3 提供的一項全球加速與高可用性功能。\n簡言之，它為跨多個 AWS Region 的 S3 Bucket 提供 **單一的全球通用 DNS 端點（Single Global Endpoint）**，並透過 **AWS Global Accelerator** 的 Anycast 網路，將使用者的請求自動引導至**距離最近、且健康狀況最佳**的 S3 Bucket。\n---\n### 核心功能與優勢\n- **單一全球端點（Global Endpoint）**：…",
+    "answer": "**Amazon S3 Multi-Region Access Point（多區域存取點）** 是 AWS S3 提供的一項全球加速與高可用性功能。\n簡言之，它為跨多個 AWS Region 的 S3 Bucket 提供 **單一的全球通用 DNS 端點（Single Global Endpoint）**，並透過 **AWS Global Accelerator** 的 Anycast 網路，將使用者的請求自動引導至**距離最近、且健康狀況最佳**的 S3 Bucket。\n---\n### 核心功能與優勢\n- **單一全球端點（Global Endpoint）**：\n- 無論應用程式或使用者分佈在世界何處，只需存取同一個存取點域名（如 `[https://xxx.mrap.accesspoint.s3-global.amazonaws.com](https://xxx.mrap.accesspoint.s3-global.amazonaws.com)`），不需要在程式碼中撰寫判斷 logic 切換不同 Region 的 Bucket URL。\n- **低延遲自動路由（Dynamic Routing）**：\n- 請求會經由 AWS 全球骨幹網路，自動送往網路延遲最低（距離最近）的 Region 處理，速度比走公網快上許多。\n- **自動故障轉移（Failover / High Availability）**：\n- 當某個 Region 的 S3 出現異常或服務中斷時，Multi-Region Access Point 會自動將流量切換至其他健康的 Region Bucket，無需人工干預。\n- **配合 S3 Cross-Region Replication (CRR)**：\n- 通常會搭配跨區域複製（CRR）使用，讓多個 Region 的 Bucket 保持資料同步，達到全球資料的低延遲讀寫與災難復原（DR）。",
+    "sourceQuestion": "S3 Multi-Region Access Point是什麽意思?"
+  },
+  {
+    "id": "c339",
+    "category": "Storage & Transfer",
+    "question": "What must be true to enable S3 Cross-Region Replication?",
+    "summary": "1. The source and destination buckets must have versioning enabled.\n2. The source and destination buckets must be in different AWS Regions.\n3. Amazon S3 must have permission to replicate objects from that source bucket to the destination bucket on your behalf.",
+    "answer": "1. The source and destination buckets must have versioning enabled.\n2. The source and destination buckets must be in different AWS Regions.\n3. Amazon S3 must have permission to replicate objects from that source bucket to the destination bucket on your behalf.",
+    "sourceQuestion": "To enable the cross-region replication feature in S3, the following items should be met:"
+  },
+  {
+    "id": "c340",
+    "category": "Integration & Messaging",
+    "question": "What is Amazon Connect?",
+    "summary": "**Amazon Connect** 是 AWS 提供的全託管、基於雲端的**雲端客服中心服務（Cloud Contact Center）**。\n簡單來說：它能讓企業在幾分鐘內建置起一套具備語音通話與文字聊天功能的客服系統（Call Center），完全不需要購買昂貴的硬體電話交換機（PBX）或簽訂長期合約。\n---\n### 核心功能與特色\n- **按用量計費（Pay-as-you-go）**：\n- 沒有預付費用或最低消費，完全只根據「客服處理的通話分鐘數」或「聊天訊息量」來計費。\n- **全通路客服（Omnichannel）**：\n- 在同一個管理介面中支援**語音通話（Voice）**、**文字聊天（Chat）**、甚至 SMS 簡訊，讓客服人員不用切換系統。\n- **智慧語音互動與 AI 整合（IVR & AI）**：…",
+    "answer": "**Amazon Connect** 是 AWS 提供的全託管、基於雲端的**雲端客服中心服務（Cloud Contact Center）**。\n簡單來說：它能讓企業在幾分鐘內建置起一套具備語音通話與文字聊天功能的客服系統（Call Center），完全不需要購買昂貴的硬體電話交換機（PBX）或簽訂長期合約。\n---\n### 核心功能與特色\n- **按用量計費（Pay-as-you-go）**：\n- 沒有預付費用或最低消費，完全只根據「客服處理的通話分鐘數」或「聊天訊息量」來計費。\n- **全通路客服（Omnichannel）**：\n- 在同一個管理介面中支援**語音通話（Voice）**、**文字聊天（Chat）**、甚至 SMS 簡訊，讓客服人員不用切換系統。\n- **智慧語音互動與 AI 整合（IVR & AI）**：\n- 結合 **Amazon Lex**（與 Alexa 相同的自然語言理解技術），可以建立聰明的語音菜單（IVR），讓客戶用自然說話的方式查詢帳單或處理簡單業務。\n- **視覺化流程設計（Contact Flow）**：\n- 提供拖拉式的 UI 介面，管理者可以輕鬆設計電話轉接邏輯、排隊機制與自動化服務流程。\n- **深度整合 AWS 生態系**：\n- 可透過 **AWS Lambda** 呼叫後端資料庫取得客戶資料，或將通話紀錄/錄音檔即時寫入 **Amazon S3** 與 **Kinesis** 進行後續分析。\n---\n### 常見考題情境\n- 題目提到要為企業**快速建立/搬遷客服中心（Call Center）**，需要處理語音與 Chat，且希望能降低營運成本。\n- 需要結合 **Amazon Lex (Chatbot)** 來實作自動化語音應答系統（Interactive Voice Response, IVR）。",
+    "sourceQuestion": "Amazon Connect是什麽?"
+  },
+  {
+    "id": "c341",
+    "category": "Integration & Messaging",
+    "question": "What is a shard in Amazon Kinesis Data Streams?",
+    "summary": "在 **Amazon Kinesis Data Streams** 中，**Shard（分片）是串流系統的基本吞吐量與算力單位**。\n你可以把 Kinesis Stream 想像成一條**多車道的高速公路**，而 **Shard 就是裡面的「車道」**：\n---\n### 1. Shard 的容量限制（固定規格）\n每個 Shard 都擁有固定且獨立的效能上限：\n- **寫入（Data Ingestion）**：每秒最多 **1 MB** 或 **1,000 筆紀錄（Records）**。\n- **讀取（Data Consumption）**：每秒最多 **2 MB**（如果是傳統讀取模式）。\n如果你的資料發送量超過了目前的 Shard 總容量，就會遇到 `ProvisionedThroughputExceededException`（塞車/超額報錯）。\n---…",
+    "answer": "在 **Amazon Kinesis Data Streams** 中，**Shard（分片）是串流系統的基本吞吐量與算力單位**。\n你可以把 Kinesis Stream 想像成一條**多車道的高速公路**，而 **Shard 就是裡面的「車道」**：\n---\n### 1. Shard 的容量限制（固定規格）\n每個 Shard 都擁有固定且獨立的效能上限：\n- **寫入（Data Ingestion）**：每秒最多 **1 MB** 或 **1,000 筆紀錄（Records）**。\n- **讀取（Data Consumption）**：每秒最多 **2 MB**（如果是傳統讀取模式）。\n如果你的資料發送量超過了目前的 Shard 總容量，就會遇到 `ProvisionedThroughputExceededException`（塞車/超額報錯）。\n---\n### 2. 為什麼要增加 Shard（Split / UpdateShardCount）？\n回到「車道」的比喻：\n- 當車流量（資料量）變大，原本的車道開始塞車（效能下降、處理變慢）。\n- **增加 Shard 數量** 就等於 **開闢更多車道**，讓總吞吐量倍增。\n- `UpdateShardCount` 命令就是讓你直接調整（擴充）這個 Stream 總共有多少條車道。\n---\n### 3. 資料是如何分到不同 Shard 的？（Partition Key）\n當你發送資料（Record）到 Kinesis 時，必須指定一個 **Partition Key（分區鍵）**。\nKinesis 會計算這個 Key 的 Hash 值，並根據 Hash 值把資料分配到對應的 Shard 中：\n```plain text\n[資料 Producer]\n│\n├── Partition Key: User_A ──► [ Shard 1 ] (處理 User_A 的資料)\n└── Partition Key: User_B ──► [ Shard 2 ] (處理 User_B 的資料)\n```\n- **順序保證（Ordering）**：**同一個 Shard 內的資料保證嚴格按時間順序排列**。因此，只要把同一個用戶/設備的資料指定相同的 Partition Key，它們就會進到同一個 Shard 並保持順序。\n---\n### 💡 總結\n- **Shard ＝ Kinesis 的容量與計費基本單位**。\n- 車道越多（Shard 越多）➔ 吞吐量越大（寫入/讀取上限越高）➔ 處理速度越快（但也越貴）。",
+    "sourceQuestion": "Amazon Kinesis Data Streams 中，Shard（分片）是什麽?"
+  },
+  {
+    "id": "c342",
+    "category": "Cost, Governance & Multi-Account",
+    "question": "What is a Regional Reserved Instance?",
+    "summary": "**Regional Reserved Instances（區域預留執行個體）** 是 AWS EC2 預留執行個體（RI）的一種購買與屬性設定模式。\n簡單來說：**它不綁定在特定的可用區（AZ），而是將折扣套用到整個 AWS Region（區域），優點是彈性高（享跨 AZ 效益與容量尺寸變更彈性），但缺點是不提供容量保證（Capacity Reservation）。**\n---\n### 核心特性比較：Regional vs Zonal RI…",
+    "answer": "**Regional Reserved Instances（區域預留執行個體）** 是 AWS EC2 預留執行個體（RI）的一種購買與屬性設定模式。\n簡單來說：**它不綁定在特定的可用區（AZ），而是將折扣套用到整個 AWS Region（區域），優點是彈性高（享跨 AZ 效益與容量尺寸變更彈性），但缺點是不提供容量保證（Capacity Reservation）。**\n---\n### 核心特性比較：Regional vs Zonal RI\n\n| **特性** | **Regional RI (區域 RI)** | **Zonal RI (可用區 RI)** |\n| --- | --- | --- |\n| **範疇 (Scope)** | 整個 Region（如 `us-east-1`） | 特定 AZ（如 `us-east-1a`） |\n| **容量預留 (Capacity Guarantee)** | ❌ **無**（熱門 AZ 沒機器時可能開不起來） | 自由度高，✔️ **保證該 AZ 留有算力容量** |\n| **折扣靈活性 (Flexibility)** | ✔️ **高**（同區域內任何 AZ 的符合機型自動享折扣） | ❌ **低**（僅限指定 AZ 內的機器享折扣） |\n| **執行個體尺寸彈性 (Instance Size Flexibility)** | ✔️ **支援**（Linux/Unix 下同系列尺寸自動換算抵扣，如 1 個 `m5.large` 可折抵 2 個 `m5.medium`） | ❌ **不支援** |\n\n---\n### 💡 考點重點與選擇時機\n- **選 Regional RI**：當你的優先考量是**費用優化（折扣極致彈性）**，且你的服務架構已經做好了跨 AZ 高可用，不在乎單一 AZ 容量瞬間不足時選用。\n- **選 Zonal RI**：當你有極度嚴格的業務需求，**必須 100% 保證特定 AZ 隨時都有算力容量可以開機**時選用。",
+    "sourceQuestion": "Regional Reserved Instances是什麽意思?"
+  },
+  {
+    "id": "c343",
+    "category": "Databases",
+    "question": "What is Amazon Aurora cloning?",
+    "summary": "**Amazon Aurora Cloning（Aurora 資料庫複製）** 是 Aurora 提供的一項「**秒級、低成本**」創建資料庫副本（Copy-on-Write）的技術。\n簡單來說：**它能在幾分鐘內，幫你建立一個與正式環境（Production）資料完全一模一樣的獨立測試或 Staging 資料庫，且建立過程「不會影響正式環境的效能」，也不會立刻產生雙倍的儲存成本。**\n---\n### 1. 運作原理：寫入時複製（Copy-on-Write）\n傳統的資料庫複製（如 MySQL Dump 或 Restore Snapshot）需要把幾百 GB 的資料完整複製一份，既耗時又浪費儲存空間。\nAurora Cloning 採用 **Copy-on-Write（寫入時複製）** 技術：…",
+    "answer": "**Amazon Aurora Cloning（Aurora 資料庫複製）** 是 Aurora 提供的一項「**秒級、低成本**」創建資料庫副本（Copy-on-Write）的技術。\n簡單來說：**它能在幾分鐘內，幫你建立一個與正式環境（Production）資料完全一模一樣的獨立測試或 Staging 資料庫，且建立過程「不會影響正式環境的效能」，也不會立刻產生雙倍的儲存成本。**\n---\n### 1. 運作原理：寫入時複製（Copy-on-Write）\n傳統的資料庫複製（如 MySQL Dump 或 Restore Snapshot）需要把幾百 GB 的資料完整複製一份，既耗時又浪費儲存空間。\nAurora Cloning 採用 **Copy-on-Write（寫入時複製）** 技術：\n1. **建立瞬間（Initial Clone）**：克隆出來的新 Cluster 會**直接指向與原資料庫相同的底層儲存頁面（Page）**。因此建立過程只需幾分鐘（不論資料庫是 10GB 還是 10TB），且完全不用複製實體資料。\n2. **後續修改（Data Changes）**：只有當原本的資料庫或克隆資料庫**發生資料寫入/修改**時，Aurora 才會針對「被修改的資料頁」單獨複製出新頁面。\n3. **成本效益**：你只需要為**被修改過的新增/變更資料**支付額外的儲存費用，沒變動的資料不會重複計費。\n---\n### 2. 核心優勢與特點\n- **零效能影響（No Performance Impact）**：複製過程只在儲存層（Storage Layer）處理指標，不會佔用原資料庫的 CPU/Memory，也不影響線上業務運作。\n- **獨立運作（Independent Cluster）**：Clone 出來的 DB 是一個完全獨立的 Cluster。你在 Clone 上做任何刪除、修改測試，都不會影響到原 Production 資料庫。\n- **極速擴展（Fast Setup）**：非常適合用於需要快速取得最新 Production 資料進行測試、報表分析或 Analytics 團隊運作的場景。\n---\n### 💡 題目場景對照（為何選它？）\n如你畫面中的考題：\n- **痛點**：原本 MySQLDump 複製 1TB 資料要花好幾個小時，且過程中會造成 Production 機會性停機（Downtime）。\n- **解法**：將 DB 遷移至 **Amazon Aurora**，並使用 **Aurora Cloning**。Analytics 團隊能在幾分鐘內拿到一份最新的 Staging 資料庫，完全不干擾 Production 運作！",
+    "sourceQuestion": "Aurora cloning是什麽?"
+  },
+  {
+    "id": "c344",
+    "category": "Databases",
+    "question": "What is mysqldump, and when should you avoid it on AWS?",
+    "summary": "`mysqldump` 是 MySQL / MariaDB 資料庫官方提供的一個**命令列工具（Command-Line Utility）**，主要用來做**資料庫的備份（Backup）與遷移（Migration）**。\n### 核心特點與運作方式\n- **文字型邏輯備份（Logical Backup）**：\n- 它運作時會連接到資料庫，並將資料庫中的結構（Tables, Views, Stored Procedures）與資料，導出一成串的 **SQL 敘述句檔案**（通常是 `.sql` 檔）。\n- 產生的 `.sql` 檔案裡面基本上就是一堆 `CREATE TABLE` 和 `INSERT INTO` 的語法。復原時只需執行這個 SQL 檔即可重建資料庫。\n- **跨版本/跨平台相容性高**：…",
+    "answer": "`mysqldump` 是 MySQL / MariaDB 資料庫官方提供的一個**命令列工具（Command-Line Utility）**，主要用來做**資料庫的備份（Backup）與遷移（Migration）**。\n### 核心特點與運作方式\n- **文字型邏輯備份（Logical Backup）**：\n- 它運作時會連接到資料庫，並將資料庫中的結構（Tables, Views, Stored Procedures）與資料，導出一成串的 **SQL 敘述句檔案**（通常是 `.sql` 檔）。\n- 產生的 `.sql` 檔案裡面基本上就是一堆 `CREATE TABLE` 和 `INSERT INTO` 的語法。復原時只需執行這個 SQL 檔即可重建資料庫。\n- **跨版本/跨平台相容性高**：\n- 因為導出的純粹是 SQL 語法，所以很容易把資料從一台 Server 搬到另一台（例如：從 On-Premises 搬移到 AWS RDS/Aurora，或是從舊版 MySQL 升級到新版）。\n---\n### 在大型資料庫/雲端環境下的局限性\n1. **速度慢（極耗資源）**：\n- 當資料庫容量很大（如 500GB \\~ 幾 TB）時，`mysqldump` 一筆一筆讀取與寫入 SQL 的過程非常緩慢，且復原（Import）也會花上數小時甚至數天。\n2. **鎖表與效能影響**：\n- 執行備份時，為了保證資料一致性，往往會對資料庫加鎖（Lock Tables），這會嚴重干擾線上運作中的 Production 資料庫效能。\n> **💡 AWS 考題/實務應用比對**：\n在 AWS 環境中，如果需要快速、無負擔地複製巨量資料，通常**不會選 `mysqldump`**，而是選用 **Aurora Cloning**（寫入時複製，秒級完成）或 **AWS DMS (Database Migration Service)** 來做持續性同步。",
+    "sourceQuestion": "MySQLDump是什麽?"
+  },
+  {
+    "id": "c345",
+    "category": "Migration & DR",
+    "question": "How does AWS DRS differ from native database replication?",
+    "summary": "| **比較項目** | **AWS DRS (Elastic Disaster Recovery)** | **資料庫原生同步 (如 SQL Server Always On / DMS)** |\n| --- | --- | --- |\n| **複製層級** | **整台伺服器 / 硬碟區塊 (Block-level)** | **資料庫 Engine / Transaction Log / Table** |\n| **保護範圍** | 作業系統、應用程式設定、資料庫、檔案全部打包 | **僅限資料庫裡面的資料** |\n| **平時成本** | **極低**（只需負擔輕量級 Staging 資源與 EBS 儲存費） | **高**（AWS 端必須 24 小時開著對應規格的 DB 實體） |…",
+    "answer": "| **比較項目** | **AWS DRS (Elastic Disaster Recovery)** | **資料庫原生同步 (如 SQL Server Always On / DMS)** |\n| --- | --- | --- |\n| **複製層級** | **整台伺服器 / 硬碟區塊 (Block-level)** | **資料庫 Engine / Transaction Log / Table** |\n| **保護範圍** | 作業系統、應用程式設定、資料庫、檔案全部打包 | **僅限資料庫裡面的資料** |\n| **平時成本** | **極低**（只需負擔輕量級 Staging 資源與 EBS 儲存費） | **高**（AWS 端必須 24 小時開著對應規格的 DB 實體） |\n| **主要用途** | 整體機房 / 伺服器層級的災難復原 (Disaster Recovery) | 資料庫即時高可用 (HA) 或跨區即時讀寫 |",
+    "sourceQuestion": "DRS vs 資料庫原生同步（DB Replication）"
+  },
+  {
+    "id": "c346",
+    "category": "Compute & Scaling",
+    "question": "What is Amazon AppStream 2.0?",
+    "summary": "**Amazon AppStream 2.0** 是 AWS 提供的全託管**應用程式串流服務（Application Streaming Service）**。\n簡單來說，它能將桌面上運行的應用程式（如 CAD 設計軟體、ERP 系統、大型 3D 繪圖工具等）部署在 AWS 雲端伺服器上運算，並以**畫面串流**的方式即時傳送到使用者的裝置上（例如 Windows、Mac、Chromebook、iPad 或支援 HTML5 的瀏覽器）。\n---\n**核心特點與優勢**\n- **跨裝置與系統**：使用者不需配備高規格電腦，只需透過瀏覽器或 Client 端，即可在任何裝置上順暢執行效能要求極高的 Windows 或 Linux 桌面應用程式。\n- **安全性高**：軟體與敏感資料全部保留在 AWS 雲端，不會下載或儲存在使用者的本機裝置上。…",
+    "answer": "**Amazon AppStream 2.0** 是 AWS 提供的全託管**應用程式串流服務（Application Streaming Service）**。\n簡單來說，它能將桌面上運行的應用程式（如 CAD 設計軟體、ERP 系統、大型 3D 繪圖工具等）部署在 AWS 雲端伺服器上運算，並以**畫面串流**的方式即時傳送到使用者的裝置上（例如 Windows、Mac、Chromebook、iPad 或支援 HTML5 的瀏覽器）。\n---\n**核心特點與優勢**\n- **跨裝置與系統**：使用者不需配備高規格電腦，只需透過瀏覽器或 Client 端，即可在任何裝置上順暢執行效能要求極高的 Windows 或 Linux 桌面應用程式。\n- **安全性高**：軟體與敏感資料全部保留在 AWS 雲端，不會下載或儲存在使用者的本機裝置上。\n- **集中管理與維護**：IT 管理員只需在 AWS 集中更新與維護一套軟體版本，免去為全公司每台電腦逐一安裝與更新軟體的麻煩。\n- **按需付費（按量計費）**：根據實際使用的用戶數與串流時數計費，無須預先投資昂貴的硬體設備。\n---\n**常見應用場景**\n- **軟體供應商（SaaS 化）**：將原本傳統的桌面版軟體（如 3D 設計、工程模擬）快速轉型為無須安裝、透過瀏覽器即可使用的雲端服務。\n- **企業遠端辦公（BYOD）**：讓員工使用個人電腦或平板，安全地存取公司內部的核心桌面軟體（如 ERP、財務系統）。\n- **教育與培訓機構**：為學生提供裝有專業教學軟體的虛擬電腦環境，無須採購高規格電腦教室。",
+    "sourceQuestion": "Amazon AppStream是什麽?"
+  },
+  {
+    "id": "c347",
+    "category": "Databases",
+    "question": "What is semi-synchronous replication?",
+    "summary": "**半同步複製（Semi-synchronous Replication）** 是一種介於「同步」與「異步」之間的資料複製機制，用來兼顧**資料安全性**與**寫入效能**。\n運作邏輯如下：\n- **同步複製（Synchronous）**：主節點寫入後，必須等待**所有**副本都寫入硬碟並回傳確認（ACK），主節點才算完成交易。\n- *優點*：資料絕對不遺失。\n- *缺點*：非常慢，任何一個副本延遲都會卡住整個系統。\n- **異步複製（Asynchronous）**：主節點寫入自己的硬碟後**立刻完成交易**，完全不等待副本。副本會在背景慢慢同步。\n- *優點*：效能極高、速度最快。\n- *缺點*：若主節點突然崩潰，尚未同步到副本的資料就會永久遺失（Data Loss）。…",
+    "answer": "**半同步複製（Semi-synchronous Replication）** 是一種介於「同步」與「異步」之間的資料複製機制，用來兼顧**資料安全性**與**寫入效能**。\n運作邏輯如下：\n- **同步複製（Synchronous）**：主節點寫入後，必須等待**所有**副本都寫入硬碟並回傳確認（ACK），主節點才算完成交易。\n- *優點*：資料絕對不遺失。\n- *缺點*：非常慢，任何一個副本延遲都會卡住整個系統。\n- **異步複製（Asynchronous）**：主節點寫入自己的硬碟後**立刻完成交易**，完全不等待副本。副本會在背景慢慢同步。\n- *優點*：效能極高、速度最快。\n- *缺點*：若主節點突然崩潰，尚未同步到副本的資料就會永久遺失（Data Loss）。\n- **半同步複製（Semi-synchronous）**：主節點將交易日誌（Transaction Log）發送給副本，**只要收到「至少一個」副本確認已接收並寫入日誌（尚未套用到資料庫）**，主節點就會立刻回應用戶「寫入成功」。\n---\n**為什麼 RDS Multi-AZ DB Cluster 要用半同步複製？**\n在 Multi-AZ DB Cluster 中（1 個 Writer + 2 個 Readers），只要其中 **1 個 Reader** 回傳 ACK 確認收到 Transaction Log，寫入就算完成。\n這樣既確保了雲端資料庫在其中一台機器硬碟損壞時**資料不會遺失**，又不會因為要等待全部節點處理完畢而嚴重拖慢資料庫的寫入效能。",
+    "sourceQuestion": "什麽叫半同步複製?"
+  },
+  {
+    "id": "c348",
+    "category": "Databases",
+    "question": "How does storage-layer replication differ from engine-layer replication in RDS?",
+    "summary": "這兩者的主要差別在於「誰」在處理資料同步**以及**「等待確認」的範圍：\n- **儲存層 (EBS Synchronous)**：\n- **處理者**：由底層 EBS 儲存系統負責，資料庫引擎（MySQL/PostgreSQL）並不直接參與。\n- **機制**：主節點將資料寫入 EBS 時，底層儲存網路會將資料「完全同步」寫入 Standby 節點的 EBS 區塊。\n- **特點**：寫入必須等兩邊 EBS 磁碟都寫入完成才算成功（100% 完全同步），確保資料零遺失，但缺點是寫入延遲較高、且備援節點無法開啓讀取。\n- **引擎層 (Transaction Log Semi-sync)**：\n- **處理者**：由資料庫引擎本身（DB Engine）直接控制。…",
+    "answer": "這兩者的主要差別在於「誰」在處理資料同步**以及**「等待確認」的範圍：\n- **儲存層 (EBS Synchronous)**：\n- **處理者**：由底層 EBS 儲存系統負責，資料庫引擎（MySQL/PostgreSQL）並不直接參與。\n- **機制**：主節點將資料寫入 EBS 時，底層儲存網路會將資料「完全同步」寫入 Standby 節點的 EBS 區塊。\n- **特點**：寫入必須等兩邊 EBS 磁碟都寫入完成才算成功（100% 完全同步），確保資料零遺失，但缺點是寫入延遲較高、且備援節點無法開啓讀取。\n- **引擎層 (Transaction Log Semi-sync)**：\n- **處理者**：由資料庫引擎本身（DB Engine）直接控制。\n- **機制**：採用**半同步（Semi-synchronous）**。主節點發送交易日誌（Transaction Log）給其他 2 個 Reader 節點，**只要其中 1 個 Reader 回傳 ACK** 表示收到日誌，主節點就立刻回應用戶寫入成功，不需等待所有節點寫入硬碟。\n- **特點**：兼顧了安全性與效能，且 Reader 節點可以直接提供 SQL 讀取查詢。",
+    "sourceQuestion": "儲存層, 引擎層兩種複製機制有什麽不同?"
+  },
+  {
+    "id": "c349",
+    "category": "Databases",
+    "question": "How does RDS Multi-AZ DB instance deployment differ from a Multi-AZ DB cluster?",
+    "summary": "這兩者都是 Amazon RDS 提供的**高可用性（High Availability）解決方案，但底層部署架構、讀取能力與切換速度**有顯著差異：\n**1. Amazon RDS Multi-AZ DB Instance（傳統型 Multi-AZ）**\n- **架構與節點數**：**1 個主節點（Primary）+ 1 個備援節點（Standby）**，跨 2 個可用區（AZ）。\n- **資料同步**：採用區塊級（EBS 物理層）同步複製（Synchronous Replication）。\n- **讀取能力**：Standby 節點**完全無法提供讀取或寫入服務**，純粹作為故障轉移的熱備援（Warm Standby）。若需要讀取能力，必須另外建立 Read Replicas。\n- **故障切換（Failover）**：通常需要 **60 到 120 秒**（包含修改 DNS 指向以及啟動 Standby 節點的程序）。…",
+    "answer": "這兩者都是 Amazon RDS 提供的**高可用性（High Availability）解決方案，但底層部署架構、讀取能力與切換速度**有顯著差異：\n**1. Amazon RDS Multi-AZ DB Instance（傳統型 Multi-AZ）**\n- **架構與節點數**：**1 個主節點（Primary）+ 1 個備援節點（Standby）**，跨 2 個可用區（AZ）。\n- **資料同步**：採用區塊級（EBS 物理層）同步複製（Synchronous Replication）。\n- **讀取能力**：Standby 節點**完全無法提供讀取或寫入服務**，純粹作為故障轉移的熱備援（Warm Standby）。若需要讀取能力，必須另外建立 Read Replicas。\n- **故障切換（Failover）**：通常需要 **60 到 120 秒**（包含修改 DNS 指向以及啟動 Standby 節點的程序）。\n---\n**2. Amazon RDS Multi-AZ DB Cluster（叢集型 Multi-AZ）**\n- **架構與節點數**：**1 個主節點（Writer）+ 2 個可讀取副本（Readable Readers）**，跨 3 個可用區（AZ）。\n- **資料同步**：採用資料庫層級（DB Engine 交易日誌）半同步複製（Semi-synchronous Replication）。\n- **讀取能力**：2 個 Reader 節點**可以直接處理 SQL 讀取流量**（系統會提供 Reader Endpoint 來自動做讀取負載平衡），不會白白浪費硬體資源。\n- **故障切換（Failover）**：通常**小於 35 秒**（比傳統 Multi-AZ 快上近一倍）。\n---\n**核心差異比較表**\n\n| **特性** | **Multi-AZ DB Instance（傳統型）** | **Multi-AZ DB Cluster（叢集型）** |\n| --- | --- | --- |\n| **總節點數量** | 2 個（1 Write + 1 Standby） | 3 個（1 Write + 2 Readable Readers） |\n| **跨 AZ 覆蓋** | 2 個 AZ | 3 個 AZ |\n| **備援節點可否讀取** | **否**（完全無流量服務） | **是**（可同時處理讀取請求） |\n| **Failover 切換時間** | 60 – 120 秒 | **\\< 35 秒** |\n| **資料複製機制** | 儲存層（EBS Synchronous） | 引擎層（Transaction Log Semi-sync） |\n| **寫入延遲** | 較低（只需等待 1 個 Standby 確認） | 略高（需等待至少 1 個 Reader 回應 ACKs） |\n| **支援引擎** | MySQL, PostgreSQL, MariaDB, Oracle, SQL Server | 目前僅支援 MySQL 及 PostgreSQL |",
+    "sourceQuestion": "Amazon RDS (Multi-AZ Deployments) vs RDS Multi-AZ DB Cluster 有什麽不同?"
+  },
+  {
+    "id": "c350",
+    "category": "Storage & Transfer",
+    "question": "What is an SVM in Amazon FSx for NetApp ONTAP?",
+    "summary": "**SVM（Storage Virtual Machine）** 可以把它理解成 FSx for ONTAP 裡「獨立的虛擬檔案伺服器／儲存租戶」。而 **thin provisioning** 則是「先給你看起來很大的 volume 容量，但實體 SSD 只在真的寫入資料時才消耗」。[docs.aws.amazon](https://docs.aws.amazon.com/fsx/latest/ONTAPGuide/managing-svms.html)\n## SVM 是什麼？…",
+    "answer": "**SVM（Storage Virtual Machine）** 可以把它理解成 FSx for ONTAP 裡「獨立的虛擬檔案伺服器／儲存租戶」。而 **thin provisioning** 則是「先給你看起來很大的 volume 容量，但實體 SSD 只在真的寫入資料時才消耗」。[docs.aws.amazon](https://docs.aws.amazon.com/fsx/latest/ONTAPGuide/managing-svms.html)\n## SVM 是什麼？\n在一個 FSx for ONTAP file system 中，SVM 是承載 volumes 的邏輯隔離單位。每個 SVM 有自己的管理憑證、網路 endpoint/IP，以及供用戶端存取資料的介面。Client 會透過該 SVM 的 endpoint 掛載 NFS volume、連線 SMB share，或存取 iSCSI LUN。[docs.aws.amazon](https://docs.aws.amazon.com/fsx/latest/ONTAPGuide/managing-volumes.html)\n把它類比為：\n```plain text\ntextFSx for ONTAP File System│├── SVM: production-linux│   ├── NFS endpoint / IP│   ├── volume: app-data│   └── volume: shared-uploads│├── SVM: windows-files│   ├── SMB endpoint / IP│   └── volume: finance-share│└── SVM: development    ├── NFS endpoint / IP    └── volume: test-data\n```\n因此，同一套底層 FSx 儲存資源可以服務多個獨立的 workload。你可以將 Linux 與 Windows、production 與 development、或不同團隊的資料放在不同 SVM，以分開其存取 endpoint、管理權限和資料 namespace。每個 SVM 可以擁有一個或多個 volume。[docs.aws.amazon](https://docs.aws.amazon.com/fsx/latest/ONTAPGuide/managing-svms.html)\n## SVM 不是什麼\nSVM **不是 EC2 VM**，不需要選 instance type、登入作業系統或自行 patch；它是 ONTAP 控制平面提供的 logical storage server。它也不代表實體硬碟切割：多個 SVM 仍共享其所屬 FSx file system 的底層容量與效能資源。[docs.aws.amazon](https://docs.aws.amazon.com/fsx/latest/ONTAPGuide/how-it-works-fsx-ontap.html)\n## Thin provisioning 是什麼？\n假設你的 FSx file system 現在有 **10 TiB 可用實體儲存容量**。你可以建立三個各自標示為 **10 TiB** 的 volume：\n```plain text\ntextVolume A：邏輯大小 10 TiB，實際資料 2 TiBVolume B：邏輯大小 10 TiB，實際資料 3 TiBVolume C：邏輯大小 10 TiB，實際資料 1 TiB總邏輯配置：30 TiB總實體消耗：6 TiBFSx 實體可用：10 TiB\n```\n這種情況可以成立，因為 FSx for ONTAP 的 volume 預設採用 thin provisioning：建立 volume 時不會預留同等大小的實體儲存；只有實際資料被寫入時才動態配置容量。AWS 的例子甚至指出，在有 10 TiB 可用空間時，可以建立三個 10 TiB volume，只要三者在任一時刻實際儲存的資料總量不超過 10 TiB。[aws.amazon](https://aws.amazon.com/blogs/storage/how-to-size-an-amazon-fsx-for-netapp-ontap-file-system/)\n## 為何有用？\n- **節省初期容量與成本**：不必因為應用程式「可能」需要 10 TiB，就一開始占住完整 10 TiB。\n- **較好地配置共享儲存**：可依每個團隊或 application 的預期上限設定 volume 大小，但實際資源由真正的使用量決定。\n- **快速建立與複製資料集**：配合 ONTAP snapshot/clone，可避免一開始為完整資料副本耗用相同的實體空間。[docs.netapp](https://docs.netapp.com/us-en/ontap/concepts/thin-provisioning-concept.html)\n## 最大風險：Overcommit\nThin provisioning 代表你能建立的「邏輯總容量」可大於目前的實體容量，這稱為 **overcommit／overprovisioning**。優點是資源利用率高；風險是多個 volume 若同時大量寫入，底層 file system 可能被寫滿。[docs.aws.amazon](https://docs.aws.amazon.com/fsx/latest/ONTAPGuide/how-it-works-fsx-ontap.html)\n例如：\n```plain text\ntextFSx 實體容量：10 TiB已建立：- prod-db volume：8 TiB- analytics volume：8 TiB- backup volume：8 TiB邏輯可寫總量：24 TiB實際可容納總量：最多約 10 TiB\n```\n若三個 workload 合計寫入超過可用的實體容量，後續寫入便可能失敗。因此 production 設計上應監控 FSx 儲存使用率、volume 使用量與成長趨勢，並在接近門檻前擴充 SSD 容量、調整 tiering，或限制不受控的資料寫入。[docs.aws.amazon](https://docs.aws.amazon.com/fsx/latest/ONTAPGuide/how-it-works-fsx-ontap.html)\n## Thick vs Thin\n\n| 類型 | 建立 10 TiB volume 時 | 實際儲存未寫資料時 | 主要風險 |\n| --- | --- | --- | --- |\n| Thick provisioning | 預先保留 10 TiB 實體空間 | 已占用 10 TiB | 容量閒置、利用率低 |\n| Thin provisioning | 宣告可用 10 TiB，但不預先保留 | 接近 0 TiB | 多個 volume 同時成長造成底層容量不足 |\n\n對 FSx for ONTAP 而言，volume 是 thin provisioned，僅按儲存在其中的資料消耗底層容量；資料或 LUN 被刪除後，可用空間會回到 file system。[docs.aws.amazon](https://docs.aws.amazon.com/fsx/latest/ONTAPGuide/managing-volumes.html)",
+    "sourceQuestion": "什麼是SVM？"
+  },
+  {
+    "id": "c351",
+    "category": "Storage & Transfer",
+    "question": "What is the CIFS protocol?",
+    "summary": "**CIFS（Common Internet File System）是一種網路檔案分享協定，可讓用戶端透過網路存取伺服器上的檔案和印表機資源。** 它本質上是 **SMB（Server Message Block）協定的一種早期 dialect／實作**，現代實務通常直接稱為 SMB。[learn.microsoft](https://learn.microsoft.com/en-us/windows/win32/fileio/microsoft-smb-protocol-and-cifs-protocol-overview)\n## 它怎樣運作\n在 Windows 檔案分享情境中，檔案伺服器將資料夾以 share 的形式發布，client 再以 UNC path 存取，例如：\n```plain text\ntext\\\\fileserver.example.local\\finance\n```…",
+    "answer": "**CIFS（Common Internet File System）是一種網路檔案分享協定，可讓用戶端透過網路存取伺服器上的檔案和印表機資源。** 它本質上是 **SMB（Server Message Block）協定的一種早期 dialect／實作**，現代實務通常直接稱為 SMB。[learn.microsoft](https://learn.microsoft.com/en-us/windows/win32/fileio/microsoft-smb-protocol-and-cifs-protocol-overview)\n## 它怎樣運作\n在 Windows 檔案分享情境中，檔案伺服器將資料夾以 share 的形式發布，client 再以 UNC path 存取，例如：\n```plain text\ntext\\\\fileserver.example.local\\finance\n```\n使用者在 Windows Explorer 開啟這個路徑時，Windows 會透過 SMB/CIFS 向檔案伺服器進行身分驗證、列出目錄、讀寫檔案，以及依 ACL 判斷是否有權限。SMB 是 client-server 型協定，由 client 送出請求封包，server 回應操作結果。[learn.microsoft](https://learn.microsoft.com/en-us/windows/win32/fileio/microsoft-smb-protocol-and-cifs-protocol-overview)\n## CIFS 與 SMB\n\n| 名稱 | 意思 | 現代定位 |\n| --- | --- | --- |\n| SMB | Server Message Block，網路檔案分享協定家族 | 現代 Windows file sharing 的正式常用名稱 |\n| CIFS | Common Internet File System，SMB 的一個 dialect | 通常指較舊、與 SMB 1.0 關聯的實作或歷史名稱 |\n| SMB 2/3 | 後續 SMB 世代 | 現代環境建議使用，具備較好的效能與安全能力 |\n\nMicrosoft 將 CIFS 定義為 SMB 的 dialect；更精確地說，CIFS 通常與舊版 SMB 1.0 世代相關，而後續 SMB 的改良與延伸另由 SMB 規格描述。[learn.microsoft](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-smb/fd2a8346-9414-40e2-81b1-ed294f9768ea)\n## 在 FSx for ONTAP 中\n題目寫的 **“configured over NFS and CIFS protocols”**，意思是該檔案分享可同時支援兩種存取方式：\n- **NFS**：常見於 Linux/Unix；例如掛載成 `/mnt/shared-data`\n- **CIFS／SMB**：常見於 Windows；例如映射成 `Z:` 或存取 `\\\\server\\share`\nFSx for ONTAP 的 SVM 可建立 SMB server，並用 `vserver cifs create` 這類 ONTAP 指令設定 CIFS/SMB 服務。[docs.aws.amazon](https://docs.aws.amazon.com/fsx/latest/ONTAPGuide/create-smb-server-workgroup.html)\n## 考試重點\n在 AWS／NetApp 題目裡，看到 **CIFS** 時，先把它視為 **Windows SMB file share** 即可：\n```plain text\ntextNFS   -> Linux / Unix 檔案掛載CIFS  -> Windows SMB 網路檔案分享iSCSI -> Block storage\n```\n安全上不要因為題目用了 CIFS 就刻意啟用老舊 SMBv1；實際部署應優先採用現代 SMB 版本與妥善的 AD、NTFS ACL、網路存取控制設定。[docs.aws.amazon](https://docs.aws.amazon.com/fsx/latest/ONTAPGuide/create-smb-server-workgroup.html)",
+    "sourceQuestion": "CIFS Protocol是什麼？"
+  },
+  {
+    "id": "c352",
+    "category": "Databases",
+    "question": "What are DynamoDB transactions?",
+    "summary": "**DynamoDB Transactions（事務處理）** 是 AWS 為 DynamoDB 提供的一種**多數據表/多項目（Multi-Item/Multi-Table）的操作機制**，用來確保跨資料表或跨項目的多個操作能夠符合 **ACID** 屬性。\n簡單來說，它能讓你將多個「新增、更新、刪除」操作打包成同一個事務。這些操作「要麼全部成功，要麼全部失敗退回（All-or-Nothing）」，絕不會出現只成功一半的尷尬狀況。\n---\n**核心特性**\n- **ACID 保證**：\n- **原子性（Atomicity）**：打包的所有操作要麼全做，要麼都不做。\n- **一致性（Consistency）**：寫入前後資料皆符合預設規則與限制。\n- **隔離性（Isolation）**：事務執行期間，其他讀取或寫入請求不會看到「只更新到一半」的中間狀態（符合串行化 Serializability）。…",
+    "answer": "**DynamoDB Transactions（事務處理）** 是 AWS 為 DynamoDB 提供的一種**多數據表/多項目（Multi-Item/Multi-Table）的操作機制**，用來確保跨資料表或跨項目的多個操作能夠符合 **ACID** 屬性。\n簡單來說，它能讓你將多個「新增、更新、刪除」操作打包成同一個事務。這些操作「要麼全部成功，要麼全部失敗退回（All-or-Nothing）」，絕不會出現只成功一半的尷尬狀況。\n---\n**核心特性**\n- **ACID 保證**：\n- **原子性（Atomicity）**：打包的所有操作要麼全做，要麼都不做。\n- **一致性（Consistency）**：寫入前後資料皆符合預設規則與限制。\n- **隔離性（Isolation）**：事務執行期間，其他讀取或寫入請求不會看到「只更新到一半」的中間狀態（符合串行化 Serializability）。\n- **持久性（Durability）**：一旦事務提交成功，變更就會永久保存。\n- **跨表支援**：同一個事務可以同時針對**同一個帳戶內的不同 DynamoDB 資料表**進行操作。\n- **容量限制**：一個事務內最多可包含 **100 個操作** 或總共 **4 MB 的資料量**。\n---\n**常見應用場景**\n- **銀行轉帳 / 點數交易**：帳戶 A 扣款 \\$100 的同時，帳戶 B 必須加款 \\$100。兩者必須同時成功，否則全數撤銷。\n- **電子商務下單與扣減庫存**：建立訂單記錄（Order Table）的同時，必須同步扣減商品庫存（Inventory Table）。\n- **多使用者註冊 / 唯一性校驗**：新增用戶資料的同時，確保用戶名與 Email 唯一性表同步更新。\n---\n**效能與成本開銷（注意事項）**\n- **雙倍讀寫費用**：DynamoDB 在背後會使用兩階段提交（Two-Phase Commit）協議。因此，Transactions 操作會消耗 **2 倍的 Read/Write Capacity Units (RCU/WCU)**。\n- **更高的延遲**：相較於單一項目的 PutItem/UpdateItem，Transactions 需要額外的協調與鎖定時間，延遲會相對較高。",
+    "sourceQuestion": "DynamoDB transactions是什麽?"
+  },
+  {
+    "id": "c353",
+    "category": "Analytics & AI",
+    "question": "What are the node types in an Amazon EMR cluster?",
+    "summary": "In Amazon EMR (Elastic MapReduce), a cluster comprises three main types of nodes, each serving a specific function:\n1. **Primary (Master) Node:** Manages the distribution of data and tasks among other nodes, monitors the health of the cluster, and communicates with external clients. It’s responsible for orchestrating the processing of data across the cluster.…",
+    "answer": "In Amazon EMR (Elastic MapReduce), a cluster comprises three main types of nodes, each serving a specific function:\n1. **Primary (Master) Node:** Manages the distribution of data and tasks among other nodes, monitors the health of the cluster, and communicates with external clients. It’s responsible for orchestrating the processing of data across the cluster.\n2. **Core Nodes:** These nodes store data and execute tasks. They are crucial for both data storage in HDFS (Hadoop Distributed File System) and for processing tasks. There is only one core instance group or instance fleet per cluster, but there can be multiple nodes running on multiple Amazon EC2 instances in the instance group or instance fleet. With instance groups, you can add and remove Amazon EC2 instances while the cluster is running. You can also set up automatic scaling to add instances based on the value of a metric.\n3. **Task Nodes:** Task nodes are optional and dedicated solely to processing tasks. They do not store data. Task nodes can be added or removed from the cluster to increase the processing power as needed, making them a flexible resource for managing workload demands.",
+    "sourceQuestion": "Different types of nodes in EMR Cluster"
+  },
+  {
+    "id": "c354",
+    "category": "Migration & DR",
+    "question": "What is AWS Transform MGN?",
+    "summary": "**AWS Transform MGN**, formerly known as AWS Application Migration Service, is a highly automated lift-and-shift solution that simplifies and accelerates application migration from physical, virtual, or cloud servers to AWS. It replicates source servers into an AWS account and supports rehosting a large number of servers without long cutover windows, performance disruption, or compatibility issues.…",
+    "answer": "**AWS Transform MGN**, formerly known as AWS Application Migration Service, is a highly automated lift-and-shift solution that simplifies and accelerates application migration from physical, virtual, or cloud servers to AWS. It replicates source servers into an AWS account and supports rehosting a large number of servers without long cutover windows, performance disruption, or compatibility issues. This makes it suitable for migrating complete servers, including the operating system, applications, and data.\nWith AWS Transform MGN, source servers can be monitored from the Source servers page, where migration lifecycle status and data replication status can be reviewed. After testing is complete, cutover instances can be launched at a planned cutover date and time, allowing the migrated servers to run on AWS while reducing interruptions to business operations.",
+    "sourceQuestion": "AWS Transform MGN"
+  },
+  {
+    "id": "c355",
+    "category": "Compute & Scaling",
+    "question": "How does a Lambda resource-based policy differ from an execution role?",
+    "summary": "- **Resource-based Policy（資源基礎策略）**：直接附掛在 Lambda 函數本身上。它用來宣告「**誰（Principal）可以對這個 Lambda 做什麼事（Action）**」。\n- 當你需要授權「另一個 AWS 帳號」來呼叫你的 Lambda 時，直接在 Lambda 設置 Resource-based Policy 是最直接且符合規範的做法。\n- **Execution Role（執行角色）**：這是 Lambda 函數**自己要拿去存取其他 AWS 資源**（例如寫入 CloudWatch Logs、讀取 S3 或 DynamoDB）時使用的身份，**不是**用來限制「誰可以呼叫這個 Lambda」的門禁策略。",
+    "answer": "- **Resource-based Policy（資源基礎策略）**：直接附掛在 Lambda 函數本身上。它用來宣告「**誰（Principal）可以對這個 Lambda 做什麼事（Action）**」。\n- 當你需要授權「另一個 AWS 帳號」來呼叫你的 Lambda 時，直接在 Lambda 設置 Resource-based Policy 是最直接且符合規範的做法。\n- **Execution Role（執行角色）**：這是 Lambda 函數**自己要拿去存取其他 AWS 資源**（例如寫入 CloudWatch Logs、讀取 S3 或 DynamoDB）時使用的身份，**不是**用來限制「誰可以呼叫這個 Lambda」的門禁策略。",
+    "sourceQuestion": "AWS Lambda Resource-based Policy vs Execution Role"
+  },
+  {
+    "id": "c356",
+    "category": "Monitoring & Operations",
+    "question": "How does CloudTrail log file validation prove log integrity?",
+    "summary": "**Log File Validation**\n開啟**Log File Validation**功能後，CloudTrail 會自動採取以下機制：\n- **產生摘要檔案（Digest Files）：** 每小時會將過去一小時內寫入的 Log 檔案，計算其 **密碼學雜湊值（SHA-256 Hash）**，並用 AWS 私鑰進行 **數位簽章（Digital Signature）**，生成一個 Digest 檔案存回 S3。\n- **驗證完整性：** 當需要審計時，只要執行 CLI 命令 `aws cloudtrail validate-logs`，AWS 就會比對 Log 的 Hash 與 Digest 檔案。\n- 如果有人刪除、修改或替換了 Log，Hash 比對就會失敗，立刻發現被篡改。\n---\n### 題目其他選項錯在哪？…",
+    "answer": "**Log File Validation**\n開啟**Log File Validation**功能後，CloudTrail 會自動採取以下機制：\n- **產生摘要檔案（Digest Files）：** 每小時會將過去一小時內寫入的 Log 檔案，計算其 **密碼學雜湊值（SHA-256 Hash）**，並用 AWS 私鑰進行 **數位簽章（Digital Signature）**，生成一個 Digest 檔案存回 S3。\n- **驗證完整性：** 當需要審計時，只要執行 CLI 命令 `aws cloudtrail validate-logs`，AWS 就會比對 Log 的 Hash 與 Digest 檔案。\n- 如果有人刪除、修改或替換了 Log，Hash 比對就會失敗，立刻發現被篡改。\n---\n### 題目其他選項錯在哪？\n- **CloudTrail Insights：** 用來偵測 API 呼叫的「異常行為」（例如突然大量刪除 EC2），無法驗證檔案本身有無被修改。\n- **CloudWatch Logs + SNS：** 適用於對 API 事件做即時告警，但無法追溯性地驗證 S3 內靜態檔案的完整性。\n- **CloudTrail Processing Library：** 這是用來自訂程式處理 Log 的 Java 程式庫，並非內建的驗證機制。",
+    "sourceQuestion": "CloudTrail suites"
+  },
+  {
+    "id": "c357",
+    "category": "CDN, DNS & Load Balancing",
+    "question": "What are ALB sticky sessions (session affinity)?",
+    "summary": "**Sticky Sessions (also known as session affinity)** is an option that you can enable in an ALB. When enabled, this causes traffic to be routed to the same EC2 instance based on the client session. Furthermore, this will lead to uneven load distribution among EC2 instances, where one instance may receive more traffic than others – this is precisely what is happening in the given scenario.…",
+    "answer": "**Sticky Sessions (also known as session affinity)** is an option that you can enable in an ALB. When enabled, this causes traffic to be routed to the same EC2 instance based on the client session. Furthermore, this will lead to uneven load distribution among EC2 instances, where one instance may receive more traffic than others – this is precisely what is happening in the given scenario. Turning off sticky sessions allows the ALB to distribute traffic evenly across all available EC2 instances. Ultimately, this option is most commonly used when your EC2 instances handle the application state.",
+    "sourceQuestion": "ALB Sticky Sessions"
+  },
+  {
+    "id": "c358",
+    "category": "Monitoring & Operations",
+    "question": "What is Amazon CloudWatch Container Insights?",
+    "summary": "**Amazon CloudWatch Container Insights** 是 AWS 用於收集、聚合與視覺化容器化應用程式（包含 microservices）指標與日誌的完全託管監控服務**Amazon CloudWatch Container Insights** 是 AWS 提供的完全託管監控服務，專門用於收集、聚合與視覺化容器化應用程式及微服務的指標（Metrics）與日誌（Logs）。\n### 支援平台\n- **Amazon ECS**（含 EC2 與 Fargate 模式）\n- **Amazon EKS**（含 EC2 與 Fargate 模式）\n- **Kubernetes**（部署於 EC2 上）\n### 核心功能與特點\n- **自動化數據收集**：自動收集 CPU、記憶體、磁碟及網路等資源使用率，並提供容器重啟失敗等診斷資訊。…",
+    "answer": "**Amazon CloudWatch Container Insights** 是 AWS 用於收集、聚合與視覺化容器化應用程式（包含 microservices）指標與日誌的完全託管監控服務**Amazon CloudWatch Container Insights** 是 AWS 提供的完全託管監控服務，專門用於收集、聚合與視覺化容器化應用程式及微服務的指標（Metrics）與日誌（Logs）。\n### 支援平台\n- **Amazon ECS**（含 EC2 與 Fargate 模式）\n- **Amazon EKS**（含 EC2 與 Fargate 模式）\n- **Kubernetes**（部署於 EC2 上）\n### 核心功能與特點\n- **自動化數據收集**：自動收集 CPU、記憶體、磁碟及網路等資源使用率，並提供容器重啟失敗等診斷資訊。\n- **Embedded Metric Format (EMF)**：將效能數據以結構化 JSON 格式記錄為日誌事件，並自動轉化為高粒度的 CloudWatch Metrics。\n- **多層級監控**：支援在 Cluster（集群）、Node（節點）、Pod/Task（容器組/任務）及 Service（服務）層級進行數據聚合與監控。\n- **開箱即用儀表板**：提供預設的自動化 Dashboard，可直接檢視容器效能與健康狀況，並支援設定 CloudWatch Alarms 進行即時告警。\n### 考試與實務要點\n- **最低維運負擔 (Least Operational Overhead)**：相較於自建 Prometheus + Grafana 或 OpenSearch，Container Insights 是 AWS 上收集 EKS/ECS 指標與日誌最省時省力的原生方案。\n- **部署方式**：在 EKS 上通常透過 CloudWatch Observability EKS Add-on 或安裝 CloudWatch Agent/Fluent Bit 來啟用。",
+    "sourceQuestion": "Amazon CloudWatch Container Insights"
+  },
+  {
+    "id": "c359",
+    "category": "Analytics & AI",
+    "question": "Does an AWS data lake actually store data in Amazon S3?",
+    "summary": "是的，在 AWS 架構中，**Data Lake（資料湖）的底層核心儲存空間就是 **[**Amazon S3**](https://docs.aws.amazon.com/whitepapers/latest/building-data-lakes/amazon-s3-data-lake-storage-platform.html)。\n「Data Lake」本身是一個**架構概念**，而不是單一的獨立產品。在 AWS 上建立 Data Lake 時，各個服務扮演的角色如下：…",
+    "answer": "是的，在 AWS 架構中，**Data Lake（資料湖）的底層核心儲存空間就是 **[**Amazon S3**](https://docs.aws.amazon.com/whitepapers/latest/building-data-lakes/amazon-s3-data-lake-storage-platform.html)。\n「Data Lake」本身是一個**架構概念**，而不是單一的獨立產品。在 AWS 上建立 Data Lake 時，各個服務扮演的角色如下：\n- **儲存層 (Storage) — **[**Amazon S3**](https://docs.aws.amazon.com/whitepapers/latest/building-data-lakes/amazon-s3-data-lake-storage-platform.html)**：** 所有原始資料（結構化、半結構化、非結構化）實際存放的地方。提供極高擴充性、11 個 9 的持久性與低成本特性。\n- **管理與權限層 (Governance) — **[**AWS Lake Formation**](https://cloudian.com/guides/data-lake/s3-data-lake-building-data-lakes-on-aws-and-4-tips-for-success/)**：** 負責幫你看管 S3 裡面的資料。它可以在 S3 之上建立資料目錄（Data Catalog），並設定細粒度的存取權限（例如控制某些人只能看 S3 裡某張表的特定欄位或列）。\n- **計算與分析層 (Compute & Analytics) — **[**Athena**](https://aws.amazon.com/big-data/datalakes-and-analytics/datalakes/)** / **[**EMR**](https://aws.amazon.com/big-data/datalakes-and-analytics/datalakes/)** / **[**Redshift Spectrum**](https://aws.amazon.com/big-data/datalakes-and-analytics/datalakes/)**：** 直接讀取 S3 裡面的資料進行 SQL 查詢、Spark 批次處理或分析。\n簡而言之，AWS 的 Data Lake 就是「以 S3 為資料中心，再搭配其他服務進行權限控管與數據分析」的組合。",
+    "sourceQuestion": "Data lake is actually using s3 under the hook?"
+  },
+  {
+    "id": "c360",
+    "category": "Analytics & AI",
+    "question": "What is AWS Glue Elastic Views?",
+    "summary": "[**AWS Glue Elastic Views**](https://docs.aws.amazon.com/whitepapers/latest/big-data-analytics-options/aws-glue.html) is a serverless feature of AWS Glue designed to combine, replicate, and synchronize data across multiple AWS data stores without custom code.…",
+    "answer": "[**AWS Glue Elastic Views**](https://docs.aws.amazon.com/whitepapers/latest/big-data-analytics-options/aws-glue.html) is a serverless feature of AWS Glue designed to combine, replicate, and synchronize data across multiple AWS data stores without custom code.\n- **Core Concept:** Allows creation of **materialized views** using PartiQL (a SQL-compatible query language). It automatically queries source data stores, transforms it, and materializes the output in a target data store.\n- **Near Real-Time Synchronization:** Monitors source databases for continuous changes and updates the target data stores automatically to keep data synchronized.\n- **Supported Sources & Targets:** Pulls data from sources like Amazon DynamoDB or relational databases and populates targets such as Amazon S3, Amazon Redshift, or Amazon OpenSearch (formerly Elasticsearch).\n- **Use Case:** Simplifies ETL workloads when copying operational database changes to analytical data lakes or search indexes without managing custom Lambda functions or Glue ETL pipelines.",
+    "sourceQuestion": "AWS Glue Elastic Views"
+  },
+  {
+    "id": "c361",
+    "category": "Analytics & AI",
+    "question": "What are AWS Lake Formation blueprints?",
+    "summary": "AWS Lake Formation Blueprints are designed to automate the process of data ingestion into the data lake. The “Incremental database” blueprint, in particular, is suitable for loading only new data from the Amazon Aurora MySQL database into the S3 data lake, based on previously set bookmarks. This ensures that the data in the data lake is continually updated with the latest operational data.",
+    "answer": "AWS Lake Formation Blueprints are designed to automate the process of data ingestion into the data lake. The “Incremental database” blueprint, in particular, is suitable for loading only new data from the Amazon Aurora MySQL database into the S3 data lake, based on previously set bookmarks. This ensures that the data in the data lake is continually updated with the latest operational data.",
+    "sourceQuestion": "AWS Lake Formation Blueprints"
+  },
+  {
+    "id": "c362",
+    "category": "Storage & Transfer",
+    "question": "What is NetApp SnapMirror, and when is it used with FSx for ONTAP?",
+    "summary": "**NetApp SnapMirror** 是 NetApp 公司開發的高效能資料複製與災難復原（Disaster Recovery, DR）技術。\n在 AWS 環境中，當你使用 [**Amazon FSx for NetApp ONTAP**](https://docs.aws.amazon.com/whitepapers/latest/building-data-lakes/amazon-s3-data-lake-storage-platform.html) 時，SnapMirror 就是官方推薦用來做**跨區域（Cross-Region）或跨檔案系統資料同步與備份**的核心工具。\n---\n### 核心特點與優勢\n- **區塊級增量備份 (Block-Level Incremental)：**\n- 只會複製建立 Snapshot 後「變更過的資料區塊」，而不是重新傳輸整個檔案。…",
+    "answer": "**NetApp SnapMirror** 是 NetApp 公司開發的高效能資料複製與災難復原（Disaster Recovery, DR）技術。\n在 AWS 環境中，當你使用 [**Amazon FSx for NetApp ONTAP**](https://docs.aws.amazon.com/whitepapers/latest/building-data-lakes/amazon-s3-data-lake-storage-platform.html) 時，SnapMirror 就是官方推薦用來做**跨區域（Cross-Region）或跨檔案系統資料同步與備份**的核心工具。\n---\n### 核心特點與優勢\n- **區塊級增量備份 (Block-Level Incremental)：**\n- 只會複製建立 Snapshot 後「變更過的資料區塊」，而不是重新傳輸整個檔案。\n- 極大地節省了網路頻寬與跨區資料傳輸費用（Data Transfer Cost）。\n- **原生傳輸，維運負擔最低 (Least Management Overhead)：**\n- 在 AWS 證照考試（如 SAA）中，如果題目要求在兩個 FSx for ONTAP 之間做 DR 災難復原備份，且要求**最小化維運成本**，**NetApp SnapMirror** 通常是最佳標準答案（比使用 AWS DataSync 或自建 Script 更省事）。\n- **保留所有檔案系統特性與權限：**\n- 複製過程會完整保留 NFS / SMB 的 POSIX / NTFS 存取權限（ACL）、檔案快照（Snapshot）與資料壓縮/重複資料刪除（Deduplication）狀態。\n- **支援多種複製模式：**\n- **非同步（Asynchronous）：** 定時同步（例如每 5 分鐘或每小時），適合跨區域 DR。\n- **同步（Synchronous / SnapMirror Synchronous）：** 做到 RPO = 0（資料零遺失），適合極高韌性需求的架構。\n---\n### 典型應用場景\n1. **跨區域災難復原 (Cross-Region DR)：** 在 Region A 與 Region B 各建一個 FSx for ONTAP，透過 VPC Peering 打通網路後，設定 SnapMirror 自動複製。\n2. **混合雲遷移 (Hybrid Cloud Migration)：** 將地端（On-Premises）NetApp 儲存設備上的資料，即時複製到 AWS FSx for ONTAP 上。",
+    "sourceQuestion": "NetApp SnapMirror"
+  },
+  {
+    "id": "c363",
+    "category": "Storage & Transfer",
+    "question": "What is S3 server access logging, and how does it differ from CloudTrail data events?",
+    "summary": "[**Amazon S3 Server Access Logging**](https://www.google.com/search?q=https://docs.aws.amazon.com/whitepapers/latest/big-data-analytics-options/aws-s3-server-access-logging.html) 是 S3 提供的一項免費原生功能，專門用來記錄所有針對該 S3 Bucket 發出的**詳細請求（Request Logs）**。\n---\n### 核心特點\n- **詳細的請求記錄：** 記錄包含請求者（Requester）、Bucket 名稱、請求時間、動作（如 `GET`、`PUT`）、HTTP 狀態碼、Turnaround Time（處理時間）、Referrer 以及 Error Code 等資訊。…",
+    "answer": "[**Amazon S3 Server Access Logging**](https://www.google.com/search?q=https://docs.aws.amazon.com/whitepapers/latest/big-data-analytics-options/aws-s3-server-access-logging.html) 是 S3 提供的一項免費原生功能，專門用來記錄所有針對該 S3 Bucket 發出的**詳細請求（Request Logs）**。\n---\n### 核心特點\n- **詳細的請求記錄：** 記錄包含請求者（Requester）、Bucket 名稱、請求時間、動作（如 `GET`、`PUT`）、HTTP 狀態碼、Turnaround Time（處理時間）、Referrer 以及 Error Code 等資訊。\n- **免費服務：** 開啟 Access Logging 本身不收取額外費用，你只需要支付**儲存這些 Log 檔案的 S3 空間費用**。\n- **Deliver to S3：** 設定後，S3 會自動將產生出的 Access Log 檔案定時寫入你指定的 Target Bucket 中。\n---\n### 與 AWS CloudTrail Data Events 的差別\n這是 SAA 考試中極高頻率出現的對比考點：\n\n| **特性** | **Server Access Logging** | **AWS CloudTrail Data Events** |\n| --- | --- | --- |\n| **費用** | **免費**（僅收 S3 儲存費） | **需額外付費**（按 Data Event 數量計費） |\n| **詳細度** | 包含 HTTP 轉發資訊、HTTP referrer、Turnaround time 等低階細節 | 著重於「誰在什麼時間呼叫了什麼 API」Audit 審計紀錄 |\n| **即時性** | 稍有延遲（Best effort delivery，通常數小時內） | 近乎即時（通常數分鐘內） |\n| **跨帳號管理** | 適合單一 Bucket 或簡易記錄 | 可透過 CloudTrail 輕鬆將多個帳號與服務的 Log 集中管理 |\n\n---\n### 考試與實務應用場景\n1. **合規與安全審計（Audit & Compliance）：** 需要追蹤是誰存取或下載了敏感文件。\n2. **存取分析與除錯：** 透過 [Amazon Athena](https://docs.aws.amazon.com/whitepapers/latest/big-data-analytics-options/aws-glue.html) 分析 Access Log，找出高流量的熱點檔案或 4xx/5xx 錯誤請求的原因。\n3. **最省成本的方案：** 當題目要求「記錄 S3 Bucket 的所有請求/物件級操作」**且**「降低成本」時，優先選擇 **Server Access Logging** 而非 CloudTrail Data Events。",
+    "sourceQuestion": "S3 server access logging"
   }
 ]

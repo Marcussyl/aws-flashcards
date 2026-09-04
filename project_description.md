@@ -46,7 +46,7 @@ Cards are grouped by topic rather than only by the four SAA exam domains (secure
 | Cost, Governance & Multi-Account | Organizations, Control Tower, SCP, RAM, Cost Explorer |
 | Migration & DR | MGN, DRS, Discovery, Migration Hub |
 
-Expect roughly 310+ cards after cleanup. Counts shift if notes are re-imported.
+Expect roughly 360+ cards after cleanup. The deck now includes notes added after the 18/08/2026 marker on the Notion page. Counts shift if notes are re-imported.
 
 ## Product features
 
