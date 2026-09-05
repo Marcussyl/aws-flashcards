@@ -4,16 +4,16 @@
 :root {
   --background: #020617;
   --foreground: #e2e8f0;
-  --accent: #7dd3fc;
+  --accent: #fbbf24;
   --accent-fg: #020617;
   --scrollbar-size: 0.5rem;
   --scrollbar-thumb: rgba(148, 163, 184, 0.42);
-  --scrollbar-thumb-hover: rgba(125, 211, 252, 0.72);
+  --scrollbar-thumb-hover: rgba(251, 191, 36, 0.72);
   --scrollbar-track: transparent;
 }
 
 [data-topic='library'] {
-  --accent: #7dd3fc;
+  --accent: #fbbf24;
   --accent-fg: #020617;
 }
 
