@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { AmbientBackdrop } from '@/components/AmbientBackdrop'
+import { MemoriMark } from '@/components/MemoriMark'
 import { SiteNav } from '@/components/SiteNav'
 import { TopicSwitcher } from '@/components/TopicSwitcher'
 import { topicFromPath } from '@/data/topics'
@@ -22,10 +23,8 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-3 py-3 sm:px-4 sm:py-4">
           <div className="flex min-w-0 items-center gap-2 sm:gap-3">
             <Link href="/" className="flex shrink-0 items-center gap-2 text-lg font-semibold tracking-tight sm:text-xl">
-              <span className="inline-flex size-7 items-center justify-center rounded-lg bg-accent/15 text-sm font-semibold text-accent">
-                R
-              </span>
-              <span>Recall</span>
+              <MemoriMark className="size-7 text-accent" title="Memori" />
+              <span>Memori</span>
             </Link>
             {topicId ? <TopicSwitcher topicId={topicId} /> : null}
           </div>

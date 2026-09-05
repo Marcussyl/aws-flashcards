@@ -11,8 +11,8 @@ const geistSans = Geist({
 
 export const metadata: Metadata = {
   title: {
-    default: 'Recall',
-    template: '%s · Recall',
+    default: 'Memori',
+    template: '%s · Memori',
   },
   description: 'Personal flip-card review for AWS, Proxmox, and other topics you are learning.',
 }
