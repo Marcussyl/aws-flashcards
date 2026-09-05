@@ -14,7 +14,7 @@ function normalizeMarkdown(content: string) {
 export function MarkdownContent({ content, className = '' }: MarkdownContentProps) {
   return (
     <div
-      className={`markdown-body prose prose-invert max-w-none prose-headings:scroll-mt-4 prose-headings:text-white prose-p:text-slate-100 prose-li:text-slate-100 prose-strong:text-white prose-a:text-sky-300 prose-code:text-accent prose-th:text-white prose-td:text-slate-200 ${className}`.trim()}
+      className={`markdown-body prose prose-invert max-w-none prose-headings:scroll-mt-4 prose-headings:text-foreground prose-p:text-foreground prose-li:text-foreground prose-strong:text-foreground prose-a:text-accent prose-code:text-accent prose-th:text-foreground prose-td:text-muted ${className}`.trim()}
     >
       <Markdown
         remarkPlugins={[remarkGfm]}
