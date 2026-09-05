@@ -1,0 +1,75 @@
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' width='512' height='512' fill='none'>
+  <defs>
+    <linearGradient id='primaryLobeGrad' x1='0%' y1='0%' x2='100%' y2='100%'>
+      <stop offset='0%' stop-color='#fbbf24'/>
+      <stop offset='100%' stop-color='#f59e0b'/>
+    </linearGradient>
+    <linearGradient id='innerSynapseGrad' x1='0%' y1='0%' x2='100%' y2='100%'>
+      <stop offset='0%' stop-color='#fb923c'/>
+      <stop offset='100%' stop-color='#ea580c'/>
+    </linearGradient>
+    <linearGradient id='amberSparkGrad' x1='0%' y1='0%' x2='100%' y2='100%'>
+      <stop offset='0%' stop-color='#fffbeb'/>
+      <stop offset='40%' stop-color='#fef08a'/>
+      <stop offset='100%' stop-color='#f59e0b'/>
+    </linearGradient>
+    <filter id='amberGlowClean' x='-30%' y='-30%' width='160%' height='160%'>
+      <feGaussianBlur stdDeviation='12' result='blur'/>
+      <feComposite in='SourceGraphic' in2='blur' operator='over'/>
+    </filter>
+  </defs>
+  <g transform='translate(256, 256) scale(0.92) translate(-512, -500)'>
+    <line x1='512' y1='465' x2='512' y2='705' stroke='#353942' stroke-width='22' stroke-linecap='round'/>
+    <circle cx='512' cy='580' r='11' fill='#f59e0b' fill-opacity='0.9'/>
+    <path
+      d='M480 370 C420 370 360 395 345 445 C325 490 340 535 375 555 C335 580 325 630 345 675 C370 725 430 745 480 745'
+      fill='none'
+      stroke='url(#primaryLobeGrad)'
+      stroke-width='50'
+      stroke-linecap='round'
+      stroke-linejoin='round'
+    />
+    <path
+      d='M480 460 C425 460 405 490 410 520 C415 550 445 565 480 565'
+      fill='none'
+      stroke='url(#innerSynapseGrad)'
+      stroke-width='42'
+      stroke-linecap='round'
+    />
+    <path
+      d='M480 650 C435 650 415 630 425 605'
+      fill='none'
+      stroke='url(#innerSynapseGrad)'
+      stroke-width='42'
+      stroke-linecap='round'
+    />
+    <path
+      d='M544 370 C604 370 664 395 679 445 C699 490 684 535 649 555 C689 580 699 630 679 675 C654 725 594 745 544 745'
+      fill='none'
+      stroke='url(#primaryLobeGrad)'
+      stroke-width='50'
+      stroke-linecap='round'
+      stroke-linejoin='round'
+    />
+    <path
+      d='M544 460 C599 460 619 490 614 520 C609 550 579 565 544 565'
+      fill='none'
+      stroke='url(#innerSynapseGrad)'
+      stroke-width='42'
+      stroke-linecap='round'
+    />
+    <path
+      d='M544 650 C589 650 609 630 599 605'
+      fill='none'
+      stroke='url(#innerSynapseGrad)'
+      stroke-width='42'
+      stroke-linecap='round'
+    />
+    <path
+      d='M512 260 C512 315 528 335 575 335 C528 335 512 355 512 410 C512 355 496 335 449 335 C496 335 512 315 512 260 Z'
+      fill='url(#amberSparkGrad)'
+      filter='url(#amberGlowClean)'
+    />
+    <circle cx='512' cy='335' r='14' fill='#fffbeb'/>
+  </g>
+</svg>
