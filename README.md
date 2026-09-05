@@ -1,4 +1,4 @@
-# Recall
+# Memori
 
 Personal flip-card app for reviewing more than one subject. AWS Solutions Architect notes ship as the first deck; Proxmox VE has a small starter set.
 

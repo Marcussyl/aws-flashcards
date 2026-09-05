@@ -1,4 +1,4 @@
-# Recall
+# Memori
 
 ## Overview
 
@@ -143,7 +143,7 @@ On Vercel, set the same `MONGODB_URI` (and optional `MONGODB_DB`) environment va
 ## Project layout
 
 ```text
-recall/
+memori/
   project_description.md
   .env.example             # MONGODB_URI template
   data/progress.json       # legacy local file, migrated once into MongoDB
