@@ -8,7 +8,7 @@ export function AmbientBackdrop() {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
       <motion.div
-        className="absolute -left-24 -top-24 h-72 w-72 rounded-full bg-amber-400/12 blur-3xl"
+        className="absolute -left-24 -top-24 h-72 w-72 rounded-full bg-accent/15 blur-3xl"
         animate={reduce ? undefined : { x: [0, 18, 0], y: [0, 14, 0] }}
         transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut' }}
       />

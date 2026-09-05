@@ -1,18 +1,18 @@
-import { Suspense } from 'react'
-import { IconShuffle } from '@/components/icons'
-import { StudyView } from '@/components/StudyView'
+import { redirect } from 'next/navigation'
 
-export default function StudyPage() {
-  return (
-    <Suspense
-      fallback={
-        <div className="flex h-full flex-1 flex-col items-center justify-center text-center">
-          <IconShuffle className="h-6 w-6 text-amber-300" />
-          <p className="mt-3 text-slate-400">Loading deck…</p>
-        </div>
-      }
-    >
-      <StudyView />
-    </Suspense>
-  )
+export default async function LegacyStudyPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ category?: string; mode?: string }>
+}) {
+  const params = await searchParams
+  const query = new URLSearchParams()
+  if (params.category) {
+    query.set('category', params.category)
+  }
+  if (params.mode) {
+    query.set('mode', params.mode)
+  }
+  const suffix = query.toString()
+  redirect(suffix ? `/aws/study?${suffix}` : '/aws/study')
 }

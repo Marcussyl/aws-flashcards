@@ -1,33 +1,49 @@
-# AWS Cert Flashcards
+# Recall
 
 ## Overview
 
-A Next.js study app that turns personal AWS certification notes into flip-style memory cards. The source material is the Notion export `random notes 35199f70bc56802a8800fbb944e0c856.html`, collected while preparing for the AWS Solutions Architect Associate exam.
+A Next.js study app for private flip-card review across more than one subject. The first deck is personal AWS Solutions Architect notes (from the Notion export `random notes 35199f70bc56802a8800fbb944e0c856.html`). A small Proxmox VE seed deck sits beside it so the same UI can review other topics.
 
-The app is for private revision: short exam-style questions on the front, condensed notes on the back, with optional full original explanations. Progress is stored as one MongoDB document and read/written through `GET`/`PUT /api/progress`.
+Short questions on the front, a condensed summary on the back, then an optional full note. Progress is stored as one MongoDB document and read/written through `GET`/`PUT /api/progress`. Card ids stay unique across topics (`c001` for AWS, `pve001` for PVE), so existing AWS progress keeps working.
 
 ## Goals
 
-- Review weak AWS topics faster than rereading a long notes page.
-- Group related facts so a session can focus on one domain (IAM, VPC, S3, etc.).
-- Keep question wording closer to exam English, including paraphrases of typos and informal notes.
-- Fill a small set of originally empty answers with accurate exam-oriented explanations.
+- Review more than one subject without mixing decks.
+- Drill weak cards faster than rereading a long notes page.
+- Group related facts so a session can focus on one category inside a topic.
+- Keep AWS question wording close to exam English.
+- Add later topics by editing JSON, not by shipping an editor.
 
-## Content pipeline
+## Topics
+
+| Topic id | What it covers |
+| --- | --- |
+| `aws` | AWS Solutions Architect notes, 360+ cards after cleanup |
+| `pve` | Proxmox VE seed cards: unprivileged LXC, UID mapping, LXC vs QEMU, Linux bridge |
+
+Progress reset on a dashboard clears only that topic's card ids.
+
+## Routes
+
+- `/` topic library
+- `/[topic]` dashboard with known / learning / unseen counts and category tiles
+- `/[topic]/study` flip session (`category`, `mode=due|learning|known`)
+- `/[topic]/browse` search inside that topic
+- `/study` and `/browse` redirect to `/aws/study` and `/aws/browse`
+
+## AWS content pipeline
 
 1. Parse Notion `<details>/<summary>` toggles from the HTML export.
 2. Skip empty "错题" markers that are not real questions.
-3. Deduplicate near-identical prompts (for example Macie, LDAP, IAM Identity Center, SAM) and keep the richer answer.
+3. Deduplicate near-identical prompts and keep the richer answer.
 4. Paraphrase many questions into clearer exam-style English. Original wording is stored as `sourceQuestion`.
 5. Assign each card to one study category using service keywords.
-6. Write `src/data/cards.json` for the app to load.
+6. Write `src/data/cards.json`. The loader stamps `topic: "aws"` at runtime so that file does not need a full rewrite.
 7. Copy referenced Notion images into `public/notes/` and attach them as `images` on matching cards.
 
-Empty notes that were completed during import include S3 storage-class waterfall, SQS polling/timeouts/retention, SWF, S3 event-notification delivery semantics, EC2 billing by instance state, Athena performance, RDS Multi-AZ vs Multi-Region vs replicas, IGW vs VGW, and Standard vs FIFO SQS.
+## AWS categories
 
-## Categories
-
-Cards are grouped by topic rather than only by the four SAA exam domains (secure, resilient, high-performing, cost-optimized). Those four domains still appear as an exam-fundamentals card.
+Cards are grouped by service area rather than only by the four SAA exam domains.
 
 | Category | What it covers |
 | --- | --- |
@@ -46,36 +62,54 @@ Cards are grouped by topic rather than only by the four SAA exam domains (secure
 | Cost, Governance & Multi-Account | Organizations, Control Tower, SCP, RAM, Cost Explorer |
 | Migration & DR | MGN, DRS, Discovery, Migration Hub |
 
-Expect roughly 360+ cards after cleanup. The deck now includes notes added after the 18/08/2026 marker on the Notion page. Counts shift if notes are re-imported.
+## PVE seed categories
+
+| Category | What it covers |
+| --- | --- |
+| Containers (LXC) | Unprivileged vs privileged, UID mapping, nesting, bind mounts |
+| Virtual Machines | When QEMU/KVM is the better fit |
+| Networking | Linux bridge / vmbr |
+
+## How to add another topic
+
+There is no in-app editor. To add a subject:
+
+1. Add an id and accent in `src/data/topics.ts` and `src/app/globals.css` (`[data-topic='...']`).
+2. Add categories in `src/data/categories.ts`.
+3. Add a JSON file of cards (`topic`, unique `id`, `category`, `question`, `summary`, `answer`, `sourceQuestion`).
+4. Import and concat that file in `src/lib/cards.ts`.
 
 ## Product features
 
-- Home dashboard with category tiles and known / learning / unseen counts.
+- Topic library with per-deck known / learning / unseen counts.
+- Topic dashboard with category tiles and a topic-scoped reset.
 - Study mode: flip cards, shuffle, filter by category, or study only due cards. Category and due sessions skip known cards until every card in that set is known.
 - Keyboard: Space to flip, arrows to move, `1` still learning, `2` I know this.
-- Card back shows a short summary first, with a toggle for the full note.
-- Browse + search across paraphrased questions and original notes.
-- Progress is written to MongoDB (`progress` collection) and can be reset from the home page.
+- Card back shows a short summary first, with a toggle for the rest of the note.
+- Browse + search inside the current topic.
+- Topic switcher in the header.
+- Progress is written to MongoDB (`progress` collection).
 
 ## Tech stack
 
 - Next.js App Router (TypeScript)
 - React client components for study/browse interactions
 - Tailwind CSS
-- Static JSON card deck (`src/data/cards.json`)
+- Static JSON decks (`src/data/cards.json`, `src/data/pve-cards.json`)
 - MongoDB progress document through `GET`/`PUT /api/progress`
 
 ## Data model
 
-Each card in `src/data/cards.json`:
+Each card:
 
-- `id`: stable local id such as `c001`
-- `category`: one of the topics above
+- `id`: stable local id such as `c001` or `pve001`
+- `topic`: `aws` or `pve` (AWS cards get this at load time)
+- `category`: one of the categories for that topic
 - `question`: paraphrased or cleaned prompt
 - `summary`: short back-of-card text
-- `answer`: full explanation from notes (or a filled-in answer)
-- `sourceQuestion`: original toggle title from the HTML notes
-- `images`: optional list of `/notes/...` screenshot paths shown on the card back
+- `answer`: full explanation
+- `sourceQuestion`: original prompt from notes
+- `images`: optional list of `/notes/...` screenshot paths
 
 Progress document in MongoDB collection `progress` (`_id: "default"`):
 
@@ -91,8 +125,6 @@ If MongoDB has no cards yet and `data/progress.json` still has local data, the A
 1. Create a free [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) M0 cluster.
 2. Add a database user, then allow your IP (and `0.0.0.0/0` if you will deploy to Vercel).
 3. Copy `.env.example` to `.env.local` and paste the connection string into `MONGODB_URI`.
-
-From `aws-flashcards/`:
 
 ```bash
 npm install
@@ -111,15 +143,17 @@ On Vercel, set the same `MONGODB_URI` (and optional `MONGODB_DB`) environment va
 ## Project layout
 
 ```text
-aws-flashcards/
+recall/
   project_description.md
   .env.example             # MONGODB_URI template
   data/progress.json       # legacy local file, migrated once into MongoDB
-  public/notes/            # screenshots from the original notes
-  src/app/                 # routes: /, /study, /browse, /api/progress
-  src/components/          # home, study, browse, flip card
-  src/data/cards.json      # imported deck
-  src/data/categories.ts   # topic metadata
+  public/notes/            # screenshots from the original AWS notes
+  src/app/                 # /, /[topic], /[topic]/study, /[topic]/browse, /api/progress
+  src/components/          # library, dashboard, study, browse, flip card
+  src/data/cards.json      # AWS deck (topic stamped at load)
+  src/data/pve-cards.json  # Proxmox seed deck
+  src/data/topics.ts       # topic metadata
+  src/data/categories.ts   # categories per topic
   src/lib/mongo.ts         # MongoDB client
   src/lib/progress.ts      # client progress hook
   src/lib/progress-db.ts   # reads/writes the progress document
@@ -128,6 +162,7 @@ aws-flashcards/
 
 ## Out of scope (unless requested later)
 
+- In-app card or topic editor
 - User accounts or sharing decks (progress is one MongoDB document)
 - Spaced-repetition algorithm (SM-2 / Anki)
 - Importing new Notion exports from the UI
@@ -136,6 +171,7 @@ aws-flashcards/
 
 ## Suggested next steps
 
-- Add a "wrong questions" tag for items marked 错题 in the original notes.
+- Grow the PVE deck as notes accumulate.
+- Add a "wrong questions" tag for items marked 错题 in the original AWS notes.
 - Re-import when the Notion page grows.
 - Optional Anki-style intervals if daily review becomes a habit.

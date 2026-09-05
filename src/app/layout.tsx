@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import type { Metadata } from 'next'
 import { Geist } from 'next/font/google'
 import { AppShell } from '@/components/AppShell'
@@ -9,11 +10,14 @@ const geistSans = Geist({
 })
 
 export const metadata: Metadata = {
-  title: 'AWS Cert Flashcards',
-  description: 'Review AWS Solutions Architect notes with flip cards.',
+  title: {
+    default: 'Recall',
+    template: '%s · Recall',
+  },
+  description: 'Personal flip-card review for AWS, Proxmox, and other topics you are learning.',
 }
 
-export default function RootLayout({ children }: LayoutProps<'/'>) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={`${geistSans.variable} h-dvh antialiased`}>
       <body className="h-dvh overflow-hidden bg-slate-950 font-sans">

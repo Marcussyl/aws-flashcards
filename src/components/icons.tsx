@@ -79,6 +79,14 @@ export function IconInbox({ className = 'h-5 w-5' }: IconProps) {
   )
 }
 
+export function IconChevronDown({ className = 'h-5 w-5' }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
 export function IconLayers({ className = 'h-5 w-5' }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2">

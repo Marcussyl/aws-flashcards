@@ -2,22 +2,25 @@
 
 import { useMemo, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import { CATEGORIES } from '@/data/categories'
-import { cards } from '@/lib/cards'
+import { getCategoriesForTopic } from '@/data/categories'
+import type { TopicId } from '@/data/topics'
+import { getCardsByTopic } from '@/lib/cards'
 import { MarkdownContent } from '@/components/MarkdownContent'
 import { easeOutExpo } from '@/lib/motion'
 import { useProgress } from '@/lib/progress'
 
-export function BrowseView() {
+export function BrowseView({ topicId }: { topicId: TopicId }) {
   const { map } = useProgress()
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('All')
   const [openId, setOpenId] = useState<string | null>(null)
   const reduce = useReducedMotion()
+  const topicCards = getCardsByTopic(topicId)
+  const categories = getCategoriesForTopic(topicId)
 
   const visible = useMemo(() => {
     const needle = query.trim().toLowerCase()
-    return cards.filter((card) => {
+    return topicCards.filter((card) => {
       const categoryOk = category === 'All' || card.category === category
       if (!categoryOk) {
         return false
@@ -31,14 +34,14 @@ export function BrowseView() {
         card.sourceQuestion.toLowerCase().includes(needle)
       )
     })
-  }, [query, category])
+  }, [query, category, topicCards])
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-semibold">Browse cards</h1>
         <p className="mt-2 text-slate-400">
-          Search original notes or paraphrased exam-style questions.
+          Search questions or notes in this topic.
         </p>
       </div>
       <div className="flex flex-col gap-3 sm:flex-row">
@@ -46,7 +49,7 @@ export function BrowseView() {
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Search questions or answers"
-          className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-sm outline-none ring-amber-400/40 placeholder:text-slate-500 focus:ring-2"
+          className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-sm outline-none ring-accent/40 placeholder:text-slate-500 focus:ring-2"
         />
         <select
           value={category}
@@ -54,7 +57,7 @@ export function BrowseView() {
           className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-sm sm:w-auto"
         >
           <option value="All">All categories</option>
-          {CATEGORIES.map((item) => (
+          {categories.map((item) => (
             <option key={item.name} value={item.name}>
               {item.name}
             </option>
@@ -88,7 +91,7 @@ export function BrowseView() {
                   onClick={() => setOpenId(open ? null : card.id)}
                 >
                   <div>
-                    <p className="text-xs uppercase tracking-wide text-amber-300/80">
+                    <p className="text-xs uppercase tracking-wide text-accent/80">
                       {card.category}
                     </p>
                     <h2 className="mt-1 font-medium text-white">{card.question}</h2>

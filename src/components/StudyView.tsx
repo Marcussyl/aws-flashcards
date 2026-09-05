@@ -18,7 +18,8 @@ import {
   IconSpark,
 } from '@/components/icons'
 import { getCategoryEmoji } from '@/data/categories'
-import { cards, shuffleCards } from '@/lib/cards'
+import { getTopic, type TopicId } from '@/data/topics'
+import { getCardsByTopic, shuffleCards } from '@/lib/cards'
 import {
   cardExitKnown,
   cardExitLearning,
@@ -26,6 +27,7 @@ import {
   easeOutExpo,
   tapSpring,
 } from '@/lib/motion'
+import { topicHref } from '@/lib/paths'
 import { useProgress } from '@/lib/progress'
 import { advanceStudyDeck, selectStudyCards, studySessionHint } from '@/lib/study-deck'
 import type { Card } from '@/data/types'
@@ -47,7 +49,7 @@ type Swipe = {
   exit: 'next' | 'prev' | 'known' | 'learning'
 }
 
-export function StudyView() {
+export function StudyView({ topicId }: { topicId: TopicId }) {
   const params = useSearchParams()
   const category = params.get('category')
   const mode = params.get('mode')
@@ -58,17 +60,20 @@ export function StudyView() {
   const [burstKind, setBurstKind] = useState<BurstKind>('known')
   const [swipe, setSwipe] = useState<Swipe>({ dir: 1, exit: 'next' })
   const reduce = useReducedMotion()
+  const topic = getTopic(topicId)
+
+  const topicCards = useMemo(() => getCardsByTopic(topicId), [topicId])
 
   const baseList = useMemo(() => {
     return category
-      ? cards.filter((card) => card.category === category)
-      : cards
-  }, [category])
+      ? topicCards.filter((card) => card.category === category)
+      : topicCards
+  }, [category, topicCards])
 
   const usesProgress = Boolean(mode) || Boolean(category)
   const sessionKey = usesProgress
-    ? `${category ?? ''}|${mode ?? ''}|${ready ? 'ready' : 'pending'}`
-    : `all|${category ?? ''}|${mode ?? ''}`
+    ? `${topicId}|${category ?? ''}|${mode ?? ''}|${ready ? 'ready' : 'pending'}`
+    : `all|${topicId}|${category ?? ''}|${mode ?? ''}`
   const sessionHint = ready
     ? studySessionHint(baseList, map, { category, mode })
     : null
@@ -173,12 +178,13 @@ export function StudyView() {
   }
 
   if (deck === null) {
-    return <StudyLoading category={category} mode={mode} />
+    return <StudyLoading topicId={topicId} category={category} mode={mode} />
   }
 
   if (deck.length === 0 && (session?.original.length ?? 0) > 0) {
     return (
       <SessionComplete
+        topicId={topicId}
         count={session?.original.length ?? 0}
         category={category}
         mode={mode}
@@ -190,12 +196,12 @@ export function StudyView() {
   }
 
   if (!card) {
-    return <EmptyDeck category={category} mode={mode} />
+    return <EmptyDeck topicId={topicId} category={category} mode={mode} />
   }
 
   const progressPct = total ? Math.round(((index + 1) / total) * 100) : 0
-  const topicEmoji = getCategoryEmoji(category ?? card.category)
-  const topicLabel = category ?? 'All topics'
+  const topicEmoji = getCategoryEmoji(category ?? card.category, topicId)
+  const topicLabel = category ?? topic?.name ?? 'All topics'
   const modeLabel = sessionHint
     ? MODE_LABELS[sessionHint] ?? sessionHint
     : mode
@@ -208,7 +214,7 @@ export function StudyView() {
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/20 bg-amber-400/10 px-2.5 py-1 text-xs font-medium text-amber-200">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-accent/20 bg-accent/10 px-2.5 py-1 text-xs font-medium text-accent">
                 <span aria-hidden="true">{topicEmoji}</span>
                 <span className="truncate">{topicLabel}</span>
               </span>
@@ -218,7 +224,7 @@ export function StudyView() {
               </span>
             </div>
             <h1 className="mt-2 flex items-center gap-2 text-xl font-semibold sm:text-2xl">
-              <IconBook className="h-5 w-5 text-amber-300" />
+              <IconBook className="h-5 w-5 text-accent" />
               Study session
             </h1>
           </div>
@@ -232,7 +238,7 @@ export function StudyView() {
         </div>
         <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
           <motion.div
-            className="h-full rounded-full bg-gradient-to-r from-amber-300 to-sky-400"
+            className="h-full rounded-full bg-gradient-to-r from-accent to-sky-400"
             animate={{ width: `${progressPct}%` }}
             transition={reduce ? { duration: 0 } : { type: 'spring', stiffness: 180, damping: 24 }}
           />
@@ -323,13 +329,15 @@ export function StudyView() {
 }
 
 function StudyLoading({
+  topicId,
   category,
   mode,
 }: {
+  topicId: TopicId
   category: string | null
   mode: string | null
 }) {
-  const topic = category ?? 'All topics'
+  const topic = category ?? getTopic(topicId)?.name ?? 'All topics'
   const modeLabel = mode ? MODE_LABELS[mode] ?? mode : 'Shuffled deck'
   const reduce = useReducedMotion()
 
@@ -354,15 +362,15 @@ function StudyLoading({
           className="absolute inset-0 flex items-center justify-center rounded-[1.15rem] border border-white/12 shadow-[0_18px_40px_rgba(0,0,0,0.35)]"
           style={{
             background:
-              'radial-gradient(circle at top right, rgba(251, 191, 36, 0.28), transparent 40%), linear-gradient(180deg, #0f172a, #111827)',
+              'radial-gradient(circle at top right, color-mix(in oklab, var(--accent) 28%, transparent), transparent 40%), linear-gradient(180deg, #0f172a, #111827)',
           }}
           animate={reduce ? undefined : { y: [0, -8, 0] }}
           transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut', delay: 0.3 }}
         >
-          <IconLayers className="h-8 w-8 text-amber-200" />
+          <IconLayers className="h-8 w-8 text-accent" />
         </motion.span>
       </div>
-      <span className="mt-8 inline-flex items-center gap-2 rounded-full border border-amber-300/20 bg-amber-400/10 px-3 py-1 text-xs font-medium text-amber-200">
+      <span className="mt-8 inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/10 px-3 py-1 text-xs font-medium text-accent">
         <IconShuffle className="h-3.5 w-3.5" />
         {modeLabel}
       </span>
@@ -371,7 +379,7 @@ function StudyLoading({
         Lining up {topic.toLowerCase()} cards so you can start flipping right away.
       </p>
       <div className="mt-6 flex items-center gap-2 text-xs text-slate-500">
-        <span className="inline-flex size-2 animate-pulse rounded-full bg-amber-300" />
+        <span className="inline-flex size-2 animate-pulse rounded-full bg-accent" />
         Preparing your session
       </div>
     </div>
@@ -379,6 +387,7 @@ function StudyLoading({
 }
 
 function SessionComplete({
+  topicId,
   count,
   category,
   mode,
@@ -386,6 +395,7 @@ function SessionComplete({
   burstKind,
   onStartOver,
 }: {
+  topicId: TopicId
   count: number
   category: string | null
   mode: string | null
@@ -394,7 +404,7 @@ function SessionComplete({
   onStartOver: () => void
 }) {
   const reduce = useReducedMotion()
-  const topic = category ?? 'All topics'
+  const topic = category ?? getTopic(topicId)?.name ?? 'All topics'
   const modeLabel = mode ? MODE_LABELS[mode] ?? mode : 'Shuffled'
 
   return (
@@ -411,8 +421,8 @@ function SessionComplete({
       >
         <IconCheck className="h-8 w-8" />
       </motion.div>
-      <span className="mt-5 inline-flex items-center gap-1.5 rounded-full border border-amber-300/20 bg-amber-400/10 px-2.5 py-1 text-xs font-medium text-amber-200">
-        <span aria-hidden="true">{getCategoryEmoji(category ?? '')}</span>
+      <span className="mt-5 inline-flex items-center gap-1.5 rounded-full border border-accent/20 bg-accent/10 px-2.5 py-1 text-xs font-medium text-accent">
+        <span aria-hidden="true">{getCategoryEmoji(category ?? '', topicId)}</span>
         {topic}
         <span className="text-slate-500">·</span>
         {modeLabel}
@@ -420,13 +430,13 @@ function SessionComplete({
       <h1 className="mt-4 text-2xl font-semibold">You have finished the session</h1>
       <p className="mt-3 max-w-sm text-sm leading-6 text-slate-400">
         You marked all {count} {count === 1 ? 'card' : 'cards'} as known. Would you
-        like to start over with this round, or head back home?
+        like to start over with this round, or head back to the dashboard?
       </p>
       <div className="mt-6 flex flex-col gap-3 sm:flex-row">
         <motion.button
           type="button"
           onClick={onStartOver}
-          className="inline-flex items-center justify-center gap-2 rounded-full bg-amber-400 px-5 py-3 text-sm font-semibold text-slate-950 hover:bg-amber-300"
+          className="inline-flex items-center justify-center gap-2 rounded-full bg-accent px-5 py-3 text-sm font-semibold text-accent-fg hover:opacity-90"
           whileHover={reduce ? undefined : { scale: 1.03 }}
           whileTap={reduce ? undefined : { scale: 0.97 }}
           transition={tapSpring}
@@ -435,10 +445,10 @@ function SessionComplete({
           Start over
         </motion.button>
         <Link
-          href="/"
-          className="inline-flex items-center justify-center gap-2 rounded-full border border-white/15 px-5 py-3 text-sm font-semibold text-white hover:border-amber-300/60"
+          href={topicHref(topicId)}
+          className="inline-flex items-center justify-center gap-2 rounded-full border border-white/15 px-5 py-3 text-sm font-semibold text-white hover:border-accent/60"
         >
-          Back home
+          Back to dashboard
         </Link>
       </div>
       <CelebrateBurst burstId={burstId} kind={burstKind} />
@@ -447,9 +457,11 @@ function SessionComplete({
 }
 
 function EmptyDeck({
+  topicId,
   category,
   mode,
 }: {
+  topicId: TopicId
   category: string | null
   mode: string | null
 }) {
@@ -462,7 +474,7 @@ function EmptyDeck({
       animate={{ opacity: 1, y: 0 }}
     >
       <motion.div
-        className="flex size-16 items-center justify-center rounded-2xl border border-white/10 bg-slate-900/80 text-amber-300"
+        className="flex size-16 items-center justify-center rounded-2xl border border-white/10 bg-slate-900/80 text-accent"
         initial={reduce ? false : { scale: 0.88 }}
         animate={{ scale: 1 }}
         transition={{ type: 'spring', stiffness: 380, damping: 22 }}
@@ -473,21 +485,21 @@ function EmptyDeck({
       <p className="mt-3 max-w-sm text-sm leading-6 text-slate-400">
         {category ? `${category} ` : 'This '}
         {mode ? `${MODE_LABELS[mode] ?? mode} ` : ''}
-        pile is empty. Shuffle everything, or reset progress from home.
+        pile is empty. Shuffle everything, or reset progress from the dashboard.
       </p>
       <div className="mt-6 flex flex-col gap-3 sm:flex-row">
         <Link
-          href="/study"
-          className="inline-flex items-center justify-center gap-2 rounded-full bg-amber-400 px-5 py-3 text-sm font-semibold text-slate-950 hover:bg-amber-300"
+          href={topicHref(topicId, 'study')}
+          className="inline-flex items-center justify-center gap-2 rounded-full bg-accent px-5 py-3 text-sm font-semibold text-accent-fg hover:opacity-90"
         >
           <IconShuffle className="h-4 w-4" />
           Shuffle all
         </Link>
         <Link
-          href="/"
-          className="inline-flex items-center justify-center gap-2 rounded-full border border-white/15 px-5 py-3 text-sm font-semibold text-white hover:border-amber-300/60"
+          href={topicHref(topicId)}
+          className="inline-flex items-center justify-center gap-2 rounded-full border border-white/15 px-5 py-3 text-sm font-semibold text-white hover:border-accent/60"
         >
-          Back home
+          Back to dashboard
         </Link>
       </div>
     </motion.div>

@@ -6,6 +6,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { IconFlip } from '@/components/icons'
 import { MarkdownContent } from '@/components/MarkdownContent'
 import { getCategoryEmoji } from '@/data/categories'
+import { cardNoteRemainder } from '@/lib/paths'
 import { useIsClient } from '@/lib/use-is-client'
 import type { Card } from '@/data/types'
 
@@ -16,9 +17,28 @@ type FlashCardProps = {
 }
 
 export function FlashCard({ card, flipped, onFlip }: FlashCardProps) {
-  const [expanded, setExpanded] = useState(false)
+  const [ui, setUi] = useState({ id: card.id, expanded: false, showFull: false })
   const isClient = useIsClient()
   const reduce = useReducedMotion()
+
+  if (ui.id !== card.id) {
+    setUi({ id: card.id, expanded: false, showFull: false })
+  }
+
+  const expanded = ui.expanded
+  const showFull = ui.showFull
+
+  function setExpanded(value: boolean) {
+    setUi((current) => ({ ...current, id: card.id, expanded: value }))
+  }
+
+  function setShowFull(value: boolean | ((prev: boolean) => boolean)) {
+    setUi((current) => ({
+      ...current,
+      id: card.id,
+      showFull: typeof value === 'function' ? value(current.showFull) : value,
+    }))
+  }
 
   useEffect(() => {
     if (!expanded) {
@@ -28,7 +48,7 @@ export function FlashCard({ card, flipped, onFlip }: FlashCardProps) {
     document.body.style.overflow = 'hidden'
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        setExpanded(false)
+        setUi((current) => ({ ...current, expanded: false }))
       }
     }
     window.addEventListener('keydown', onKey)
@@ -63,8 +83,8 @@ export function FlashCard({ card, flipped, onFlip }: FlashCardProps) {
         <div className={`card-inner ${flipped ? 'is-flipped' : ''}`}>
           <div className="card-face card-front">
             <div className="flex h-8 shrink-0 items-center justify-between gap-3">
-              <p className="flex min-w-0 items-center gap-2 leading-none text-xs font-semibold uppercase tracking-[0.18em] text-amber-300/80">
-                <span aria-hidden="true">{getCategoryEmoji(card.category)}</span>
+              <p className="flex min-w-0 items-center gap-2 leading-none text-xs font-semibold uppercase tracking-[0.18em] text-accent/80">
+                <span aria-hidden="true">{getCategoryEmoji(card.category, card.topic)}</span>
                 <span className="truncate">{card.category}</span>
               </p>
               <ExpandButton onClick={openExpanded} />
@@ -75,7 +95,7 @@ export function FlashCard({ card, flipped, onFlip }: FlashCardProps) {
               </h2>
             </div>
             <p className="flex shrink-0 items-center justify-center gap-2 pt-4 text-sm text-slate-400 sm:pt-6">
-              <IconFlip className="h-4 w-4 text-amber-300/80" />
+              <IconFlip className="h-4 w-4 text-accent/80" />
               Tap the card to flip
             </p>
           </div>
@@ -90,7 +110,7 @@ export function FlashCard({ card, flipped, onFlip }: FlashCardProps) {
               className="mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain pr-2 text-left text-slate-100"
               onClick={(event) => event.stopPropagation()}
             >
-              <CardBody card={card} />
+              <CardBody card={card} showFull={showFull} onToggleFull={() => setShowFull((value) => !value)} />
             </div>
           </div>
         </div>
@@ -131,7 +151,11 @@ export function FlashCard({ card, flipped, onFlip }: FlashCardProps) {
                     </div>
                     <div className="overflow-y-auto pr-1 text-slate-100">
                       {flipped ? (
-                        <CardBody card={card} />
+                        <CardBody
+                          card={card}
+                          showFull={showFull}
+                          onToggleFull={() => setShowFull((value) => !value)}
+                        />
                       ) : (
                         <h2 className="text-center text-2xl font-semibold leading-snug text-white sm:text-3xl">
                           {card.question}
@@ -149,12 +173,57 @@ export function FlashCard({ card, flipped, onFlip }: FlashCardProps) {
   )
 }
 
-function CardBody({ card }: { card: Card }) {
+function CardBody({
+  card,
+  showFull,
+  onToggleFull,
+}: {
+  card: Card
+  showFull: boolean
+  onToggleFull: () => void
+}) {
+  const extra = cardNoteRemainder(card.summary, card.answer)
+  const images = card.images ?? []
+
   return (
     <>
-      {(card.images?.length ?? 0) > 0 && (
-        <div className="mb-4 space-y-3">
-          {card.images?.map((src) => (
+      <MarkdownContent content={card.summary} />
+      {extra && !showFull ? (
+        <button
+          type="button"
+          className="mt-4 text-sm font-medium text-accent hover:underline"
+          onClick={onToggleFull}
+        >
+          Show full note
+        </button>
+      ) : null}
+      {extra && showFull ? (
+        <div className="mt-4 space-y-4 border-t border-white/10 pt-4">
+          {images.length > 0 ? (
+            <div className="space-y-3">
+              {images.map((src) => (
+                <img
+                  key={src}
+                  src={src}
+                  alt=""
+                  className="max-h-[70vh] w-full rounded-xl border border-white/10 object-contain bg-slate-950"
+                />
+              ))}
+            </div>
+          ) : null}
+          <MarkdownContent content={extra} />
+          <button
+            type="button"
+            className="text-sm font-medium text-slate-400 hover:text-white"
+            onClick={onToggleFull}
+          >
+            Hide full note
+          </button>
+        </div>
+      ) : null}
+      {!extra && images.length > 0 ? (
+        <div className="mt-4 space-y-3">
+          {images.map((src) => (
             <img
               key={src}
               src={src}
@@ -163,8 +232,7 @@ function CardBody({ card }: { card: Card }) {
             />
           ))}
         </div>
-      )}
-      <MarkdownContent content={card.answer} />
+      ) : null}
     </>
   )
 }
