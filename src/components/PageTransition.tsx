@@ -9,8 +9,8 @@ export function PageTransition({ children }: { children: React.ReactNode }) {
   return (
     <motion.div
       className="flex h-full min-h-0 flex-1 flex-col"
-      initial={reduce ? false : { opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={false}
+      animate={reduce ? undefined : { opacity: 1, y: 0 }}
       transition={pageTransition}
     >
       {children}

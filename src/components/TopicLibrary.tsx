@@ -20,7 +20,7 @@ export function TopicLibrary() {
     <motion.div
       className="space-y-10"
       variants={reduce ? undefined : stagger}
-      initial={reduce ? false : 'hidden'}
+      initial={false}
       animate="show"
     >
       <motion.section variants={reduce ? undefined : fadeUp} className="max-w-3xl">

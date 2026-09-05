@@ -35,7 +35,7 @@ export function HomeView({ topicId }: { topicId: TopicId }) {
     <motion.div
       className="space-y-10"
       variants={reduce ? undefined : stagger}
-      initial={reduce ? false : 'hidden'}
+      initial={false}
       animate="show"
     >
       <motion.section

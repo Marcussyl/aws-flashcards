@@ -68,7 +68,7 @@ export function BrowseView({ topicId }: { topicId: TopicId }) {
       <motion.div
         key={`${category}|${query}`}
         className="space-y-3"
-        initial={reduce ? false : { opacity: 0, y: 8 }}
+        initial={false}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.2, ease: easeOutExpo }}
       >
