@@ -109,9 +109,19 @@ export function useProgress() {
     [persist],
   )
 
-  const reset = useCallback(() => {
-    persist({})
-    setMap({})
+  const reset = useCallback((ids?: string[]) => {
+    setMap((prev) => {
+      if (!ids) {
+        persist({})
+        return {}
+      }
+      const next = { ...prev }
+      ids.forEach((id) => {
+        delete next[id]
+      })
+      persist(next)
+      return next
+    })
   }, [persist])
 
   return { map, ready, mark, reset }

@@ -5,7 +5,7 @@ import type { Transition, Variants } from 'motion/react'
 export const easeOutExpo: [number, number, number, number] = [0.22, 1, 0.36, 1]
 
 export const fadeUp: Variants = {
-  hidden: { opacity: 0, y: 14 },
+  hidden: { opacity: 1, y: 0 },
   show: {
     opacity: 1,
     y: 0,

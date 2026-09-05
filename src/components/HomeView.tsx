@@ -3,51 +3,59 @@
 import Link from 'next/link'
 import { motion, useReducedMotion } from 'motion/react'
 import { AnimatedNumber } from '@/components/AnimatedNumber'
-import { CATEGORIES } from '@/data/categories'
-import { cards, getCategoryCounts } from '@/lib/cards'
+import { getCategoriesForTopic } from '@/data/categories'
+import { getTopic, type TopicId } from '@/data/topics'
+import { getCardsByTopic, getCategoryCounts } from '@/lib/cards'
 import { fadeUp, stagger, tapSpring } from '@/lib/motion'
+import { topicHref } from '@/lib/paths'
 import { countByStatus, useProgress } from '@/lib/progress'
 
 const MotionLink = motion.create(Link)
 
-export function HomeView() {
+export function HomeView({ topicId }: { topicId: TopicId }) {
+  const topic = getTopic(topicId)
   const { map, ready, reset } = useProgress()
-  const counts = getCategoryCounts()
+  const topicCards = getCardsByTopic(topicId)
+  const categories = getCategoriesForTopic(topicId)
+  const counts = getCategoryCounts(topicId)
   const totals = countByStatus(
     map,
-    cards.map((card) => card.id),
+    topicCards.map((card) => card.id),
   )
-  const masteredPct = ready
-    ? Math.round((totals.known / cards.length) * 100)
+  const masteredPct = ready && topicCards.length
+    ? Math.round((totals.known / topicCards.length) * 100)
     : 0
   const reduce = useReducedMotion()
+
+  if (!topic) {
+    return null
+  }
 
   return (
     <motion.div
       className="space-y-10"
       variants={reduce ? undefined : stagger}
-      initial={reduce ? false : 'hidden'}
+      initial={false}
       animate="show"
     >
       <motion.section
         variants={reduce ? undefined : fadeUp}
-        className="overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 via-slate-900 to-amber-950/40 p-5 sm:p-10"
+        className="overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 p-5 sm:p-10"
       >
-        <p className="text-xs font-medium uppercase tracking-[0.18em] text-amber-300 sm:text-sm sm:tracking-[0.25em]">
-          Solutions Architect review
+        <p className="text-xs font-medium uppercase tracking-[0.18em] text-accent sm:text-sm sm:tracking-[0.25em]">
+          {topic.emoji} {topic.tagline}
         </p>
         <h1 className="mt-3 max-w-3xl text-3xl font-semibold tracking-tight text-white sm:text-5xl">
-          Flip through the AWS facts you flagged while studying.
+          Flip through the facts you flagged while studying.
         </h1>
         <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-300 sm:text-base sm:leading-7">
-          {cards.length} cards, grouped into {CATEGORIES.length} topics from your
-          random notes. Mark what you know, drill the rest, and keep exam
-          phrasing close to the real test.
+          {topicCards.length} cards in {topic.name}, grouped into {categories.length} categories.
+          Mark what you know, drill the rest, and keep the wording close to how you will recall it.
         </p>
         <div className="mt-6 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:flex-wrap">
           <MotionLink
-            href="/study?mode=due"
-            className="rounded-full bg-amber-400 px-5 py-3 text-center text-sm font-semibold text-slate-950 hover:bg-amber-300"
+            href={topicHref(topicId, 'study', { mode: 'due' })}
+            className="rounded-full bg-accent px-5 py-3 text-center text-sm font-semibold text-accent-fg hover:opacity-90"
             whileHover={reduce ? undefined : { scale: 1.03 }}
             whileTap={reduce ? undefined : { scale: 0.97 }}
             transition={tapSpring}
@@ -55,8 +63,8 @@ export function HomeView() {
             Study due cards
           </MotionLink>
           <MotionLink
-            href="/study"
-            className="rounded-full border border-white/15 px-5 py-3 text-center text-sm font-semibold text-white hover:border-amber-300/60"
+            href={topicHref(topicId, 'study')}
+            className="rounded-full border border-white/15 px-5 py-3 text-center text-sm font-semibold text-white hover:border-accent/60"
             whileHover={reduce ? undefined : { scale: 1.03 }}
             whileTap={reduce ? undefined : { scale: 0.97 }}
             transition={tapSpring}
@@ -64,8 +72,8 @@ export function HomeView() {
             Shuffle all
           </MotionLink>
           <MotionLink
-            href="/browse"
-            className="rounded-full border border-white/15 px-5 py-3 text-center text-sm font-semibold text-white hover:border-amber-300/60"
+            href={topicHref(topicId, 'browse')}
+            className="rounded-full border border-white/15 px-5 py-3 text-center text-sm font-semibold text-white hover:border-accent/60"
             whileHover={reduce ? undefined : { scale: 1.03 }}
             whileTap={reduce ? undefined : { scale: 0.97 }}
             transition={tapSpring}
@@ -95,7 +103,7 @@ export function HomeView() {
           label="Unseen"
           value={totals.unseen}
           ready={ready}
-          hint={`${cards.length} total cards`}
+          hint={`${topicCards.length} total cards`}
         />
       </motion.section>
 
@@ -104,8 +112,8 @@ export function HomeView() {
           <h2 className="text-lg font-semibold sm:text-xl">Categories</h2>
           <motion.button
             type="button"
-            onClick={reset}
-            className="shrink-0 text-sm text-slate-400 hover:text-amber-300"
+            onClick={() => reset(topicCards.map((card) => card.id))}
+            className="shrink-0 text-sm text-slate-400 hover:text-accent"
             whileTap={reduce ? undefined : { scale: 0.96 }}
           >
             Reset progress
@@ -115,12 +123,12 @@ export function HomeView() {
           className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
           variants={reduce ? undefined : stagger}
         >
-          {CATEGORIES.map((category) => {
+          {categories.map((category) => {
             const total = counts[category.name] ?? 0
             if (!total) {
               return null
             }
-            const ids = cards
+            const ids = topicCards
               .filter((card) => card.category === category.name)
               .map((card) => card.id)
             const stats = countByStatus(map, ids)
@@ -128,12 +136,12 @@ export function HomeView() {
             return (
               <MotionLink
                 key={category.name}
-                href={`/study?category=${encodeURIComponent(category.name)}`}
+                href={topicHref(topicId, 'study', { category: category.name })}
                 variants={reduce ? undefined : fadeUp}
                 whileHover={reduce ? undefined : { y: -4, scale: 1.01 }}
                 whileTap={reduce ? undefined : { scale: 0.98 }}
                 transition={tapSpring}
-                className="rounded-2xl border border-white/10 bg-slate-900/70 p-5 hover:border-amber-300/40 hover:bg-slate-900"
+                className="rounded-2xl border border-white/10 bg-slate-900/70 p-5 hover:border-accent/40 hover:bg-slate-900"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
@@ -147,7 +155,7 @@ export function HomeView() {
                 </div>
                 <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-white/10">
                   <motion.div
-                    className="h-full rounded-full bg-amber-400"
+                    className="h-full rounded-full bg-accent"
                     initial={false}
                     animate={{ width: `${pct}%` }}
                     transition={reduce ? { duration: 0 } : { type: 'spring', stiffness: 160, damping: 24 }}

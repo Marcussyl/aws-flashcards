@@ -6,29 +6,41 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { layoutSpring } from '@/lib/motion'
+import { topicHref } from '@/lib/paths'
 import { useIsClient } from '@/lib/use-is-client'
+import type { TopicId } from '@/data/topics'
 
-const navItems = [
-  { href: '/', label: 'Home' },
-  { href: '/study', label: 'Study' },
-  { href: '/browse', label: 'Browse' },
-]
+function navItems(topicId: TopicId | null) {
+  if (!topicId) {
+    return [{ href: '/', label: 'Library' }]
+  }
+  return [
+    { href: '/', label: 'Library' },
+    { href: topicHref(topicId), label: 'Dashboard' },
+    { href: topicHref(topicId, 'study'), label: 'Study' },
+    { href: topicHref(topicId, 'browse'), label: 'Browse' },
+  ]
+}
 
 function isActivePath(pathname: string, href: string) {
   if (href === '/') {
     return pathname === '/'
   }
-
+  const depth = href.split('/').filter(Boolean).length
+  if (depth === 1) {
+    return pathname === href
+  }
   return pathname === href || pathname.startsWith(`${href}/`)
 }
 
-export function SiteNav() {
+export function SiteNav({ topicId }: { topicId: TopicId | null }) {
   const pathname = usePathname()
   const [openPath, setOpenPath] = useState<string | null>(null)
   const isClient = useIsClient()
   const open = openPath === pathname
   const menuId = useId()
   const reduce = useReducedMotion()
+  const items = navItems(topicId)
 
   useEffect(() => {
     if (!open) {
@@ -48,14 +60,14 @@ export function SiteNav() {
   return (
     <div className="relative">
       <nav className="hidden text-sm text-slate-300 sm:flex sm:gap-1" aria-label="Main">
-        {navItems.map((item) => {
+        {items.map((item) => {
           const active = isActivePath(pathname, item.href)
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`relative rounded-lg px-4 py-2 text-center hover:text-amber-300 ${
-                active ? 'text-amber-300' : ''
+              className={`relative rounded-lg px-4 py-2 text-center hover:text-accent ${
+                active ? 'text-accent' : ''
               }`}
             >
               {active ? (
@@ -73,7 +85,7 @@ export function SiteNav() {
 
       <button
         type="button"
-        className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-slate-200 hover:bg-white/10 hover:text-amber-300 sm:hidden"
+        className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-slate-200 hover:bg-white/10 hover:text-accent sm:hidden"
         aria-expanded={open}
         aria-controls={menuId}
         aria-label={open ? 'Close menu' : 'Open menu'}
@@ -115,12 +127,12 @@ export function SiteNav() {
             exit={reduce ? undefined : { opacity: 0, y: -8, scale: 0.96 }}
             transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
           >
-            {navItems.map((item) => (
+            {items.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`block rounded-lg px-3 py-2.5 hover:bg-white/10 hover:text-amber-300 ${
-                  isActivePath(pathname, item.href) ? 'bg-white/10 text-amber-300' : ''
+                className={`block rounded-lg px-3 py-2.5 hover:bg-white/10 hover:text-accent ${
+                  isActivePath(pathname, item.href) ? 'bg-white/10 text-accent' : ''
                 }`}
               >
                 {item.label}

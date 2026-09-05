@@ -1,5 +1,5 @@
-import { BrowseView } from '@/components/BrowseView'
+import { redirect } from 'next/navigation'
 
-export default function BrowsePage() {
-  return <BrowseView />
+export default function LegacyBrowsePage() {
+  redirect('/aws/browse')
 }

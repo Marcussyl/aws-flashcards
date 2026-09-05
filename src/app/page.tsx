@@ -1,5 +1,5 @@
-import { HomeView } from '@/components/HomeView'
+import { TopicLibrary } from '@/components/TopicLibrary'
 
 export default function HomePage() {
-  return <HomeView />
+  return <TopicLibrary />
 }

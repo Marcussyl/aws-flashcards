@@ -1,0 +1,65 @@
+[
+  {
+    "id": "pve001",
+    "topic": "pve",
+    "category": "Containers (LXC)",
+    "question": "What is an unprivileged LXC container in Proxmox VE, and why is it the default?",
+    "summary": "An unprivileged container maps container root (UID 0) to an unprivileged host UID range. It is the safer default because a container breakout has much less host power.",
+    "answer": "An unprivileged container maps container root (UID 0) to an unprivileged host UID range. It is the safer default because a container breakout has much less host power.\n\nIn PVE, LXC can run privileged or unprivileged. Unprivileged is the UI default for new CT templates.\n- Inside the CT, processes still believe they are root.\n- On the host, those processes are a high UID/GID range (often 100000+), so they cannot rewrite host files or load kernel modules.\n- Privileged CTs share the host's UID 0. That is closer to a chroot with root, and a kernel/LXC bug is much more dangerous.\n\nUse unprivileged unless a workload truly needs host-level capabilities you cannot grant another way.",
+    "sourceQuestion": "what is an unprivileged container in pve?"
+  },
+  {
+    "id": "pve002",
+    "topic": "pve",
+    "category": "Containers (LXC)",
+    "question": "Unprivileged vs privileged LXC: what security tradeoff are you making?",
+    "summary": "Unprivileged = safer isolation, fewer host privileges. Privileged = more hardware and mount flexibility, much weaker isolation from the host.",
+    "answer": "Unprivileged = safer isolation, fewer host privileges. Privileged = more hardware and mount flexibility, much weaker isolation from the host.\n\nQuick compare:\n- Isolation: unprivileged maps root away from host root; privileged is host root inside the CT.\n- Devices / filesystems: privileged can mount NFS, FUSE, or pass through more devices more easily. Unprivileged often needs extra idmap, features, or bind-mount tricks.\n- Nesting / Docker: both can enable nesting, but unprivileged Docker-in-LXC is the painful path (AppArmor, cgroup, overlay).\n- When people still use privileged: old templates, GPU/USB passthrough that will not map, or nested storage drivers that refuse to run unprivileged.\n\nIf the question is \"default for a homelab app CT\", pick unprivileged. If the question is \"needs raw host devices or kernel-ish mounts\", you are trading security for convenience.",
+    "sourceQuestion": "unprivileged vs privileged lxc"
+  },
+  {
+    "id": "pve003",
+    "topic": "pve",
+    "category": "Containers (LXC)",
+    "question": "How does UID/GID mapping work in an unprivileged Proxmox container?",
+    "summary": "Container UIDs are shifted onto a host range via /etc/subuid and LXC idmap. CT root 0 becomes something like host 100000, so bind-mounted host files must match the mapped owner.",
+    "answer": "Container UIDs are shifted onto a host range via /etc/subuid and LXC idmap. CT root 0 becomes something like host 100000, so bind-mounted host files must match the mapped owner.\n\nTypical PVE mapping:\n- `0 100000 65536` means CT UIDs 0–65535 appear as host 100000–165535.\n- A file created as root in the CT is owned by 100000 on the ZFS/LVM dataset.\n- If you bind-mount `/tank/media` into the CT, the CT only sees it as writable if the host ownership matches the mapped UID, or you add an extra idmap line.\n\nThis is why \"permission denied\" on bind mounts is the classic unprivileged gotcha: the names look like root/user inside the CT, but the host inode owners are the mapped numbers.",
+    "sourceQuestion": "uid gid mapping unprivileged container"
+  },
+  {
+    "id": "pve004",
+    "topic": "pve",
+    "category": "Containers (LXC)",
+    "question": "What commonly breaks in unprivileged containers: nesting, FUSE, and bind mounts?",
+    "summary": "Unprivileged CTs cannot perform many privileged mounts. Docker nesting, FUSE/NFS, and bind-mounting host devices or root-owned paths often fail unless you add features, idmap, or switch to a VM.",
+    "answer": "Unprivileged CTs cannot perform many privileged mounts. Docker nesting, FUSE/NFS, and bind-mounting host devices or root-owned paths often fail unless you add features, idmap, or switch to a VM.\n\nCommon failures:\n- Nesting / Docker: needs `features: nesting=1` (and often keyctl). Overlay, AppArmor, and cgroup v2 still bite. A small VM is often cleaner for Docker.\n- FUSE / NFS client mounts from inside the CT: usually blocked; mount on the host and bind-mount in, or use a privileged CT / VM.\n- Bind mounts of host paths: work, but UID mapping makes ownership look wrong. Device nodes (`/dev/dri`, disks) are often denied.\n- systemd / nesting clocks and AppArmor profiles can also block service startup.\n\nPVE features (`nesting`, `fuse`, `keyctl`, `nfs`) are explicit holes you punch in that isolation. Turn on only what the workload needs.",
+    "sourceQuestion": "unprivileged nesting fuse bind mount limits"
+  },
+  {
+    "id": "pve005",
+    "topic": "pve",
+    "category": "Virtual Machines",
+    "question": "When should you choose an LXC container instead of a QEMU VM in Proxmox VE?",
+    "summary": "Use LXC for lightweight Linux services that can share the host kernel. Use a QEMU VM when you need a different kernel, stronger isolation, Docker-in-guest, or device passthrough.",
+    "answer": "Use LXC for lightweight Linux services that can share the host kernel. Use a QEMU VM when you need a different kernel, stronger isolation, Docker-in-guest, or device passthrough.\n\nChoose LXC when:\n- The guest is Linux and is fine on the PVE kernel.\n- You want fast start, low RAM, and simple bind mounts of host datasets.\n- It is a single service (Caddy, DNS, *arr, Postgres) and unprivileged is enough.\n\nChoose QEMU/KVM when:\n- You need Windows, BSD, or a custom kernel.\n- You want Docker/K8s without fighting LXC nesting.\n- You need PCI/GPU/USB passthrough or a full independent systemd/cgroup world.\n- Isolation matters more than density (untrusted workloads).\n\nLXC is not a tiny VM. It is a namespaced view of the host kernel. That is the whole tradeoff.",
+    "sourceQuestion": "lxc vs qemu vm when to choose"
+  },
+  {
+    "id": "pve006",
+    "topic": "pve",
+    "category": "Networking",
+    "question": "What is a Linux bridge (vmbr) in Proxmox VE networking?",
+    "summary": "A vmbr is a host Linux bridge that acts like a virtual switch. VMs and CTs attach veth/tap NICs to it so they share a LAN with the physical uplink port.",
+    "answer": "A vmbr is a host Linux bridge that acts like a virtual switch. VMs and CTs attach veth/tap NICs to it so they share a LAN with the physical uplink port.\n\nTypical default:\n- `vmbr0` bridges `enp*` (the NIC) and holds the host management IP.\n- A guest NIC with bridge=vmbr0 is on the same L2 network as the host.\n- VLANs can be tagged on the bridge or via SDN / extra vmbrs.\n\nDo not confuse the bridge with NAT. A plain vmbr is switching, not routing. NAT/masquerade is a separate firewall or `vmbr` + iptables setup, often used when the host has only one public IP.",
+    "sourceQuestion": "what is linux bridge vmbr in proxmox"
+  },
+  {
+    "id": "pve007",
+    "topic": "pve",
+    "category": "Containers (LXC)",
+    "question": "Why can an unprivileged container not mount many host devices?",
+    "summary": "Device nodes and raw mounts need capabilities that unprivileged user namespaces do not get. The CT root is not host root, so /dev passthrough and privileged filesystems are denied by the kernel and AppArmor.",
+    "answer": "Device nodes and raw mounts need capabilities that unprivileged user namespaces do not get. The CT root is not host root, so /dev passthrough and privileged filesystems are denied by the kernel and AppArmor.\n\nUnprivileged LXC runs in a user namespace:\n- `CAP_SYS_ADMIN` and device cgroup rules are restricted.\n- Creating or opening block/char devices usually fails (`mknod`, `/dev/sda`, many GPU nodes).\n- Mounting NFS, CIFS, or FUSE from inside the CT is a privileged mount.\n\nWorkarounds: bind-mount a host-prepared path, add a narrow lxc cgroup device allow, enable a specific feature, use privileged (worse), or move the workload into a VM where the guest kernel can own the device.",
+    "sourceQuestion": "why unprivileged cannot mount host devices"
+  }
+]

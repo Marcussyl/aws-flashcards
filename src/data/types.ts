@@ -1,7 +1,10 @@
+import type { TopicId } from '@/data/topics'
+
 export type CardStatus = 'unseen' | 'learning' | 'known'
 
 export type Card = {
   id: string
+  topic: TopicId
   category: string
   question: string
   summary: string
