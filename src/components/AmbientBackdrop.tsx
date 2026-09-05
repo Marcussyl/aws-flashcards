@@ -6,8 +6,7 @@ export function AmbientBackdrop() {
   const reduce = useReducedMotion()
 
   return (
-    <div className='pointer-events-none absolute inset-0 overflow-hidden' aria-hidden='true'>
-      <div className='absolute inset-0 bg-[#0b0f17]' />
+    <div className='pointer-events-none absolute inset-0 z-0 overflow-hidden' aria-hidden='true'>
       <motion.div
         className='absolute -left-24 -top-28 h-80 w-80 rounded-full bg-accent/10 blur-3xl'
         animate={reduce ? undefined : { x: [0, 14, 0], y: [0, 10, 0] }}

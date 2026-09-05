@@ -31,7 +31,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <SiteNav topicId={topicId} />
         </div>
       </header>
-      <main className='mx-auto flex min-h-0 w-full max-w-[1180px] flex-1 flex-col overflow-y-auto px-4 py-6 lg:px-10 lg:py-8'>
+      <main className='relative z-10 mx-auto flex min-h-0 w-full max-w-[1180px] flex-1 flex-col overflow-y-auto px-4 py-6 lg:px-10 lg:py-8'>
         {children}
       </main>
     </div>
