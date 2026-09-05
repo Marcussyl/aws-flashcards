@@ -2,8 +2,8 @@ import { ImageResponse } from 'next/og'
 import { MemoriIconGlyph } from '@/lib/memori-icon'
 
 export const size = {
-  width: 32,
-  height: 32,
+  width: 64,
+  height: 64,
 }
 
 export const contentType = 'image/png'
