@@ -1,16 +1,11 @@
 import type { ReactNode } from 'react'
 import type { Metadata } from 'next'
-import { Geist, JetBrains_Mono } from 'next/font/google'
+import { Geist } from 'next/font/google'
 import { AppShell } from '@/components/AppShell'
 import './globals.css'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
-  subsets: ['latin'],
-})
-
-const jetbrainsMono = JetBrains_Mono({
-  variable: '--font-jetbrains-mono',
   subsets: ['latin'],
 })
 
@@ -24,8 +19,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang='en' className={`${geistSans.variable} ${jetbrainsMono.variable} h-dvh antialiased`}>
-      <body className='h-dvh overflow-hidden bg-background font-sans text-foreground'>
+    <html lang="en" className={`${geistSans.variable} h-dvh antialiased`}>
+      <body className="h-dvh overflow-hidden bg-slate-950 font-sans">
         <AppShell>{children}</AppShell>
       </body>
     </html>

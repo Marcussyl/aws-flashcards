@@ -47,23 +47,23 @@ export function TopicSwitcher({ topicId }: { topicId: TopicId }) {
   }
 
   return (
-    <div className='relative'>
+    <div className="relative">
       <button
-        type='button'
-        className='inline-flex max-w-[11rem] items-center gap-1.5 rounded-lg bg-[#181c24] px-2.5 py-1 text-[13px] font-medium text-foreground hover:bg-surface-3 sm:max-w-none sm:px-3'
+        type="button"
+        className="inline-flex max-w-[11rem] items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs font-medium text-slate-200 hover:border-accent/40 hover:text-white sm:max-w-none sm:px-3 sm:text-sm"
         aria-expanded={open}
         aria-controls={menuId}
         onClick={() => setOpenForPath((currentPath) => (currentPath === pathname ? null : pathname))}
       >
-        <span className='size-2 shrink-0 rounded-full bg-accent' aria-hidden='true' />
-        <span className='truncate'>{current.name}</span>
-        <IconChevronDown className={`h-3.5 w-3.5 shrink-0 text-muted transition-transform ${open ? 'rotate-180' : ''}`} />
+        <span aria-hidden="true">{current.emoji}</span>
+        <span className="truncate">{current.name}</span>
+        <IconChevronDown className={`h-3.5 w-3.5 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
       <AnimatePresence>
         {open ? (
           <motion.div
             id={menuId}
-            className='absolute left-0 top-full z-50 mt-2 w-72 origin-top-left rounded-xl border border-border-strong bg-surface-2/95 p-1 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.75)] backdrop-blur-xl'
+            className="absolute left-0 top-full z-50 mt-2 w-72 origin-top-left rounded-2xl border border-white/10 bg-slate-900/95 p-1 shadow-2xl backdrop-blur"
             initial={reduce ? false : { opacity: 0, y: -8, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={reduce ? undefined : { opacity: 0, y: -8, scale: 0.96 }}
@@ -78,19 +78,19 @@ export function TopicSwitcher({ topicId }: { topicId: TopicId }) {
                 <Link
                   key={topic.id}
                   href={destForTopic(pathname, topic.id)}
-                  className={`flex items-start gap-3 rounded-[10px] px-3 py-2.5 hover:bg-surface-3 ${
-                    active ? 'bg-surface-3' : ''
+                  className={`flex items-start gap-3 rounded-xl px-3 py-2.5 hover:bg-white/10 ${
+                    active ? 'bg-white/10' : ''
                   }`}
                   onClick={() => setOpenForPath(null)}
                 >
-                  <span className='text-lg' aria-hidden='true'>
+                  <span className="text-lg" aria-hidden="true">
                     {topic.emoji}
                   </span>
-                  <span className='min-w-0 flex-1'>
-                    <span className='block text-sm font-medium text-foreground'>{topic.name}</span>
-                    <span className='mt-0.5 block text-xs text-muted'>{topic.tagline}</span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-medium text-white">{topic.name}</span>
+                    <span className="mt-0.5 block text-xs text-slate-400">{topic.tagline}</span>
                   </span>
-                  <span className='shrink-0 font-mono text-[11px] text-muted-2'>{pct}%</span>
+                  <span className="shrink-0 text-xs text-slate-500">{pct}%</span>
                 </Link>
               )
             })}

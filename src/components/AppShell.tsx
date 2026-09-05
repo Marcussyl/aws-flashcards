@@ -16,22 +16,22 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div
       data-topic={topicId ?? 'library'}
-      className='relative flex h-dvh flex-col overflow-hidden bg-background text-foreground'
+      className="relative flex h-dvh flex-col overflow-hidden bg-slate-950 text-slate-100"
     >
       <AmbientBackdrop />
-      <header className='relative z-50 h-14 shrink-0 border-b border-border bg-[#0f131c]/85 backdrop-blur-xl'>
-        <div className='mx-auto flex h-full max-w-[1180px] items-center justify-between gap-3 px-4 lg:px-10'>
-          <div className='flex min-w-0 items-center gap-2 sm:gap-3'>
-            <Link href='/' className='flex shrink-0 items-center gap-2 text-base font-semibold tracking-tight'>
-              <MemoriMark className='size-8 text-accent' title='Memori' />
-              <span className='text-foreground'>Memori</span>
+      <header className="relative z-50 shrink-0 border-b border-white/10 bg-slate-950/70 backdrop-blur">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-3 py-3 sm:px-4 sm:py-4">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+            <Link href="/" className="flex shrink-0 items-center gap-2 text-lg font-semibold tracking-tight sm:text-xl">
+              <MemoriMark className="size-7 text-accent" title="Memori" />
+              <span>Memori</span>
             </Link>
             {topicId ? <TopicSwitcher topicId={topicId} /> : null}
           </div>
           <SiteNav topicId={topicId} />
         </div>
       </header>
-      <main className='relative z-10 mx-auto flex min-h-0 w-full max-w-[1180px] flex-1 flex-col overflow-y-auto px-4 py-6 lg:px-10 lg:py-8'>
+      <main className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col overflow-y-auto px-3 py-4 sm:px-4 sm:py-6">
         {children}
       </main>
     </div>

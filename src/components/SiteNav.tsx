@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
+import { layoutSpring } from '@/lib/motion'
 import { topicHref } from '@/lib/paths'
 import { useIsClient } from '@/lib/use-is-client'
 import type { TopicId } from '@/data/topics'
@@ -57,29 +58,34 @@ export function SiteNav({ topicId }: { topicId: TopicId | null }) {
   }, [open])
 
   return (
-    <div className='relative'>
-      <nav className='hidden items-center gap-1 md:flex' aria-label='Main'>
+    <div className="relative">
+      <nav className="hidden text-sm text-slate-300 sm:flex sm:gap-1" aria-label="Main">
         {items.map((item) => {
           const active = isActivePath(pathname, item.href)
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`rounded-lg px-3 py-1 text-[13px] leading-5 transition-colors ${
-                active
-                  ? 'bg-surface-3 font-medium text-foreground shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]'
-                  : 'text-muted hover:bg-[#262a33] hover:text-foreground'
+              className={`relative rounded-lg px-4 py-2 text-center hover:text-accent ${
+                active ? 'text-accent' : ''
               }`}
             >
-              {item.label}
+              {active ? (
+                <motion.span
+                  layoutId="nav-pill"
+                  className="absolute inset-0 rounded-lg bg-white/10"
+                  transition={reduce ? { duration: 0 } : layoutSpring}
+                />
+              ) : null}
+              <span className="relative z-10">{item.label}</span>
             </Link>
           )
         })}
       </nav>
 
       <button
-        type='button'
-        className='inline-flex size-9 items-center justify-center rounded-[10px] text-foreground hover:bg-surface-2 hover:text-accent md:hidden'
+        type="button"
+        className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-slate-200 hover:bg-white/10 hover:text-accent sm:hidden"
         aria-expanded={open}
         aria-controls={menuId}
         aria-label={open ? 'Close menu' : 'Open menu'}
@@ -93,10 +99,10 @@ export function SiteNav({ topicId }: { topicId: TopicId | null }) {
             <AnimatePresence>
               {open ? (
                 <motion.button
-                  key='nav-backdrop'
-                  type='button'
-                  className='fixed inset-0 z-40 bg-[#0b0f17]/60 md:hidden'
-                  aria-label='Close menu'
+                  key="nav-backdrop"
+                  type="button"
+                  className="fixed inset-0 z-40 bg-slate-950/50 sm:hidden"
+                  aria-label="Close menu"
                   initial={reduce ? false : { opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={reduce ? undefined : { opacity: 0 }}
@@ -112,10 +118,10 @@ export function SiteNav({ topicId }: { topicId: TopicId | null }) {
       <AnimatePresence>
         {open ? (
           <motion.nav
-            key='nav-menu'
+            key="nav-menu"
             id={menuId}
-            className='absolute right-0 top-full z-50 mt-2 w-48 origin-top-right rounded-xl border border-border-strong bg-surface-2 p-1 text-sm text-muted shadow-[0_25px_50px_-12px_rgba(0,0,0,0.75)] backdrop-blur-xl md:hidden'
-            aria-label='Main'
+            className="absolute right-0 top-full z-50 mt-2 w-48 origin-top-right rounded-xl border border-white/10 bg-slate-900 p-1 text-sm text-slate-300 shadow-xl sm:hidden"
+            aria-label="Main"
             initial={reduce ? false : { opacity: 0, y: -8, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={reduce ? undefined : { opacity: 0, y: -8, scale: 0.96 }}
@@ -125,8 +131,8 @@ export function SiteNav({ topicId }: { topicId: TopicId | null }) {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`block rounded-lg px-3 py-2.5 hover:bg-surface-3 hover:text-foreground ${
-                  isActivePath(pathname, item.href) ? 'bg-surface-3 text-foreground' : ''
+                className={`block rounded-lg px-3 py-2.5 hover:bg-white/10 hover:text-accent ${
+                  isActivePath(pathname, item.href) ? 'bg-white/10 text-accent' : ''
                 }`}
               >
                 {item.label}
@@ -141,7 +147,7 @@ export function SiteNav({ topicId }: { topicId: TopicId | null }) {
 
 function MenuIcon({ open }: { open: boolean }) {
   return (
-    <span className='relative block h-4 w-5' aria-hidden='true'>
+    <span className="relative block h-4 w-5" aria-hidden="true">
       <span
         className={`absolute left-0 block h-0.5 w-5 bg-current transition-transform ${
           open ? 'top-1.5 rotate-45' : 'top-0'
