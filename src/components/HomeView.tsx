@@ -57,7 +57,7 @@ export function HomeView({ topicId }: { topicId: TopicId }) {
           <span className='text-muted-2'>•</span>
           <span>{topic.tagline}</span>
         </p>
-        <div className='mt-4 flex flex-col justify-between gap-6 lg:flex-row lg:items-end'>
+        <div className='mt-4 flex flex-col gap-6'>
           <div className='max-w-2xl'>
             <h1 className='text-[32px] font-semibold leading-10 tracking-tight text-foreground sm:text-[40px] sm:leading-[48px]'>
               {topic.name}
