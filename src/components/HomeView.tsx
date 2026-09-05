@@ -7,11 +7,8 @@ import { IconBook, IconRefresh, IconShuffle } from '@/components/icons'
 import { getCategoriesForTopic } from '@/data/categories'
 import { getTopic, type TopicId } from '@/data/topics'
 import { getCardsByTopic, getCategoryCounts } from '@/lib/cards'
-import { fadeUp, stagger, tapSpring } from '@/lib/motion'
 import { topicHref } from '@/lib/paths'
 import { countByStatus, useProgress } from '@/lib/progress'
-
-const MotionLink = motion.create(Link)
 
 export function HomeView({ topicId }: { topicId: TopicId }) {
   const topic = getTopic(topicId)
@@ -40,13 +37,8 @@ export function HomeView({ topicId }: { topicId: TopicId }) {
   }
 
   return (
-    <motion.div
-      className='space-y-10 lg:space-y-12'
-      variants={reduce ? undefined : stagger}
-      initial={false}
-      animate='show'
-    >
-      <motion.section variants={reduce ? undefined : fadeUp} className='relative'>
+    <div className='space-y-10 lg:space-y-12'>
+      <section className='relative'>
         <p className='flex flex-wrap items-center gap-2 font-mono text-[11px] uppercase tracking-wider text-muted'>
           <span>Topics</span>
           <span className='text-muted-2'>/</span>
@@ -68,43 +60,31 @@ export function HomeView({ topicId }: { topicId: TopicId }) {
             </p>
           </div>
           <div className='flex flex-wrap items-center gap-2'>
-            <MotionLink
+            <Link
               href={topicHref(topicId, 'study', { mode: 'due' })}
               className='btn-primary inline-flex items-center gap-2 px-4 py-2.5 text-sm'
-              whileHover={reduce ? undefined : { scale: 1.02 }}
-              whileTap={reduce ? undefined : { scale: 0.98 }}
-              transition={tapSpring}
             >
               <IconBook className='h-4 w-4' />
               Study due cards
-            </MotionLink>
-            <MotionLink
+            </Link>
+            <Link
               href={topicHref(topicId, 'study')}
               className='btn-secondary inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium'
-              whileHover={reduce ? undefined : { scale: 1.02 }}
-              whileTap={reduce ? undefined : { scale: 0.98 }}
-              transition={tapSpring}
             >
               <IconShuffle className='h-4 w-4 text-muted' />
               Shuffle all
-            </MotionLink>
-            <MotionLink
+            </Link>
+            <Link
               href={topicHref(topicId, 'browse')}
               className='btn-ghost inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium'
-              whileHover={reduce ? undefined : { scale: 1.02 }}
-              whileTap={reduce ? undefined : { scale: 0.98 }}
-              transition={tapSpring}
             >
               Browse deck
-            </MotionLink>
+            </Link>
           </div>
         </div>
-      </motion.section>
+      </section>
 
-      <motion.section
-        variants={reduce ? undefined : fadeUp}
-        className='grid grid-cols-1 gap-4 md:grid-cols-3'
-      >
+      <section className='grid grid-cols-1 gap-4 md:grid-cols-3'>
         <Stat
           label='Known'
           value={totals.known}
@@ -126,9 +106,9 @@ export function HomeView({ topicId }: { topicId: TopicId }) {
           hint={`${topicCards.length} total cards`}
           tone='muted'
         />
-      </motion.section>
+      </section>
 
-      <motion.section variants={reduce ? undefined : fadeUp}>
+      <section>
         <div className='mb-4 flex items-center justify-between gap-3'>
           <div className='flex items-center gap-2'>
             <h2 className='text-xl font-semibold tracking-tight'>Progress by category</h2>
@@ -136,20 +116,16 @@ export function HomeView({ topicId }: { topicId: TopicId }) {
               {categories.length} areas
             </span>
           </div>
-          <motion.button
+          <button
             type='button'
             onClick={() => reset(topicCards.map((card) => card.id))}
             className='btn-ghost inline-flex shrink-0 items-center gap-1 px-2 py-1 text-sm'
-            whileTap={reduce ? undefined : { scale: 0.96 }}
           >
             <IconRefresh className='h-3.5 w-3.5' />
             Reset progress
-          </motion.button>
+          </button>
         </div>
-        <motion.div
-          className='grid gap-4 sm:grid-cols-2 lg:grid-cols-3'
-          variants={reduce ? undefined : stagger}
-        >
+        <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-3'>
           {categories.map((category) => {
             const total = counts[category.name] ?? 0
             if (!total) {
@@ -161,14 +137,10 @@ export function HomeView({ topicId }: { topicId: TopicId }) {
             const stats = countByStatus(map, ids)
             const pct = ready && total ? Math.round((stats.known / total) * 100) : 0
             return (
-              <MotionLink
+              <Link
                 key={category.name}
                 href={topicHref(topicId, 'study', { category: category.name })}
-                variants={reduce ? undefined : fadeUp}
-                whileHover={reduce ? undefined : { y: -3, scale: 1.01 }}
-                whileTap={reduce ? undefined : { scale: 0.98 }}
-                transition={tapSpring}
-                className='surface-card rounded-xl p-5 hover:border-border-strong'
+                className='surface-card surface-card-interactive rounded-xl p-5'
               >
                 <div className='flex items-start justify-between gap-3'>
                   <div>
@@ -189,12 +161,12 @@ export function HomeView({ topicId }: { topicId: TopicId }) {
                   />
                 </div>
                 <p className='mt-2 font-mono text-[11px] text-muted-2'>{pct}% known</p>
-              </MotionLink>
+              </Link>
             )
           })}
-        </motion.div>
-      </motion.section>
-    </motion.div>
+        </div>
+      </section>
+    </div>
   )
 }
 

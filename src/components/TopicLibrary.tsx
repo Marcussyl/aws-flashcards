@@ -6,11 +6,8 @@ import { AnimatedNumber } from '@/components/AnimatedNumber'
 import { IconChevronRight } from '@/components/icons'
 import { TOPICS } from '@/data/topics'
 import { getCardsByTopic } from '@/lib/cards'
-import { fadeUp, stagger, tapSpring } from '@/lib/motion'
 import { topicHref } from '@/lib/paths'
 import { countByStatus, useProgress } from '@/lib/progress'
-
-const MotionLink = motion.create(Link)
 
 export function TopicLibrary() {
   const { map, ready } = useProgress()
@@ -25,13 +22,8 @@ export function TopicLibrary() {
   const mastered = topicStats.reduce((sum, item) => sum + item.totals.known, 0)
 
   return (
-    <motion.div
-      className='space-y-8 lg:space-y-12'
-      variants={reduce ? undefined : stagger}
-      initial={false}
-      animate='show'
-    >
-      <motion.section variants={reduce ? undefined : fadeUp} className='max-w-3xl'>
+    <div className='space-y-8 lg:space-y-12'>
+      <section className='max-w-3xl'>
         <div className='flex items-center gap-2'>
           <span className='size-1.5 rounded-full bg-accent' />
           <p className='font-mono text-[11px] font-semibold uppercase tracking-[0.08em] text-accent'>
@@ -63,26 +55,19 @@ export function TopicLibrary() {
             <span className='text-muted'>Mastered</span>
           </span>
         </div>
-      </motion.section>
+      </section>
 
-      <motion.section
-        className='grid items-stretch gap-4 lg:grid-cols-2 lg:gap-6'
-        variants={reduce ? undefined : stagger}
-      >
+      <section className='grid items-stretch gap-4 lg:grid-cols-2 lg:gap-6'>
         {topicStats.map(({ topic, topicCards, totals }) => {
           const ids = topicCards.map((card) => card.id)
           const pct = ready && ids.length ? Math.round((totals.known / ids.length) * 100) : 0
           const learningPct = ready && ids.length ? Math.round((totals.learning / ids.length) * 100) : 0
           return (
-            <MotionLink
+            <Link
               key={topic.id}
               href={topicHref(topic.id)}
               data-topic={topic.id}
-              variants={reduce ? undefined : fadeUp}
-              whileHover={reduce ? undefined : { y: -3, scale: 1.01 }}
-              whileTap={reduce ? undefined : { scale: 0.99 }}
-              transition={tapSpring}
-              className='surface-card group relative flex flex-col overflow-hidden rounded-xl p-6'
+              className='surface-card surface-card-interactive group relative flex flex-col overflow-hidden rounded-xl p-6'
             >
               <div className='pointer-events-none absolute inset-0 bg-gradient-to-b from-accent/10 via-transparent to-transparent' />
               <div className='relative flex flex-1 flex-col'>
@@ -127,11 +112,11 @@ export function TopicLibrary() {
                   <IconChevronRight className='h-4 w-4' />
                 </span>
               </div>
-            </MotionLink>
+            </Link>
           )
         })}
-      </motion.section>
-    </motion.div>
+      </section>
+    </div>
   )
 }
 

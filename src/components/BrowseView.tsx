@@ -75,13 +75,7 @@ export function BrowseView({ topicId }: { topicId: TopicId }) {
       <p className='font-mono text-[11px] uppercase tracking-wider text-muted-2'>
         {visible.length} cards
       </p>
-      <motion.div
-        key={`${category}|${query}`}
-        className='space-y-3'
-        initial={false}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.2, ease: easeOutExpo }}
-      >
+      <div key={`${category}|${query}`} className='space-y-3'>
         {visible.length === 0 ? (
           <p className='surface-card rounded-xl px-5 py-8 text-center text-sm text-muted'>
             No cards match this search.
@@ -142,7 +136,7 @@ export function BrowseView({ topicId }: { topicId: TopicId }) {
             )
           })
         )}
-      </motion.div>
+      </div>
     </div>
   )
 }
