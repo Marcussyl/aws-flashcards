@@ -1,8 +1,12 @@
 'use client'
 
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
 import { AnimatedNumber } from '@/components/AnimatedNumber'
+import { CardCreateModal } from '@/components/CardCreateModal'
+import { IconPlus } from '@/components/icons'
 import { getCategoriesForTopic } from '@/data/categories'
 import { getTopic, type TopicId } from '@/data/topics'
 import type { Card } from '@/data/types'
@@ -14,11 +18,13 @@ import { countByStatus, useProgress } from '@/lib/progress'
 const MotionLink = motion.create(Link)
 
 export function HomeView({ topicId, cards }: { topicId: TopicId; cards: Card[] }) {
+  const router = useRouter()
   const topic = getTopic(topicId)
   const { map, ready, reset } = useProgress()
-  const topicCards = cards
+  const [creating, setCreating] = useState(false)
+  const [topicCards, setTopicCards] = useState(cards)
   const categories = getCategoriesForTopic(topicId)
-  const counts = getCategoryCounts(cards)
+  const counts = getCategoryCounts(topicCards)
   const totals = countByStatus(
     map,
     topicCards.map((card) => card.id),
@@ -27,6 +33,10 @@ export function HomeView({ topicId, cards }: { topicId: TopicId; cards: Card[] }
     ? Math.round((totals.known / topicCards.length) * 100)
     : 0
   const reduce = useReducedMotion()
+
+  useEffect(() => {
+    setTopicCards(cards)
+  }, [cards])
 
   if (!topic) {
     return null
@@ -81,6 +91,17 @@ export function HomeView({ topicId, cards }: { topicId: TopicId; cards: Card[] }
           >
             Browse notes
           </MotionLink>
+          <motion.button
+            type="button"
+            onClick={() => setCreating(true)}
+            className="inline-flex items-center justify-center gap-1.5 rounded-full border border-accent/40 bg-accent/10 px-5 py-3 text-sm font-semibold text-accent hover:bg-accent/20"
+            whileHover={reduce ? undefined : { scale: 1.03 }}
+            whileTap={reduce ? undefined : { scale: 0.97 }}
+            transition={tapSpring}
+          >
+            <IconPlus className="h-4 w-4" />
+            Add question
+          </motion.button>
         </div>
       </motion.section>
 
@@ -168,6 +189,17 @@ export function HomeView({ topicId, cards }: { topicId: TopicId; cards: Card[] }
           })}
         </motion.div>
       </motion.section>
+
+      <CardCreateModal
+        open={creating}
+        topicId={topicId}
+        onClose={() => setCreating(false)}
+        onCreated={(card) => {
+          setTopicCards((current) => [...current, card])
+          setCreating(false)
+          router.refresh()
+        }}
+      />
     </motion.div>
   )
 }

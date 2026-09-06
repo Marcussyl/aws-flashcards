@@ -33,6 +33,14 @@ export type CardUpdate = {
   category?: string
 }
 
+export type CardCreate = {
+  topic: TopicId
+  category: string
+  question: string
+  summary: string
+  answer: string
+}
+
 export type ProgressEntry = {
   status: CardStatus
   seen: number

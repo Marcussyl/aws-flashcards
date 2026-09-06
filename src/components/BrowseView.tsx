@@ -1,9 +1,11 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
+import { CardCreateModal } from '@/components/CardCreateModal'
 import { CardEditModal } from '@/components/CardEditModal'
-import { IconPencil } from '@/components/icons'
+import { IconPencil, IconPlus } from '@/components/icons'
 import { MarkdownContent } from '@/components/MarkdownContent'
 import { getCategoriesForTopic } from '@/data/categories'
 import type { TopicId } from '@/data/topics'
@@ -12,11 +14,13 @@ import { easeOutExpo } from '@/lib/motion'
 import { useProgress } from '@/lib/progress'
 
 export function BrowseView({ topicId, cards }: { topicId: TopicId; cards: Card[] }) {
+  const router = useRouter()
   const { map } = useProgress()
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('All')
   const [openId, setOpenId] = useState<string | null>(null)
   const [editing, setEditing] = useState<Card | null>(null)
+  const [creating, setCreating] = useState(false)
   const [topicCards, setTopicCards] = useState(cards)
   const reduce = useReducedMotion()
   const categories = getCategoriesForTopic(topicId)
@@ -45,11 +49,21 @@ export function BrowseView({ topicId, cards }: { topicId: TopicId; cards: Card[]
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-semibold">Browse cards</h1>
-        <p className="mt-2 text-slate-400">
-          Search questions or notes in this topic. Use the pencil to edit markdown.
-        </p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-semibold">Browse cards</h1>
+          <p className="mt-2 text-slate-400">
+            Search questions or notes in this topic. Use the pencil to edit markdown.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setCreating(true)}
+          className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-full bg-accent px-4 py-2.5 text-sm font-semibold text-accent-fg hover:opacity-90"
+        >
+          <IconPlus className="h-4 w-4" />
+          Add question
+        </button>
       </div>
       <div className="flex flex-col gap-3 sm:flex-row">
         <input
@@ -163,6 +177,17 @@ export function BrowseView({ topicId, cards }: { topicId: TopicId; cards: Card[]
           }}
         />
       ) : null}
+      <CardCreateModal
+        open={creating}
+        topicId={topicId}
+        defaultCategory={category !== 'All' ? category : undefined}
+        onClose={() => setCreating(false)}
+        onCreated={(card) => {
+          setTopicCards((current) => [...current, card])
+          setCreating(false)
+          router.refresh()
+        }}
+      />
     </div>
   )
 }
