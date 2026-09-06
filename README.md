@@ -1,18 +1,12 @@
 # Memori
 
-Personal flip-card app for reviewing more than one subject. AWS Solutions Architect notes ship as the first deck; Proxmox VE has a small starter set.
+Personal flip-card app for reviewing more than one subject. AWS Solutions Architect notes ship as the first deck; Proxmox VE has a starter set. Card content is stored in MongoDB and can be edited in the UI.
 
 Full spec: [project_description.md](./project_description.md)
+More docs in project_description.md.
+Install deps and run the app as usual.
 
-```bash
-npm install
-cp .env.example .env.local
-# paste your MongoDB Atlas connection string into .env.local
-npm run dev
-```
+## Cards in MongoDB
 
-Open http://localhost:3000
-
-- `/` topic library
-- `/aws` and `/pve` dashboards
-- `/aws/study`, `/pve/browse`, and the same routes with `category` / `mode` query params
+First cards read seeds an empty collection from src/data JSON. Ids stay stable for progress.
+See project_description for seed and edit details.

@@ -1,22 +1,29 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
+import { CardEditModal } from '@/components/CardEditModal'
+import { IconPencil } from '@/components/icons'
+import { MarkdownContent } from '@/components/MarkdownContent'
 import { getCategoriesForTopic } from '@/data/categories'
 import type { TopicId } from '@/data/topics'
-import { getCardsByTopic } from '@/lib/cards'
-import { MarkdownContent } from '@/components/MarkdownContent'
+import type { Card } from '@/data/types'
 import { easeOutExpo } from '@/lib/motion'
 import { useProgress } from '@/lib/progress'
 
-export function BrowseView({ topicId }: { topicId: TopicId }) {
+export function BrowseView({ topicId, cards }: { topicId: TopicId; cards: Card[] }) {
   const { map } = useProgress()
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('All')
   const [openId, setOpenId] = useState<string | null>(null)
+  const [editing, setEditing] = useState<Card | null>(null)
+  const [topicCards, setTopicCards] = useState(cards)
   const reduce = useReducedMotion()
-  const topicCards = getCardsByTopic(topicId)
   const categories = getCategoriesForTopic(topicId)
+
+  useEffect(() => {
+    setTopicCards(cards)
+  }, [cards])
 
   const visible = useMemo(() => {
     const needle = query.trim().toLowerCase()
@@ -41,7 +48,7 @@ export function BrowseView({ topicId }: { topicId: TopicId }) {
       <div>
         <h1 className="text-3xl font-semibold">Browse cards</h1>
         <p className="mt-2 text-slate-400">
-          Search questions or notes in this topic.
+          Search questions or notes in this topic. Use the pencil to edit markdown.
         </p>
       </div>
       <div className="flex flex-col gap-3 sm:flex-row">
@@ -85,21 +92,33 @@ export function BrowseView({ topicId }: { topicId: TopicId }) {
                 key={card.id}
                 className="rounded-2xl border border-white/10 bg-slate-900/80"
               >
-                <button
-                  type="button"
-                  className="flex w-full items-start justify-between gap-4 p-5 text-left"
-                  onClick={() => setOpenId(open ? null : card.id)}
-                >
-                  <div>
-                    <p className="text-xs uppercase tracking-wide text-accent/80">
-                      {card.category}
-                    </p>
-                    <h2 className="mt-1 font-medium text-white">{card.question}</h2>
-                  </div>
-                  <span className="shrink-0 rounded-full bg-white/5 px-2 py-1 text-xs capitalize text-slate-400">
-                    {status}
-                  </span>
-                </button>
+                <div className="flex w-full items-start gap-2 p-5">
+                  <button
+                    type="button"
+                    className="min-w-0 flex-1 text-left"
+                    onClick={() => setOpenId(open ? null : card.id)}
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="text-xs uppercase tracking-wide text-accent/80">
+                          {card.category}
+                        </p>
+                        <h2 className="mt-1 font-medium text-white">{card.question}</h2>
+                      </div>
+                      <span className="shrink-0 rounded-full bg-white/5 px-2 py-1 text-xs capitalize text-slate-400">
+                        {status}
+                      </span>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    className="flex size-8 shrink-0 items-center justify-center rounded-lg text-slate-400 hover:bg-white/10 hover:text-white"
+                    aria-label={`Edit ${card.id}`}
+                    onClick={() => setEditing(card)}
+                  >
+                    <IconPencil className="h-4 w-4" />
+                  </button>
+                </div>
                 <AnimatePresence initial={false}>
                   {open ? (
                     <motion.div
@@ -133,6 +152,17 @@ export function BrowseView({ topicId }: { topicId: TopicId }) {
           })
         )}
       </motion.div>
+      {editing ? (
+        <CardEditModal
+          card={editing}
+          open
+          onClose={() => setEditing(null)}
+          onSaved={(next) => {
+            setTopicCards((current) => current.map((item) => (item.id === next.id ? next : item)))
+            setEditing(null)
+          }}
+        />
+      ) : null}
     </div>
   )
 }

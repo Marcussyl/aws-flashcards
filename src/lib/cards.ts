@@ -1,32 +1,20 @@
-import rawAwsCards from '@/data/cards.json'
-import rawPveCards from '@/data/pve-cards.json'
 import { getCategoriesForTopic } from '@/data/categories'
 import type { TopicId } from '@/data/topics'
 import type { Card } from '@/data/types'
 
-type AwsCardSource = Omit<Card, 'topic'>
-
-export const cards: Card[] = [
-  ...(rawAwsCards as AwsCardSource[]).map((card) => ({
-    ...card,
-    topic: 'aws' as const,
-  })),
-  ...(rawPveCards as Card[]),
-]
-
-export function getCardsByTopic(topic: TopicId): Card[] {
+export function getCardsByTopic(cards: Card[], topic: TopicId): Card[] {
   return cards.filter((card) => card.topic === topic)
 }
 
-export function getCardsByCategory(category: string, topic?: TopicId): Card[] {
+export function getCardsByCategory(cards: Card[], category: string, topic?: TopicId): Card[] {
   return cards.filter((card) => {
     const topicOk = !topic || card.topic === topic
     return topicOk && card.category === category
   })
 }
 
-export function getCategoryCounts(topic?: TopicId): Record<string, number> {
-  const list = topic ? getCardsByTopic(topic) : cards
+export function getCategoryCounts(cards: Card[], topic?: TopicId): Record<string, number> {
+  const list = topic ? getCardsByTopic(cards, topic) : cards
   return list.reduce<Record<string, number>>((acc, card) => {
     acc[card.category] = (acc[card.category] ?? 0) + 1
     return acc

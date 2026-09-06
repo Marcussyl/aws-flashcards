@@ -4,7 +4,7 @@
 
 A Next.js study app for private flip-card review across more than one subject. The first deck is personal AWS Solutions Architect notes (from the Notion export `random notes 35199f70bc56802a8800fbb944e0c856.html`). A small Proxmox VE seed deck sits beside it so the same UI can review other topics.
 
-Short questions on the front, a condensed summary on the back, then an optional full note. Progress is stored as one MongoDB document and read/written through `GET`/`PUT /api/progress`. Card ids stay unique across topics (`c001` for AWS, `pve001` for PVE), so existing AWS progress keeps working.
+Short questions on the front, a condensed summary on the back, then an optional full note. Card decks live in MongoDB (`cards` collection, one document per card) and can be edited in the study/browse UI. Progress stays in a separate `progress` document via `GET`/`PUT /api/progress`. Card ids stay unique across topics (`c001` for AWS, `pve001` for PVE), so existing progress keeps working.
 
 ## Goals
 
@@ -12,7 +12,7 @@ Short questions on the front, a condensed summary on the back, then an optional 
 - Drill weak cards faster than rereading a long notes page.
 - Group related facts so a session can focus on one category inside a topic.
 - Keep AWS question wording close to exam English.
-- Add later topics by editing JSON, not by shipping an editor.
+- Edit question / summary / answer (markdown) in-app; JSON remains the seed source.
 
 ## Topics
 
@@ -72,12 +72,12 @@ Cards are grouped by service area rather than only by the four SAA exam domains.
 
 ## How to add another topic
 
-There is no in-app editor. To add a subject:
+To add a subject (JSON seed plus optional in-app edits):
 
 1. Add an id and accent in `src/data/topics.ts` and `src/app/globals.css` (`[data-topic='...']`).
 2. Add categories in `src/data/categories.ts`.
 3. Add a JSON file of cards (`topic`, unique `id`, `category`, `question`, `summary`, `answer`, `sourceQuestion`).
-4. Import and concat that file in `src/lib/cards.ts`.
+4. Register the JSON in cards-db seeding, then seed MongoDB.
 
 ## Product features
 
@@ -89,27 +89,30 @@ There is no in-app editor. To add a subject:
 - Browse + search inside the current topic.
 - Topic switcher in the header.
 - Progress is written to MongoDB (`progress` collection).
+- Cards stored in MongoDB with pencil-icon editing (markdown textarea + preview)
 
 ## Tech stack
 
 - Next.js App Router (TypeScript)
 - React client components for study/browse interactions
 - Tailwind CSS
-- Static JSON decks (`src/data/cards.json`, `src/data/pve-cards.json`)
-- MongoDB progress document through `GET`/`PUT /api/progress`
+- JSON seed decks in src/data, runtime deck in MongoDB cards collection
+- MongoDB cards collection + progress document APIs
 
 ## Data model
 
 Each card:
 
-- `id`: stable local id such as `c001` or `pve001`
-- `topic`: `aws` or `pve` (AWS cards get this at load time)
+- `id`: stable local id such as `c001` or `pve001` (Mongo _id uses the same string)
+- `topic`: `aws` or `pve` (AWS cards get this stamped at seed time)
 - `category`: one of the categories for that topic
 - `question`: paraphrased or cleaned prompt
 - `summary`: short back-of-card text
 - `answer`: full explanation
 - `sourceQuestion`: original prompt from notes
-- `images`: optional list of `/notes/...` screenshot paths
+- `images`: optional list of `/notes/...` paths (no image binaries in Mongo)
+
+MongoDB cards docs also store createdAt/updatedAt. Indexes: unique _id; {topic:1, category:1}; text on question+sourceQuestion+answer. Empty collection auto-seeds from JSON on first list/get.
 
 Progress document in MongoDB collection `progress` (`_id: "default"`):
 
@@ -148,13 +151,16 @@ recall/
   .env.example             # MONGODB_URI template
   data/progress.json       # legacy local file, migrated once into MongoDB
   public/notes/            # screenshots from the original AWS notes
-  src/app/                 # /, /[topic], /[topic]/study, /[topic]/browse, /api/progress
+  src/app/                 # pages + /api/cards + /api/progress
   src/components/          # library, dashboard, study, browse, flip card
-  src/data/cards.json      # AWS deck (topic stamped at load)
+  src/data/cards.json      # AWS seed deck (topic stamped on seed)
   src/data/pve-cards.json  # Proxmox seed deck
   src/data/topics.ts       # topic metadata
   src/data/categories.ts   # categories per topic
   src/lib/mongo.ts         # MongoDB client
+  src/lib/cards-db.ts      # cards collection + seed
+  src/lib/cards.ts         # shuffle / count helpers
+  scripts/seed-cards.ts    # optional CLI seed
   src/lib/progress.ts      # client progress hook
   src/lib/progress-db.ts   # reads/writes the progress document
   src/lib/progress-file.ts # one-time file migration helper
@@ -162,7 +168,8 @@ recall/
 
 ## Out of scope (unless requested later)
 
-- In-app card or topic editor
+- Full WYSIWYG editor (markdown textarea + preview is supported)
+- Topic metadata editor
 - User accounts or sharing decks (progress is one MongoDB document)
 - Spaced-repetition algorithm (SM-2 / Anki)
 - Importing new Notion exports from the UI

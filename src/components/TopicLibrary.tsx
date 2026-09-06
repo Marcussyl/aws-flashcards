@@ -3,18 +3,18 @@
 import Link from 'next/link'
 import { motion, useReducedMotion } from 'motion/react'
 import { AnimatedNumber } from '@/components/AnimatedNumber'
-import { TOPICS } from '@/data/topics'
-import { getCardsByTopic } from '@/lib/cards'
+import { TOPICS, type TopicId } from '@/data/topics'
+import type { Card } from '@/data/types'
 import { fadeUp, stagger, tapSpring } from '@/lib/motion'
 import { topicHref } from '@/lib/paths'
 import { countByStatus, useProgress } from '@/lib/progress'
 
 const MotionLink = motion.create(Link)
 
-export function TopicLibrary() {
+export function TopicLibrary({ cardsByTopic }: { cardsByTopic: Record<TopicId, Card[]> }) {
   const { map, ready } = useProgress()
   const reduce = useReducedMotion()
-  const totalCards = TOPICS.reduce((sum, topic) => sum + getCardsByTopic(topic.id).length, 0)
+  const totalCards = TOPICS.reduce((sum, topic) => sum + (cardsByTopic[topic.id]?.length ?? 0), 0)
 
   return (
     <motion.div
@@ -42,7 +42,7 @@ export function TopicLibrary() {
         variants={reduce ? undefined : stagger}
       >
         {TOPICS.map((topic) => {
-          const topicCards = getCardsByTopic(topic.id)
+          const topicCards = cardsByTopic[topic.id] ?? []
           const ids = topicCards.map((card) => card.id)
           const totals = countByStatus(map, ids)
           const pct = ready && ids.length ? Math.round((totals.known / ids.length) * 100) : 0

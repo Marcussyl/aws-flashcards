@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import { IconFlip } from '@/components/icons'
+import { CardEditModal } from '@/components/CardEditModal'
+import { IconFlip, IconPencil } from '@/components/icons'
 import { MarkdownContent } from '@/components/MarkdownContent'
 import { getCategoryEmoji } from '@/data/categories'
 import { cardNoteRemainder } from '@/lib/paths'
@@ -14,19 +15,21 @@ type FlashCardProps = {
   card: Card
   flipped: boolean
   onFlip: () => void
+  onSaved?: (card: Card) => void
 }
 
-export function FlashCard({ card, flipped, onFlip }: FlashCardProps) {
-  const [ui, setUi] = useState({ id: card.id, expanded: false, showFull: false })
+export function FlashCard({ card, flipped, onFlip, onSaved }: FlashCardProps) {
+  const [ui, setUi] = useState({ id: card.id, expanded: false, showFull: false, editing: false })
   const isClient = useIsClient()
   const reduce = useReducedMotion()
 
   if (ui.id !== card.id) {
-    setUi({ id: card.id, expanded: false, showFull: false })
+    setUi({ id: card.id, expanded: false, showFull: false, editing: false })
   }
 
   const expanded = ui.expanded
   const showFull = ui.showFull
+  const editing = ui.editing
 
   function setExpanded(value: boolean) {
     setUi((current) => ({ ...current, id: card.id, expanded: value }))
@@ -38,6 +41,10 @@ export function FlashCard({ card, flipped, onFlip }: FlashCardProps) {
       id: card.id,
       showFull: typeof value === 'function' ? value(current.showFull) : value,
     }))
+  }
+
+  function setEditing(value: boolean) {
+    setUi((current) => ({ ...current, id: card.id, editing: value }))
   }
 
   useEffect(() => {
@@ -61,6 +68,11 @@ export function FlashCard({ card, flipped, onFlip }: FlashCardProps) {
   function openExpanded(event: React.MouseEvent) {
     event.stopPropagation()
     setExpanded(true)
+  }
+
+  function openEditor(event: React.MouseEvent) {
+    event.stopPropagation()
+    setEditing(true)
   }
 
   return (
@@ -87,7 +99,10 @@ export function FlashCard({ card, flipped, onFlip }: FlashCardProps) {
                 <span aria-hidden="true">{getCategoryEmoji(card.category, card.topic)}</span>
                 <span className="truncate">{card.category}</span>
               </p>
-              <ExpandButton onClick={openExpanded} />
+              <div className="flex shrink-0 items-center gap-1">
+                <EditButton onClick={openEditor} />
+                <ExpandButton onClick={openExpanded} />
+              </div>
             </div>
             <div className="mt-4 flex min-h-0 flex-1 overflow-y-auto overscroll-contain">
               <h2 className="m-auto w-full text-center text-xl font-semibold leading-snug text-white sm:text-3xl">
@@ -104,7 +119,10 @@ export function FlashCard({ card, flipped, onFlip }: FlashCardProps) {
               <p className="leading-none text-xs font-semibold uppercase tracking-[0.2em] text-sky-300/80">
                 Answer
               </p>
-              <ExpandButton onClick={openExpanded} />
+              <div className="flex shrink-0 items-center gap-1">
+                <EditButton onClick={openEditor} />
+                <ExpandButton onClick={openExpanded} />
+              </div>
             </div>
             <div
               className="mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain pr-2 text-left text-slate-100"
@@ -140,14 +158,17 @@ export function FlashCard({ card, flipped, onFlip }: FlashCardProps) {
                       <p className="leading-none text-xs font-semibold uppercase tracking-[0.2em] text-sky-300/80">
                         {flipped ? 'Answer' : card.category}
                       </p>
-                      <button
-                        type="button"
-                        className="flex size-8 shrink-0 items-center justify-center rounded-lg text-slate-300 hover:bg-white/10 hover:text-white"
-                        onClick={() => setExpanded(false)}
-                        aria-label="Close expanded card"
-                      >
-                        <CollapseIcon />
-                      </button>
+                      <div className="flex items-center gap-1">
+                        <EditButton onClick={openEditor} />
+                        <button
+                          type="button"
+                          className="flex size-8 shrink-0 items-center justify-center rounded-lg text-slate-300 hover:bg-white/10 hover:text-white"
+                          onClick={() => setExpanded(false)}
+                          aria-label="Close expanded card"
+                        >
+                          <CollapseIcon />
+                        </button>
+                      </div>
                     </div>
                     <div className="overflow-y-auto pr-1 text-slate-100">
                       {flipped ? (
@@ -169,6 +190,15 @@ export function FlashCard({ card, flipped, onFlip }: FlashCardProps) {
             document.body,
           )
         : null}
+      <CardEditModal
+        card={card}
+        open={editing}
+        onClose={() => setEditing(false)}
+        onSaved={(next) => {
+          onSaved?.(next)
+          setEditing(false)
+        }}
+      />
     </>
   )
 }
@@ -246,6 +276,19 @@ function ExpandButton({ onClick }: { onClick: (event: React.MouseEvent) => void 
       aria-label="Expand card"
     >
       <ExpandIcon />
+    </button>
+  )
+}
+
+function EditButton({ onClick }: { onClick: (event: React.MouseEvent) => void }) {
+  return (
+    <button
+      type="button"
+      className="flex size-8 shrink-0 items-center justify-center rounded-lg text-slate-300 hover:bg-white/10 hover:text-white"
+      onClick={onClick}
+      aria-label="Edit card"
+    >
+      <IconPencil className="h-4 w-4" />
     </button>
   )
 }

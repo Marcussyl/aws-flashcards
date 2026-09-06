@@ -5,19 +5,20 @@ import { motion, useReducedMotion } from 'motion/react'
 import { AnimatedNumber } from '@/components/AnimatedNumber'
 import { getCategoriesForTopic } from '@/data/categories'
 import { getTopic, type TopicId } from '@/data/topics'
-import { getCardsByTopic, getCategoryCounts } from '@/lib/cards'
+import type { Card } from '@/data/types'
+import { getCategoryCounts } from '@/lib/cards'
 import { fadeUp, stagger, tapSpring } from '@/lib/motion'
 import { topicHref } from '@/lib/paths'
 import { countByStatus, useProgress } from '@/lib/progress'
 
 const MotionLink = motion.create(Link)
 
-export function HomeView({ topicId }: { topicId: TopicId }) {
+export function HomeView({ topicId, cards }: { topicId: TopicId; cards: Card[] }) {
   const topic = getTopic(topicId)
   const { map, ready, reset } = useProgress()
-  const topicCards = getCardsByTopic(topicId)
+  const topicCards = cards
   const categories = getCategoriesForTopic(topicId)
-  const counts = getCategoryCounts(topicId)
+  const counts = getCategoryCounts(cards)
   const totals = countByStatus(
     map,
     topicCards.map((card) => card.id),
