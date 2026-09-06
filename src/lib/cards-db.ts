@@ -35,8 +35,8 @@ export async function ensureIndexes() {
   if (!globalForCards._cardsIndexesReady) {
     globalForCards._cardsIndexesReady = (async () => {
       const collection = await getCardsCollection()
+      // _id is unique by default; Mongo rejects createIndex({_id:1},{unique:true})
       await Promise.all([
-        collection.createIndex({ _id: 1 }, { unique: true }),
         collection.createIndex({ topic: 1, category: 1 }),
         collection.createIndex(
           { question: 'text', sourceQuestion: 'text', answer: 'text' },
