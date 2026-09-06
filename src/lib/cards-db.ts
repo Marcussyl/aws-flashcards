@@ -1,7 +1,7 @@
 import rawAwsCards from '@/data/cards.json'
 import rawPveCards from '@/data/pve-cards.json'
 import type { TopicId } from '@/data/topics'
-import type { Card, CardDocument, CardUpdate } from '@/data/types'
+import type { Card, CardCreate, CardDocument, CardUpdate } from '@/data/types'
 import { getDb } from '@/lib/mongo'
 
 export const CARDS_COLLECTION = 'cards'
@@ -212,6 +212,73 @@ export async function updateCard(id: string, patch: CardUpdate): Promise<Card | 
   return result ? toCard(result) : null
 }
 
+
+
+const TOPIC_ID_PREFIX: Record<TopicId, string> = {
+  aws: 'c',
+  pve: 'pve',
+}
+
+function nextIdForTopic(existingIds: string[], topic: TopicId): string {
+  const prefix = TOPIC_ID_PREFIX[topic]
+  let max = 0
+  for (const id of existingIds) {
+    if (!id.startsWith(prefix)) {
+      continue
+    }
+    const suffix = id.slice(prefix.length)
+    if (!/^\d+$/.test(suffix)) {
+      continue
+    }
+    const num = Number.parseInt(suffix, 10)
+    if (num > max) {
+      max = num
+    }
+  }
+  return `${prefix}${String(max + 1).padStart(3, '0')}`
+}
+
+export async function createCard(input: CardCreate): Promise<Card> {
+  await ensureIndexes()
+  const collection = await getCardsCollection()
+  const topicDocs = await collection
+    .find({ topic: input.topic }, { projection: { _id: 1 } })
+    .toArray()
+  const id = nextIdForTopic(
+    topicDocs.map((doc) => doc._id),
+    input.topic,
+  )
+  const now = new Date().toISOString()
+  const doc: CardDocument = {
+    _id: id,
+    topic: input.topic,
+    category: input.category.trim(),
+    question: input.question.trim(),
+    summary: input.summary.trim(),
+    answer: input.answer.trim(),
+    sourceQuestion: input.question.trim(),
+    createdAt: now,
+    updatedAt: now,
+  }
+  try {
+    await collection.insertOne(doc)
+  } catch (error) {
+    // Rare race: another insert grabbed the same id — retry once with a fresh max.
+    const code = (error as { code?: number }).code
+    if (code !== 11000) {
+      throw error
+    }
+    const again = await collection
+      .find({ topic: input.topic }, { projection: { _id: 1 } })
+      .toArray()
+    doc._id = nextIdForTopic(
+      again.map((item) => item._id),
+      input.topic,
+    )
+    await collection.insertOne(doc)
+  }
+  return toCard(doc)
+}
 
 export type SyncSummariesResult = {
   matched: number
