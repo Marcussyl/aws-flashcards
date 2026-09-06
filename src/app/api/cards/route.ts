@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { isTopicId } from '@/data/topics'
-import { forceSeedCards, listCards, seedCardsIfEmpty } from '@/lib/cards-db'
+import { forceSeedCards, listCards, seedCardsIfEmpty, syncSummariesFromJson } from '@/lib/cards-db'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -30,7 +30,14 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const body = (await request.json().catch(() => ({}))) as { force?: boolean }
+    const body = (await request.json().catch(() => ({}))) as {
+      force?: boolean
+      summariesOnly?: boolean
+    }
+    if (body.summariesOnly) {
+      const synced = await syncSummariesFromJson()
+      return NextResponse.json({ ok: true, summariesOnly: true, ...synced })
+    }
     const seeded = body.force ? await forceSeedCards() : await seedCardsIfEmpty()
     return NextResponse.json({ ok: true, seeded })
   } catch (error) {

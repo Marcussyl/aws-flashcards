@@ -212,6 +212,57 @@ export async function updateCard(id: string, patch: CardUpdate): Promise<Card | 
   return result ? toCard(result) : null
 }
 
+
+export type SyncSummariesResult = {
+  matched: number
+  modified: number
+  upserted: number
+}
+
+/**
+ * Upsert only summary and updatedAt from JSON decks by _id.
+ * Leaves question/answer/category/sourceQuestion/images untouched so user edits survive.
+ * Missing docs are inserted with the full seed document for that id.
+ */
+export async function syncSummariesFromJson(): Promise<SyncSummariesResult> {
+  await ensureIndexes()
+  const collection = await getCardsCollection()
+  const docs = seedDocuments()
+  if (docs.length === 0) {
+    return { matched: 0, modified: 0, upserted: 0 }
+  }
+  const now = new Date().toISOString()
+  const result = await collection.bulkWrite(
+    docs.map((doc) => ({
+      updateOne: {
+        filter: { _id: doc._id },
+        update: {
+          $set: {
+            summary: doc.summary,
+            updatedAt: now,
+          },
+          $setOnInsert: {
+            topic: doc.topic,
+            category: doc.category,
+            question: doc.question,
+            answer: doc.answer,
+            sourceQuestion: doc.sourceQuestion,
+            ...(doc.images ? { images: doc.images } : {}),
+            createdAt: doc.createdAt,
+          },
+        },
+        upsert: true,
+      },
+    })),
+    { ordered: false },
+  )
+  return {
+    matched: result.matchedCount,
+    modified: result.modifiedCount,
+    upserted: result.upsertedCount,
+  }
+}
+
 export function getCategoryCounts(cards: Card[]): Record<string, number> {
   return cards.reduce<Record<string, number>>((acc, card) => {
     acc[card.category] = (acc[card.category] ?? 0) + 1
