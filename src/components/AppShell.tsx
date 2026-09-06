@@ -8,6 +8,7 @@ import { MemoriMark } from '@/components/MemoriMark'
 import { SiteNav } from '@/components/SiteNav'
 import { TopicSwitcher } from '@/components/TopicSwitcher'
 import { topicFromPath } from '@/data/topics'
+import { APP_VERSION } from '@/lib/version'
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname()
@@ -26,6 +27,9 @@ export function AppShell({ children }: { children: ReactNode }) {
               <MemoriMark className="size-7 text-accent" title="Memori" />
               <span>Memori</span>
             </Link>
+            <span className="rounded-md bg-white/10 px-1.5 py-0.5 text-[10px] font-medium text-slate-400">
+              v{APP_VERSION}
+            </span>
             {topicId ? <TopicSwitcher topicId={topicId} /> : null}
           </div>
           <SiteNav topicId={topicId} />
