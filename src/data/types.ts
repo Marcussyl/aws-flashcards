@@ -13,6 +13,26 @@ export type Card = {
   images?: string[]
 }
 
+export type CardDocument = {
+  _id: string
+  topic: TopicId
+  category: string
+  question: string
+  summary: string
+  answer: string
+  sourceQuestion: string
+  images?: string[]
+  createdAt: string
+  updatedAt: string
+}
+
+export type CardUpdate = {
+  question?: string
+  summary?: string
+  answer?: string
+  category?: string
+}
+
 export type ProgressEntry = {
   status: CardStatus
   seen: number

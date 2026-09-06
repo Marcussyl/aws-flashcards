@@ -3,6 +3,9 @@ import { notFound } from 'next/navigation'
 import { IconShuffle } from '@/components/icons'
 import { StudyView } from '@/components/StudyView'
 import { isTopicId } from '@/data/topics'
+import { listCards } from '@/lib/cards-db'
+
+export const dynamic = 'force-dynamic'
 
 export default async function TopicStudyPage({
   params,
@@ -13,6 +16,7 @@ export default async function TopicStudyPage({
   if (!isTopicId(topic)) {
     notFound()
   }
+  const cards = await listCards({ topic })
 
   return (
     <Suspense
@@ -23,7 +27,7 @@ export default async function TopicStudyPage({
         </div>
       }
     >
-      <StudyView topicId={topic} />
+      <StudyView topicId={topic} cards={cards} />
     </Suspense>
   )
 }

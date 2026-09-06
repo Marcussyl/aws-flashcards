@@ -6,7 +6,6 @@ import { usePathname } from 'next/navigation'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { IconChevronDown } from '@/components/icons'
 import { TOPICS, type TopicId } from '@/data/topics'
-import { getCardsByTopic } from '@/lib/cards'
 import { countByStatus, useProgress } from '@/lib/progress'
 import { topicHref } from '@/lib/paths'
 
@@ -24,6 +23,7 @@ export function TopicSwitcher({ topicId }: { topicId: TopicId }) {
   const pathname = usePathname()
   const { map, ready } = useProgress()
   const [openForPath, setOpenForPath] = useState<string | null>(null)
+  const [idsByTopic, setIdsByTopic] = useState<Partial<Record<TopicId, string[]>>>({})
   const open = openForPath === pathname
   const menuId = useId()
   const reduce = useReducedMotion()
@@ -41,6 +41,37 @@ export function TopicSwitcher({ topicId }: { topicId: TopicId }) {
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
   }, [open])
+
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/cards')
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error('Failed to load cards')
+        }
+        return response.json() as Promise<Array<{ id: string; topic: TopicId }>>
+      })
+      .then((cards) => {
+        if (cancelled || !Array.isArray(cards)) {
+          return
+        }
+        const next: Partial<Record<TopicId, string[]>> = {}
+        for (const card of cards) {
+          const list = next[card.topic] ?? []
+          list.push(card.id)
+          next[card.topic] = list
+        }
+        setIdsByTopic(next)
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setIdsByTopic({})
+        }
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   if (!current) {
     return null
@@ -70,7 +101,7 @@ export function TopicSwitcher({ topicId }: { topicId: TopicId }) {
             transition={{ duration: 0.16 }}
           >
             {TOPICS.map((topic) => {
-              const ids = getCardsByTopic(topic.id).map((card) => card.id)
+              const ids = idsByTopic[topic.id] ?? []
               const totals = countByStatus(map, ids)
               const pct = ready && ids.length ? Math.round((totals.known / ids.length) * 100) : 0
               const active = topic.id === topicId

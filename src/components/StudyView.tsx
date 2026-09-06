@@ -19,7 +19,7 @@ import {
 } from '@/components/icons'
 import { getCategoryEmoji } from '@/data/categories'
 import { getTopic, type TopicId } from '@/data/topics'
-import { getCardsByTopic, shuffleCards } from '@/lib/cards'
+import { shuffleCards } from '@/lib/cards'
 import {
   cardExitKnown,
   cardExitLearning,
@@ -49,7 +49,7 @@ type Swipe = {
   exit: 'next' | 'prev' | 'known' | 'learning'
 }
 
-export function StudyView({ topicId }: { topicId: TopicId }) {
+export function StudyView({ topicId, cards }: { topicId: TopicId; cards: Card[] }) {
   const params = useSearchParams()
   const category = params.get('category')
   const mode = params.get('mode')
@@ -62,7 +62,7 @@ export function StudyView({ topicId }: { topicId: TopicId }) {
   const reduce = useReducedMotion()
   const topic = getTopic(topicId)
 
-  const topicCards = useMemo(() => getCardsByTopic(topicId), [topicId])
+  const topicCards = cards
 
   const baseList = useMemo(() => {
     return category
@@ -101,7 +101,7 @@ export function StudyView({ topicId }: { topicId: TopicId }) {
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (document.querySelector('[data-card-expanded]')) {
+      if (document.querySelector('[data-card-expanded], [data-card-edit]')) {
         return
       }
       if (!deck?.length) {
@@ -269,6 +269,20 @@ export function StudyView({ topicId }: { topicId: TopicId }) {
               card={card}
               flipped={flipped}
               onFlip={() => setFlipped((value) => !value)}
+              onSaved={(next) => {
+                setSession((current) => {
+                  if (!current) {
+                    return current
+                  }
+                  const patch = (list: Card[]) =>
+                    list.map((item) => (item.id === next.id ? next : item))
+                  return {
+                    ...current,
+                    deck: current.deck ? patch(current.deck) : current.deck,
+                    original: patch(current.original),
+                  }
+                })
+              }}
             />
           </motion.div>
         </AnimatePresence>
