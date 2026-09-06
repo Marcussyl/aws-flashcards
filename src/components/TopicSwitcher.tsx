@@ -78,7 +78,7 @@ export function TopicSwitcher({ topicId }: { topicId: TopicId }) {
   }
 
   return (
-    <div className="relative">
+    <div className="relative min-w-0">
       <button
         type="button"
         className="inline-flex max-w-[11rem] items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs font-medium text-slate-200 hover:border-accent/40 hover:text-white sm:max-w-none sm:px-3 sm:text-sm"
@@ -94,7 +94,7 @@ export function TopicSwitcher({ topicId }: { topicId: TopicId }) {
         {open ? (
           <motion.div
             id={menuId}
-            className="absolute left-0 top-full z-50 mt-2 w-72 origin-top-left rounded-2xl border border-white/10 bg-slate-900/95 p-1 shadow-2xl backdrop-blur"
+            className="absolute left-0 top-full z-50 mt-2 w-[min(18rem,calc(100vw-1.5rem))] max-w-[calc(100vw-1.5rem)] origin-top-left rounded-2xl border border-white/10 bg-slate-900/95 p-1 shadow-2xl backdrop-blur"
             initial={reduce ? false : { opacity: 0, y: -8, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={reduce ? undefined : { opacity: 0, y: -8, scale: 0.96 }}

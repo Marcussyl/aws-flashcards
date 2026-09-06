@@ -209,7 +209,7 @@ export function StudyView({ topicId, cards }: { topicId: TopicId; cards: Card[] 
       : 'Shuffled'
 
   return (
-    <div className="mx-auto flex h-full min-h-0 w-full max-w-3xl flex-1 flex-col gap-3 sm:gap-4">
+    <div className="mx-auto flex h-full min-h-0 min-w-0 w-full max-w-3xl flex-1 flex-col gap-3 overflow-x-hidden sm:gap-4">
       <div className="shrink-0 space-y-3">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
@@ -245,11 +245,11 @@ export function StudyView({ topicId, cards }: { topicId: TopicId; cards: Card[] 
         </div>
       </div>
 
-      <div className="relative min-h-0 flex-1">
+      <div className="relative min-h-0 min-w-0 w-full flex-1 overflow-x-hidden">
         <AnimatePresence initial={false} custom={swipe.dir}>
           <motion.div
             key={card.id}
-            className="absolute inset-0"
+            className="absolute inset-0 min-w-0 max-w-full"
             custom={swipe.dir}
             variants={cardSwipe}
             initial={reduce ? false : 'enter'}
@@ -288,7 +288,7 @@ export function StudyView({ topicId, cards }: { topicId: TopicId; cards: Card[] 
         </AnimatePresence>
       </div>
 
-      <div className="grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-[auto_1fr_1fr_auto] sm:items-center">
+      <div className="grid min-w-0 shrink-0 grid-cols-2 gap-2 sm:grid-cols-[auto_1fr_1fr_auto] sm:items-center">
         <motion.button
           type="button"
           className="order-3 inline-flex items-center justify-center gap-1.5 rounded-full border border-white/15 px-4 py-3 text-sm hover:border-white/40 sm:order-1"

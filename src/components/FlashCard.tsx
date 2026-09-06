@@ -78,7 +78,7 @@ export function FlashCard({ card, flipped, onFlip, onSaved }: FlashCardProps) {
   return (
     <>
       <div
-        className="card-scene h-full w-full text-left"
+        className="card-scene h-full min-w-0 w-full max-w-full text-left"
         onClick={onFlip}
         onKeyDown={(event) => {
           if (event.key === 'Enter') {
@@ -104,7 +104,7 @@ export function FlashCard({ card, flipped, onFlip, onSaved }: FlashCardProps) {
                 <ExpandButton onClick={openExpanded} />
               </div>
             </div>
-            <div className="mt-4 flex min-h-0 flex-1 overflow-y-auto overscroll-contain">
+            <div className="mt-4 flex min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain">
               <h2 className="m-auto w-full text-center text-xl font-semibold leading-snug text-white sm:text-3xl">
                 {card.question}
               </h2>
@@ -125,7 +125,7 @@ export function FlashCard({ card, flipped, onFlip, onSaved }: FlashCardProps) {
               </div>
             </div>
             <div
-              className="mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain pr-2 text-left text-slate-100"
+              className="mt-4 min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain break-words pr-2 text-left text-slate-100"
               onClick={(event) => event.stopPropagation()}
             >
               <CardBody card={card} showFull={showFull} onToggleFull={() => setShowFull((value) => !value)} />
