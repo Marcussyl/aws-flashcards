@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { MarkdownContent } from '@/components/MarkdownContent'
+import { RichTextEditor } from '@/components/RichTextEditor'
 import { useIsClient } from '@/lib/use-is-client'
 import type { Card } from '@/data/types'
 
@@ -123,7 +124,7 @@ export function CardEditModal({ card, open, onClose, onSaved }: CardEditModalPro
                   Edit card
                 </p>
                 <p className="mt-1 text-sm text-slate-400">
-                  {card.id} · markdown supported in summary & answer
+                  {card.id} · summary = brief takeaway · answer = full note
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -146,34 +147,38 @@ export function CardEditModal({ card, open, onClose, onSaved }: CardEditModalPro
             </div>
 
             <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-4 sm:px-6">
-              <Field
+              <PlainField
                 label="Category"
+                help="Topic / grouping for this card"
                 value={draft.category}
                 onChange={(category) => setDraft((current) => ({ ...current, category }))}
-                preview={false}
               />
-              <Field
+              <RichField
                 label="Question"
+                help="What this card asks — the prompt shown on the front"
                 value={draft.question}
                 onChange={(question) => setDraft((current) => ({ ...current, question }))}
-                rows={3}
                 preview={preview}
+                placeholder="e.g. When should you use S3 Intelligent-Tiering?"
+                minHeightClassName="min-h-[5.5rem]"
               />
-              <Field
+              <RichField
                 label="Summary"
+                help="Brief takeaway — a short condensed summary of the key point, not a truncated copy of the answer"
                 value={draft.summary}
                 onChange={(summary) => setDraft((current) => ({ ...current, summary }))}
-                rows={6}
                 preview={preview}
-                markdown
+                placeholder="1–3 sentences capturing the essential takeaway"
+                minHeightClassName="min-h-[7rem]"
               />
-              <Field
+              <RichField
                 label="Answer"
+                help="Full note — the complete explanation, details, and examples"
                 value={draft.answer}
                 onChange={(answer) => setDraft((current) => ({ ...current, answer }))}
-                rows={12}
                 preview={preview}
-                markdown
+                placeholder="Full explanation with lists, headings, and links as needed"
+                minHeightClassName="min-h-[14rem]"
               />
               {error ? <p className="text-sm text-rose-300">{error}</p> : null}
             </div>
@@ -204,50 +209,71 @@ export function CardEditModal({ card, open, onClose, onSaved }: CardEditModalPro
   )
 }
 
-function Field({
+function FieldLabel({ label, help }: { label: string; help: string }) {
+  return (
+    <div className="space-y-1">
+      <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">{label}</span>
+      <p className="text-xs leading-relaxed text-slate-500">{help}</p>
+    </div>
+  )
+}
+
+function PlainField({
   label,
+  help,
   value,
   onChange,
-  rows = 1,
-  preview,
-  markdown = false,
 }: {
   label: string
+  help: string
   value: string
   onChange: (value: string) => void
-  rows?: number
-  preview: boolean
-  markdown?: boolean
 }) {
   return (
     <label className="block space-y-2">
-      <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
-        {label}
-        {markdown ? <span className="ml-2 normal-case tracking-normal text-slate-500">markdown</span> : null}
-      </span>
-      {preview && markdown ? (
-        <div className="rounded-xl border border-white/10 bg-slate-950/60 p-3">
+      <FieldLabel label={label} help={help} />
+      <input
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2.5 text-sm text-white outline-none ring-accent/40 focus:ring-2"
+      />
+    </label>
+  )
+}
+
+function RichField({
+  label,
+  help,
+  value,
+  onChange,
+  preview,
+  placeholder,
+  minHeightClassName,
+}: {
+  label: string
+  help: string
+  value: string
+  onChange: (value: string) => void
+  preview: boolean
+  placeholder: string
+  minHeightClassName: string
+}) {
+  return (
+    <div className="space-y-2">
+      <FieldLabel label={label} help={help} />
+      {preview ? (
+        <div className={`rounded-xl border border-white/10 bg-slate-950/60 p-3 ${minHeightClassName}`}>
           <MarkdownContent className="prose-sm" content={value || '_Empty_'} />
         </div>
-      ) : preview ? (
-        <p className="rounded-xl border border-white/10 bg-slate-950/60 p-3 text-sm text-white whitespace-pre-wrap">
-          {value || '—'}
-        </p>
-      ) : rows === 1 ? (
-        <input
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2.5 text-sm text-white outline-none ring-accent/40 focus:ring-2"
-        />
       ) : (
-        <textarea
+        <RichTextEditor
           value={value}
-          onChange={(event) => onChange(event.target.value)}
-          rows={rows}
-          spellCheck={false}
-          className="w-full resize-y rounded-xl border border-white/10 bg-slate-950 px-3 py-2.5 font-mono text-sm leading-6 text-white outline-none ring-accent/40 focus:ring-2"
+          onChange={onChange}
+          placeholder={placeholder}
+          minHeightClassName={minHeightClassName}
+          ariaLabel={label}
         />
       )}
-    </label>
+    </div>
   )
 }
