@@ -4,9 +4,9 @@
     "topic": "pve",
     "category": "Containers (LXC)",
     "question": "What is an unprivileged LXC container in Proxmox VE, and why is it the default?",
-    "summary": "An unprivileged container maps container root (UID 0) to an unprivileged host UID range. It is the safer default because a container breakout has much less host power.",
-    "answer": "An unprivileged container maps container root (UID 0) to an unprivileged host UID range. It is the safer default because a container breakout has much less host power.\n\nIn PVE, LXC can run privileged or unprivileged. Unprivileged is the UI default for new CT templates.\n- Inside the CT, processes still believe they are root.\n- On the host, those processes are a high UID/GID range (often 100000+), so they cannot rewrite host files or load kernel modules.\n- Privileged CTs share the host's UID 0. That is closer to a chroot with root, and a kernel/LXC bug is much more dangerous.\n\nUse unprivileged unless a workload truly needs host-level capabilities you cannot grant another way.",
-    "sourceQuestion": "what is an unprivileged container in pve?"
+    "summary": "Unprivileged is PVE's default CT mode: container root is mapped to a high host UID, so it is not real host root.",
+    "answer": "An unprivileged container maps container root (UID 0) to an unprivileged host UID range. It is the safer default because a container breakout has much less host power.\n\nIn PVE, LXC can run privileged or unprivileged. Unprivileged is the UI default for new CT templates.\n- Inside the CT, `id` still shows uid=0, but on the host that process is a high UID (often 100000+), so it is not real host root.\n- PVE also drops capabilities and applies device cgroup + seccomp, so kernel modules and full NAT are harder.\n- Privileged (`unprivileged: 0`) makes CT root close to host root: Docker-in-LXC is easier, attack surface is larger.\n\nUse unprivileged unless a workload truly needs host-level capabilities you cannot grant another way.",
+    "sourceQuestion": "PVE 裡的 Unprivileged LXC 是什麼？容器裡的 root 跟母機 root 差在哪？"
   },
   {
     "id": "pve002",
@@ -22,9 +22,9 @@
     "topic": "pve",
     "category": "Containers (LXC)",
     "question": "How does UID/GID mapping work in an unprivileged Proxmox container?",
-    "summary": "Container UIDs are shifted onto a host range via /etc/subuid and LXC idmap. CT root 0 becomes something like host 100000, so bind-mounted host files must match the mapped owner.",
-    "answer": "Container UIDs are shifted onto a host range via /etc/subuid and LXC idmap. CT root 0 becomes something like host 100000, so bind-mounted host files must match the mapped owner.\n\nTypical PVE mapping:\n- `0 100000 65536` means CT UIDs 0–65535 appear as host 100000–165535.\n- A file created as root in the CT is owned by 100000 on the ZFS/LVM dataset.\n- If you bind-mount `/tank/media` into the CT, the CT only sees it as writable if the host ownership matches the mapped UID, or you add an extra idmap line.\n\nThis is why \"permission denied\" on bind mounts is the classic unprivileged gotcha: the names look like root/user inside the CT, but the host inode owners are the mapped numbers.",
-    "sourceQuestion": "uid gid mapping unprivileged container"
+    "summary": "UID/GID are numeric identities. Unprivileged CTs remap CT root (0) to a high host UID so host files stay protected.",
+    "answer": "Linux permission checks use numbers, not names. UID is who owns a process/file; GID is the group. Names like root or www-data are just aliases in /etc/passwd and /etc/group.\n\nIn a privileged CT, container root is host uid 0 — a breakout is roughly host root.\nUnprivileged CTs use a user namespace idmap (common PVE map: CT 0→host 100000, CT 33→100033) via /etc/subuid, /etc/subgid, and the CT config `lxc.idmap`.\nBind-mounted host files must be owned by the mapped host UIDs, or the CT will see permission errors even as \"root\".",
+    "sourceQuestion": "Linux 權限裡的 UID / GID 是什麼？為什麼 Unprivileged CT 要做 UID 映射？"
   },
   {
     "id": "pve004",
@@ -33,16 +33,16 @@
     "question": "What commonly breaks in unprivileged containers: nesting, FUSE, and bind mounts?",
     "summary": "Unprivileged CTs cannot perform many privileged mounts. Docker nesting, FUSE/NFS, and bind-mounting host devices or root-owned paths often fail unless you add features, idmap, or switch to a VM.",
     "answer": "Unprivileged CTs cannot perform many privileged mounts. Docker nesting, FUSE/NFS, and bind-mounting host devices or root-owned paths often fail unless you add features, idmap, or switch to a VM.\n\nCommon failures:\n- Nesting / Docker: needs `features: nesting=1` (and often keyctl). Overlay, AppArmor, and cgroup v2 still bite. A small VM is often cleaner for Docker.\n- FUSE / NFS client mounts from inside the CT: usually blocked; mount on the host and bind-mount in, or use a privileged CT / VM.\n- Bind mounts of host paths: work, but UID mapping makes ownership look wrong. Device nodes (`/dev/dri`, disks) are often denied.\n- systemd / nesting clocks and AppArmor profiles can also block service startup.\n\nPVE features (`nesting`, `fuse`, `keyctl`, `nfs`) are explicit holes you punch in that isolation. Turn on only what the workload needs.",
-    "sourceQuestion": "unprivileged nesting fuse bind mount limits"
+    "sourceQuestion": "PVE 的 nesting 是什麼？為什麼 Docker-in-LXC 常要 Privileged + nesting，或乾脆改用 VM？ / unprivileged nesting fuse bind mount limits"
   },
   {
     "id": "pve005",
     "topic": "pve",
     "category": "Virtual Machines",
     "question": "When should you choose an LXC container instead of a QEMU VM in Proxmox VE?",
-    "summary": "Use LXC for lightweight Linux services that can share the host kernel. Use a QEMU VM when you need a different kernel, stronger isolation, Docker-in-guest, or device passthrough.",
-    "answer": "Use LXC for lightweight Linux services that can share the host kernel. Use a QEMU VM when you need a different kernel, stronger isolation, Docker-in-guest, or device passthrough.\n\nChoose LXC when:\n- The guest is Linux and is fine on the PVE kernel.\n- You want fast start, low RAM, and simple bind mounts of host datasets.\n- It is a single service (Caddy, DNS, *arr, Postgres) and unprivileged is enough.\n\nChoose QEMU/KVM when:\n- You need Windows, BSD, or a custom kernel.\n- You want Docker/K8s without fighting LXC nesting.\n- You need PCI/GPU/USB passthrough or a full independent systemd/cgroup world.\n- Isolation matters more than density (untrusted workloads).\n\nLXC is not a tiny VM. It is a namespaced view of the host kernel. That is the whole tradeoff.",
-    "sourceQuestion": "lxc vs qemu vm when to choose"
+    "summary": "CT shares the host kernel (light). VM has its own kernel (better for Docker/K8s or non-Linux).",
+    "answer": "VM (KVM/QEMU) emulates a full machine with its own kernel — Windows or another Linux, stronger isolation, higher overhead.\nCT (LXC) shares the host Linux kernel and isolates with namespaces + cgroups — lighter and denser, but Linux-only.\n\nUse an unprivileged CT for ordinary Linux services (nginx, Postgres).\nPrefer a VM when you need a different kernel, Docker/K8s, or full netfilter: Docker then changes the guest kernel, so the host CT does not need to be Privileged.",
+    "sourceQuestion": "PVE 建立 VM 和 CT 差在哪？什麼時候該用哪一種？"
   },
   {
     "id": "pve006",
@@ -61,5 +61,59 @@
     "summary": "Device nodes and raw mounts need capabilities that unprivileged user namespaces do not get. The CT root is not host root, so /dev passthrough and privileged filesystems are denied by the kernel and AppArmor.",
     "answer": "Device nodes and raw mounts need capabilities that unprivileged user namespaces do not get. The CT root is not host root, so /dev passthrough and privileged filesystems are denied by the kernel and AppArmor.\n\nUnprivileged LXC runs in a user namespace:\n- `CAP_SYS_ADMIN` and device cgroup rules are restricted.\n- Creating or opening block/char devices usually fails (`mknod`, `/dev/sda`, many GPU nodes).\n- Mounting NFS, CIFS, or FUSE from inside the CT is a privileged mount.\n\nWorkarounds: bind-mount a host-prepared path, add a narrow lxc cgroup device allow, enable a specific feature, use privileged (worse), or move the workload into a VM where the guest kernel can own the device.",
     "sourceQuestion": "why unprivileged cannot mount host devices"
+  },
+  {
+    "id": "pve008",
+    "topic": "pve",
+    "category": "Containers (LXC)",
+    "question": "Is UID 0 always real host root, including inside an unprivileged LXC user namespace?",
+    "summary": "UID 0 is root inside the current user namespace. In an unprivileged CT that namespace root maps to a normal high host UID, so it is not host root.",
+    "answer": "In the current user namespace, UID 0 is root: /etc/passwd maps root to 0:0, the kernel skips most file checks for uid 0, and many programs treat geteuid()==0 as \"I am root\". GID 0 is usually the root group, but \"superuser\" is about UID 0.\n\nOn a normal host, VM, or privileged CT, uid 0 is that machine's real root.\nIn unprivileged LXC (or rootless Docker), a nested user namespace still calls the process uid 0 / root inside, but outside it is something like 100000 — a normal user. Same name, different power.",
+    "sourceQuestion": "UID 0 是不是保留給 root？在 user namespace 裡還算不算真 root？"
+  },
+  {
+    "id": "pve009",
+    "topic": "pve",
+    "category": "Containers (LXC)",
+    "question": "What is a cgroup, and why does Docker-in-LXC often need nesting?",
+    "summary": "Namespaces isolate what you see; cgroups limit resources. Docker-in-LXC nests another cgroup layer, so LXC usually needs nesting=1 or dockerd fails on cgroup mounts.",
+    "answer": "A cgroup (control group) limits how many resources a set of processes may use.\nNamespaces isolate what you see (PID, net, mount); cgroups limit what you can consume (CPU, memory, io, pids, devices).\n\nPVE gives each VM/CT its own cgroup so the UI can set memory caps. Docker creates another cgroup layer per container.\nA CT is already one cgroup under the host; Docker-in-LXC is a cage inside a cage. LXC often locks /sys/fs/cgroup, so you enable nesting — otherwise dockerd frequently errors on cgroup setup.",
+    "sourceQuestion": "cgroup 是什麼？跟 namespace、nesting、Docker-in-LXC 有什麼關係？"
+  },
+  {
+    "id": "pve010",
+    "topic": "pve",
+    "category": "Containers (LXC)",
+    "question": "Why do unprivileged CTs often fail at NAT/iptables, nested Docker, arbitrary mounts, and /dev access?",
+    "summary": "Those actions talk to the host kernel. Fake CT root usually lacks CAP_NET_ADMIN, module load, and device access, so Docker NAT and privileged mounts break.",
+    "answer": "These all need to talk to the host kernel; unprivileged \"root\" usually is not allowed.\n\n1) NAT / netfilter — iptables/nftables front netfilter. Docker bridge relies on DNAT (publish host ports) and MASQUERADE (outbound SNAT) plus FORWARD. Unprivileged CTs often cannot load iptable_nat modules or lack CAP_NET_ADMIN, so published ports look bound but traffic never arrives.\n\n2) Nested Docker — needs nested mounts, cgroups, and often more privileges than unprivileged gives.\n\n3) Arbitrary mounts — many filesystems and bind mounts need capabilities the user namespace does not get.\n\n4) Raw /dev — device nodes are gated by device cgroup; CT root is not host root.\n\nFix paths: keep the service as a normal CT on vmbr (no Docker NAT), use a VM for Docker, or accept Privileged + nesting with the security tradeoff.",
+    "sourceQuestion": "為什麼 Unprivileged CT 常不能做 NAT / ip_forward / 完整 iptables、巢狀 Docker、隨意 mount 或開 /dev？這四件事各代表什麼？"
+  },
+  {
+    "id": "pve011",
+    "topic": "pve",
+    "category": "Containers (LXC)",
+    "question": "What does PVE nesting do, and why is Docker-in-LXC often Privileged + nesting — or just a VM?",
+    "summary": "nesting=1 lets a CT create nested cgroups/namespaces/containers. It does not grant real root or NAT; Docker-in-LXC usually still wants Privileged, or move Docker to a VM.",
+    "answer": "Nesting is an LXC feature (`features: nesting=1`) that lets the CT create nested cgroups/namespaces/containers — a cage inside a cage. It helps dockerd with overlay, nested mounts, and child cgroups.\n\nIt does **not** automatically give real host root, ip_forward, NAT, or full /dev.\n\nPractical matrix:\n- Unprivileged, no nesting → normal services OK; Docker basically no\n- Unprivileged + nesting → sometimes rootless/special Docker; lots of sharp edges\n- Privileged + nesting → Docker-in-LXC often works; weaker isolation\n- VM → cleanest place for Docker/K8s; guest owns its own kernel and netfilter",
+    "sourceQuestion": "PVE 的 nesting 是什麼？為什麼 Docker-in-LXC 常要 Privileged + nesting，或乾脆改用 VM？"
+  },
+  {
+    "id": "pve012",
+    "topic": "pve",
+    "category": "Networking",
+    "question": "What are the iptables filter and nat tables, and how do they relate to Docker bridge publishing?",
+    "summary": "filter is the firewall (INPUT/FORWARD/OUTPUT). nat rewrites addresses (DNAT/MASQUERADE). Docker publish uses nat DNAT + MASQUERADE on the host/guest that owns docker0.",
+    "answer": "iptables is the older netfilter userspace; modern Debian/PVE often runs iptables as an nft compatibility layer.\n\n- **filter** — firewall: INPUT (to this host), FORWARD (transit), OUTPUT (from this host).\n- **nat** — rewrite addresses: PREROUTING DNAT (e.g. :5050 → 172.17.0.2:80), POSTROUTING SNAT/MASQUERADE (fix source so replies return).\n\nDebug before changing:\n- `iptables -L -n -v` (filter)\n- `iptables -t nat -L -n -v --line-numbers` (nat)\n\nDocker bridge publishing depends on those nat rules existing where dockerd runs. In an unprivileged LXC they often cannot be installed, which is why \"port published\" still fails.",
+    "sourceQuestion": "iptables 常用的 filter / nat 表是做什麼的？除錯時先看哪些指令？跟 Docker bridge 有何關係？"
+  },
+  {
+    "id": "pve013",
+    "topic": "pve",
+    "category": "Networking",
+    "question": "Why do TrueNAS or ordinary unprivileged CTs usually avoid the Docker-in-LXC networking traps?",
+    "summary": "They usually skip a second Docker NAT layer. A normal CT uses a veth on vmbr0 (L2 bridge). TrueNAS SCALE on PVE is typically a VM, so Apps use that guest kernel.",
+    "answer": "They usually are not doing Docker NAT inside an unprivileged LXC.\n\nA normal unprivileged CT (nginx, Postgres) gets a veth on vmbr0 on the LAN. The process binds 0.0.0.0:port and uses L2 bridging — no docker0, DNAT, MASQUERADE, nested cgroup, or iptable_nat modules.\n\nTrueNAS SCALE on PVE is typically a VM; Apps/k8s then change TrueNAS's own kernel. Even when Apps are containers, the host OS is a full guest with real root — not an unprivileged LXC pretending to be Docker's host.",
+    "sourceQuestion": "為什麼 TrueNAS 或其他 Unprivileged 容器通常不會踩 Docker-in-LXC 這種網路坑？"
   }
 ]
