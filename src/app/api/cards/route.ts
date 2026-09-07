@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { getCategoriesForTopic, type CategoryMeta } from '@/data/categories'
 import { isTopicId, type TopicId } from '@/data/topics'
 import type { CardCreate } from '@/data/types'
-import { createCard, forceSeedCards, listCards, seedCardsIfEmpty, syncSummariesFromJson } from '@/lib/cards-db'
+import { createCard, forceSeedCards, listCardIds, listCards, seedCardsIfEmpty, syncSummariesFromJson } from '@/lib/cards-db'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -47,8 +47,14 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Invalid topic' }, { status: 400 })
     }
 
+    const topic = topicParam && isTopicId(topicParam) ? topicParam : undefined
+    if (searchParams.get('idsOnly') === '1') {
+      const ids = await listCardIds({ topic })
+      return NextResponse.json(ids)
+    }
+
     const cards = await listCards({
-      topic: topicParam && isTopicId(topicParam) ? topicParam : undefined,
+      topic,
       category,
       q,
     })

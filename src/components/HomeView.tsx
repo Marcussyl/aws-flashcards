@@ -1,7 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
 import { AnimatedNumber } from '@/components/AnimatedNumber'
@@ -18,7 +17,6 @@ import { countByStatus, useProgress } from '@/lib/progress'
 const MotionLink = motion.create(Link)
 
 export function HomeView({ topicId, cards }: { topicId: TopicId; cards: Card[] }) {
-  const router = useRouter()
   const topic = getTopic(topicId)
   const { map, ready, reset } = useProgress()
   const [creating, setCreating] = useState(false)
@@ -197,7 +195,7 @@ export function HomeView({ topicId, cards }: { topicId: TopicId; cards: Card[] }
         onCreated={(card) => {
           setTopicCards((current) => [...current, card])
           setCreating(false)
-          router.refresh()
+          // Optimistic local update; avoid full RSC refresh on create.
         }}
       />
     </motion.div>
