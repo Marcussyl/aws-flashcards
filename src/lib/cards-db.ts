@@ -11,6 +11,30 @@ type AwsCardSource = Omit<Card, 'topic'>
 const globalForCards = globalThis as typeof globalThis & {
   _cardsIndexesReady?: Promise<void>
   _cardsSeeded?: Promise<number>
+  _cardsListCache?: Map<string, { at: number; cards: Card[] }>
+  _cardsIdCache?: Map<string, { at: number; ids: Array<{ id: string; topic: TopicId }> }>
+}
+
+/** Short in-memory TTL so topic/study/browse navigations reuse a warm Mongo result. */
+const CARDS_CACHE_TTL_MS = 30_000
+
+function listCache() {
+  if (!globalForCards._cardsListCache) {
+    globalForCards._cardsListCache = new Map()
+  }
+  return globalForCards._cardsListCache
+}
+
+function idCache() {
+  if (!globalForCards._cardsIdCache) {
+    globalForCards._cardsIdCache = new Map()
+  }
+  return globalForCards._cardsIdCache
+}
+
+export function invalidateCardsCache() {
+  listCache().clear()
+  idCache().clear()
 }
 
 function toCard(doc: CardDocument): Card {
@@ -144,6 +168,7 @@ export async function forceSeedCards(): Promise<number> {
     { ordered: false },
   )
   globalForCards._cardsSeeded = Promise.resolve(docs.length)
+  invalidateCardsCache()
   return docs.length
 }
 
@@ -153,7 +178,24 @@ export type ListCardsOptions = {
   q?: string
 }
 
+function listCacheKey(options: ListCardsOptions): string {
+  return `list|${options.topic ?? ''}|${options.category ?? ''}|${options.q?.trim() ?? ''}`
+}
+
+function idCacheKey(topic?: TopicId): string {
+  return `ids|${topic ?? ''}`
+}
+
 export async function listCards(options: ListCardsOptions = {}): Promise<Card[]> {
+  const key = listCacheKey(options)
+  const needle = options.q?.trim()
+  if (!needle) {
+    const hit = listCache().get(key)
+    if (hit && Date.now() - hit.at < CARDS_CACHE_TTL_MS) {
+      return hit.cards
+    }
+  }
+
   await seedCardsIfEmpty()
   const collection = await getCardsCollection()
   const filter: Record<string, unknown> = {}
@@ -163,7 +205,6 @@ export async function listCards(options: ListCardsOptions = {}): Promise<Card[]>
   if (options.category) {
     filter.category = options.category
   }
-  const needle = options.q?.trim()
   if (needle) {
     filter.$text = { $search: needle }
   }
@@ -175,7 +216,45 @@ export async function listCards(options: ListCardsOptions = {}): Promise<Card[]>
     : collection.find(filter).sort({ _id: 1 })
 
   const docs = await cursor.toArray()
-  return docs.map(toCard)
+  const cards = docs.map(toCard)
+  if (!needle) {
+    listCache().set(key, { at: Date.now(), cards })
+  }
+  return cards
+}
+
+/** Lightweight id+topic projection for header progress without full card payloads. */
+export async function listCardIds(options: { topic?: TopicId } = {}): Promise<
+  Array<{ id: string; topic: TopicId }>
+> {
+  const key = idCacheKey(options.topic)
+  const hit = idCache().get(key)
+  if (hit && Date.now() - hit.at < CARDS_CACHE_TTL_MS) {
+    return hit.ids
+  }
+
+  // Prefer deriving from a warm full-list cache when present.
+  const listKey = listCacheKey({ topic: options.topic })
+  const listHit = listCache().get(listKey)
+  if (listHit && Date.now() - listHit.at < CARDS_CACHE_TTL_MS) {
+    const ids = listHit.cards.map((card) => ({ id: card.id, topic: card.topic }))
+    idCache().set(key, { at: Date.now(), ids })
+    return ids
+  }
+
+  await seedCardsIfEmpty()
+  const collection = await getCardsCollection()
+  const filter: Record<string, unknown> = {}
+  if (options.topic) {
+    filter.topic = options.topic
+  }
+  const docs = await collection
+    .find(filter, { projection: { _id: 1, topic: 1 } })
+    .sort({ _id: 1 })
+    .toArray()
+  const ids = docs.map((doc) => ({ id: doc._id, topic: doc.topic }))
+  idCache().set(key, { at: Date.now(), ids })
+  return ids
 }
 
 export async function getCard(id: string): Promise<Card | null> {
@@ -209,7 +288,11 @@ export async function updateCard(id: string, patch: CardUpdate): Promise<Card | 
     { $set },
     { returnDocument: 'after' },
   )
-  return result ? toCard(result) : null
+  if (result) {
+    invalidateCardsCache()
+    return toCard(result)
+  }
+  return null
 }
 
 
@@ -277,6 +360,7 @@ export async function createCard(input: CardCreate): Promise<Card> {
     )
     await collection.insertOne(doc)
   }
+  invalidateCardsCache()
   return toCard(doc)
 }
 
@@ -323,6 +407,7 @@ export async function syncSummariesFromJson(): Promise<SyncSummariesResult> {
     })),
     { ordered: false },
   )
+  invalidateCardsCache()
   return {
     matched: result.matchedCount,
     modified: result.modifiedCount,

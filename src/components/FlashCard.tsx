@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { startTransition, useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { CardEditModal } from '@/components/CardEditModal'
@@ -19,17 +19,42 @@ type FlashCardProps = {
 }
 
 export function FlashCard({ card, flipped, onFlip, onSaved }: FlashCardProps) {
-  const [ui, setUi] = useState({ id: card.id, expanded: false, showFull: false, editing: false })
+  const [ui, setUi] = useState({
+    id: card.id,
+    expanded: false,
+    showFull: false,
+    editing: false,
+    // Defer markdown/mermaid on the back until the first flip so click → flip stays instant.
+    revealed: false,
+  })
   const isClient = useIsClient()
   const reduce = useReducedMotion()
 
   if (ui.id !== card.id) {
-    setUi({ id: card.id, expanded: false, showFull: false, editing: false })
+    setUi({ id: card.id, expanded: false, showFull: false, editing: false, revealed: false })
   }
 
   const expanded = ui.expanded
   const showFull = ui.showFull
   const editing = ui.editing
+  // Keep flip CSS instant; mount markdown/mermaid only after paint via transition.
+  const revealed = ui.revealed
+
+  useEffect(() => {
+    if (!flipped || ui.revealed) {
+      return
+    }
+    const id = window.setTimeout(() => {
+      startTransition(() => {
+        setUi((current) =>
+          current.id === card.id && !current.revealed
+            ? { ...current, revealed: true }
+            : current,
+        )
+      })
+    }, 0)
+    return () => window.clearTimeout(id)
+  }, [flipped, ui.revealed, card.id])
 
   function setExpanded(value: boolean) {
     setUi((current) => ({ ...current, id: card.id, expanded: value }))
@@ -128,7 +153,11 @@ export function FlashCard({ card, flipped, onFlip, onSaved }: FlashCardProps) {
               className="mt-4 min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain break-words pr-2 text-left text-slate-100"
               onClick={(event) => event.stopPropagation()}
             >
-              <CardBody card={card} showFull={showFull} onToggleFull={() => setShowFull((value) => !value)} />
+              {revealed ? (
+                <CardBody card={card} showFull={showFull} onToggleFull={() => setShowFull((value) => !value)} />
+              ) : (
+                <div className="min-h-[4rem]" aria-hidden="true" />
+              )}
             </div>
           </div>
         </div>

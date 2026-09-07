@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { CardCreateModal } from '@/components/CardCreateModal'
 import { CardEditModal } from '@/components/CardEditModal'
@@ -14,7 +13,6 @@ import { easeOutExpo } from '@/lib/motion'
 import { useProgress } from '@/lib/progress'
 
 export function BrowseView({ topicId, cards }: { topicId: TopicId; cards: Card[] }) {
-  const router = useRouter()
   const { map } = useProgress()
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('All')
@@ -185,7 +183,8 @@ export function BrowseView({ topicId, cards }: { topicId: TopicId; cards: Card[]
         onCreated={(card) => {
           setTopicCards((current) => [...current, card])
           setCreating(false)
-          router.refresh()
+          // Local list is already updated; skip router.refresh so create stays snappy.
+          // Server cards-db cache is invalidated by POST /api/cards.
         }}
       />
     </div>

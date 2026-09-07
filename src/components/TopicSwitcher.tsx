@@ -19,11 +19,54 @@ function destForTopic(pathname: string, topic: TopicId) {
   return topicHref(topic)
 }
 
+type IdsByTopic = Partial<Record<TopicId, string[]>>
+
+const IDS_TTL_MS = 60_000
+let idsModuleCache: { at: number; data: IdsByTopic } | null = null
+let idsInflight: Promise<IdsByTopic> | null = null
+
+async function loadIdsByTopic(): Promise<IdsByTopic> {
+  if (idsModuleCache && Date.now() - idsModuleCache.at < IDS_TTL_MS) {
+    return idsModuleCache.data
+  }
+  if (!idsInflight) {
+    idsInflight = fetch('/api/cards?idsOnly=1')
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error('Failed to load card ids')
+        }
+        return response.json() as Promise<Array<{ id: string; topic: TopicId }>>
+      })
+      .then((rows) => {
+        const next: IdsByTopic = {}
+        if (Array.isArray(rows)) {
+          for (const row of rows) {
+            const list = next[row.topic] ?? []
+            list.push(row.id)
+            next[row.topic] = list
+          }
+        }
+        idsModuleCache = { at: Date.now(), data: next }
+        return next
+      })
+      .catch(() => {
+        idsModuleCache = { at: Date.now(), data: {} }
+        return {} as IdsByTopic
+      })
+      .finally(() => {
+        idsInflight = null
+      })
+  }
+  return idsInflight
+}
+
 export function TopicSwitcher({ topicId }: { topicId: TopicId }) {
   const pathname = usePathname()
   const { map, ready } = useProgress()
   const [openForPath, setOpenForPath] = useState<string | null>(null)
-  const [idsByTopic, setIdsByTopic] = useState<Partial<Record<TopicId, string[]>>>({})
+  const [idsByTopic, setIdsByTopic] = useState<IdsByTopic>(
+    () => idsModuleCache?.data ?? {},
+  )
   const open = openForPath === pathname
   const menuId = useId()
   const reduce = useReducedMotion()
@@ -42,36 +85,21 @@ export function TopicSwitcher({ topicId }: { topicId: TopicId }) {
     return () => document.removeEventListener('keydown', onKeyDown)
   }, [open])
 
+  // Fetch ids only when the menu opens — never pull full card payloads on header mount.
   useEffect(() => {
+    if (!open) {
+      return
+    }
     let cancelled = false
-    fetch('/api/cards')
-      .then(async (response) => {
-        if (!response.ok) {
-          throw new Error('Failed to load cards')
-        }
-        return response.json() as Promise<Array<{ id: string; topic: TopicId }>>
-      })
-      .then((cards) => {
-        if (cancelled || !Array.isArray(cards)) {
-          return
-        }
-        const next: Partial<Record<TopicId, string[]>> = {}
-        for (const card of cards) {
-          const list = next[card.topic] ?? []
-          list.push(card.id)
-          next[card.topic] = list
-        }
+    void loadIdsByTopic().then((next) => {
+      if (!cancelled) {
         setIdsByTopic(next)
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setIdsByTopic({})
-        }
-      })
+      }
+    })
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [open])
 
   if (!current) {
     return null
