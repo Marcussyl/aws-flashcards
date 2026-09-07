@@ -10,3 +10,18 @@ Install deps and run the app as usual.
 
 First cards read seeds an empty collection from src/data JSON. Ids stay stable for progress.
 See project_description for seed and edit details.
+
+## Markdown answers
+
+Card answers render with GitHub-flavored Markdown (`react-markdown` + `remark-gfm`).
+
+Authors can embed diagrams with fenced Mermaid blocks:
+
+```mermaid
+flowchart LR
+  AD[Active Directory] --> ADFS[AD FS]
+  ADFS --> AWS[AWS IAM IdP]
+```
+
+Non-mermaid fences stay as normal code. Mermaid renders client-side (dark theme) inside the card; wide diagrams scroll horizontally within the card instead of widening the page.
+

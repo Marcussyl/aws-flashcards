@@ -147,7 +147,7 @@ export function FlashCard({ card, flipped, onFlip, onSaved }: FlashCardProps) {
                   onClick={() => setExpanded(false)}
                 >
                   <motion.div
-                    className="flex max-h-[92vh] w-full max-w-3xl flex-col rounded-3xl border border-white/10 bg-slate-900 p-5 shadow-2xl sm:mx-auto sm:max-h-[88vh] sm:p-8"
+                    className="flex max-h-[92vh] min-w-0 w-full max-w-3xl flex-col overflow-x-hidden rounded-3xl border border-white/10 bg-slate-900 p-5 shadow-2xl sm:mx-auto sm:max-h-[88vh] sm:p-8"
                     initial={reduce ? false : { y: 28, opacity: 0, scale: 0.98 }}
                     animate={{ y: 0, opacity: 1, scale: 1 }}
                     exit={reduce ? undefined : { y: 16, opacity: 0, scale: 0.98 }}
@@ -170,7 +170,7 @@ export function FlashCard({ card, flipped, onFlip, onSaved }: FlashCardProps) {
                         </button>
                       </div>
                     </div>
-                    <div className="overflow-y-auto pr-1 text-slate-100">
+                    <div className="min-w-0 max-w-full overflow-x-hidden overflow-y-auto break-words pr-1 text-slate-100">
                       {flipped ? (
                         <CardBody
                           card={card}

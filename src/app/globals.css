@@ -93,24 +93,56 @@ body {
 .markdown-body {
   max-width: 100%;
   min-width: 0;
+  overflow-x: hidden;
   overflow-wrap: anywhere;
   word-break: break-word;
 }
 
+.markdown-body :where(p, li, h1, h2, h3, h4, h5, h6, blockquote) {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.markdown-body :where(img, video) {
+  max-width: 100%;
+  height: auto;
+}
+
+.markdown-body :where(code):not(pre code) {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: break-spaces;
+}
+
 .markdown-body pre {
   max-width: 100%;
+  min-width: 0;
   overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+.markdown-body pre code {
+  display: block;
+  max-width: 100%;
+  overflow-wrap: normal;
+  word-break: normal;
+  white-space: pre;
 }
 
 .markdown-body .md-table-wrap {
   overflow-x: auto;
+  overscroll-behavior-x: contain;
   margin-block: 0.85em;
   max-width: 100%;
+  min-width: 0;
+  -webkit-overflow-scrolling: touch;
 }
 
 .markdown-body table {
   width: max-content;
   min-width: 100%;
+  max-width: none;
   border-collapse: collapse;
 }
 
@@ -119,6 +151,8 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.14);
   padding: 0.5rem 0.75rem;
   vertical-align: top;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .markdown-body thead th {
@@ -127,6 +161,21 @@ body {
 
 .markdown-body tbody tr:nth-child(even) {
   background: rgba(255, 255, 255, 0.03);
+}
+
+.markdown-body .md-mermaid {
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  margin-block: 0.85em;
+  -webkit-overflow-scrolling: touch;
+}
+
+.markdown-body .md-mermaid svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
 }
 
 .card-scene {
