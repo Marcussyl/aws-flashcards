@@ -2,7 +2,7 @@
 
 ## Overview
 
-A Next.js study app for private flip-card review across more than one subject. The first deck is personal AWS Solutions Architect notes (from the Notion export `random notes 35199f70bc56802a8800fbb944e0c856.html`). A small Proxmox VE seed deck sits beside it so the same UI can review other topics.
+A Next.js study app for private flip-card review across more than one subject. The first deck is personal AWS Solutions Architect notes (from the Notion export `random notes 35199f70bc56802a8800fbb944e0c856.html`). A Proxmox VE deck sits beside it so the same UI can review other topics.
 
 Short questions on the front, a condensed summary on the back, then an optional full note. Card decks live in MongoDB (`cards` collection, one document per card) and can be edited in the study/browse UI. Progress stays in a separate `progress` document via `GET`/`PUT /api/progress`. Card ids stay unique across topics (`c001` for AWS, `pve001` for PVE), so existing progress keeps working.
 
@@ -12,7 +12,7 @@ Short questions on the front, a condensed summary on the back, then an optional 
 - Drill weak cards faster than rereading a long notes page.
 - Group related facts so a session can focus on one category inside a topic.
 - Keep AWS question wording close to exam English.
-- Edit question / summary / answer (markdown) in-app; JSON remains the seed source.
+- Edit question / summary / answer (markdown) in-app; cards live in MongoDB only (no JSON seed).
 
 ## Topics
 
@@ -30,14 +30,16 @@ Progress reset on a dashboard clears only that topic's card ids.
 - `/[topic]/study` flip session (`category`, `mode=due|learning|known`)
 - `/[topic]/browse` search inside that topic
 
-## AWS content pipeline
+## AWS content pipeline (historical)
+
+The AWS deck was originally built offline from a Notion HTML export:
 
 1. Parse Notion `<details>/<summary>` toggles from the HTML export.
 2. Skip empty "错题" markers that are not real questions.
 3. Deduplicate near-identical prompts and keep the richer answer.
 4. Paraphrase many questions into clearer exam-style English. Original wording is stored as `sourceQuestion`.
 5. Assign each card to one study category using service keywords.
-6. Write `src/data/cards.json`. The loader stamps `topic: "aws"` at runtime so that file does not need a full rewrite.
+6. Load cards into MongoDB (stable ids such as `c001`). Runtime no longer reads JSON seed files.
 7. Copy referenced Notion images into `public/notes/` and attach them as `images` on matching cards.
 
 ## AWS categories
@@ -61,7 +63,7 @@ Cards are grouped by service area rather than only by the four SAA exam domains.
 | Cost, Governance & Multi-Account | Organizations, Control Tower, SCP, RAM, Cost Explorer |
 | Migration & DR | MGN, DRS, Discovery, Migration Hub |
 
-## PVE seed categories
+## PVE categories
 
 | Category | What it covers |
 | --- | --- |
@@ -73,12 +75,11 @@ Cards are grouped by service area rather than only by the four SAA exam domains.
 
 Preferred (runtime, no redeploy of taxonomy): open `/admin` and create a topic (slug, name, emoji, tagline, blurb, accent hex) plus categories. Routes `/[topic]/...` use the Mongo topic id string.
 
-Optional seed / code path for a new JSON deck:
+Optional code seed for taxonomy only (not cards):
 
 1. Add seed metadata in `src/data/topics.ts` (and optional `[data-topic]` fallback in `globals.css`).
 2. Add seed categories in `src/data/categories.ts`.
-3. Add a JSON file of cards (`topic`, unique `id`, `category`, `question`, `summary`, `answer`, `sourceQuestion`).
-4. Register the JSON in cards-db seeding, then seed MongoDB. Taxonomy collections also auto-seed from the TS files when empty.
+3. Create cards in the UI or via `POST /api/cards` — they are stored in MongoDB only. Taxonomy collections still auto-seed from the TS files when empty.
 
 ## Product features
 
@@ -100,8 +101,7 @@ Optional seed / code path for a new JSON deck:
 - Next.js App Router (TypeScript)
 - React client components for study/browse interactions
 - Tailwind CSS
-- JSON seed decks in src/data, runtime deck in MongoDB cards collection
-- MongoDB cards collection + progress document APIs
+- MongoDB cards collection (source of truth; no JSON card seed) + progress document APIs
 
 ## Data model
 
@@ -119,7 +119,7 @@ Optional seed / code path for a new JSON deck:
 Each card:
 
 - `id`: stable local id such as `c001` or `pve001` (Mongo _id uses the same string)
-- `topic`: `aws` or `pve` (AWS cards get this stamped at seed time)
+- `topic`: topic id string such as `aws` or `pve`
 - `category`: one of the categories for that topic
 - `question`: paraphrased or cleaned prompt
 - `summary`: short back-of-card text
@@ -127,7 +127,7 @@ Each card:
 - `sourceQuestion`: original prompt from notes
 - `images`: optional list of `/notes/...` paths (no image binaries in Mongo)
 
-MongoDB cards docs also store createdAt/updatedAt. Indexes: unique _id; {topic:1, category:1}; text on question+sourceQuestion+answer. Empty collection auto-seeds from JSON on first list/get.
+MongoDB cards docs also store createdAt/updatedAt. Indexes: unique _id; {topic:1, category:1}; text on question+sourceQuestion+answer. Cards live in Mongo only — there is no JSON seed/fallback. An empty collection returns an empty deck (`[]` / `null`), not an auto-seed.
 
 Progress document in MongoDB collection `progress` (`_id: "default"`):
 
@@ -168,14 +168,11 @@ recall/
   public/notes/            # screenshots from the original AWS notes
   src/app/                 # pages + /api/cards + /api/progress
   src/components/          # library, dashboard, study, browse, flip card
-  src/data/cards.json      # AWS seed deck (topic stamped on seed)
-  src/data/pve-cards.json  # Proxmox seed deck
-  src/data/topics.ts       # topic metadata
-  src/data/categories.ts   # categories per topic
+  src/data/topics.ts       # topic metadata (taxonomy seed)
+  src/data/categories.ts   # categories per topic (taxonomy seed)
   src/lib/mongo.ts         # MongoDB client
-  src/lib/cards-db.ts      # cards collection + seed; listCardMeta for dashboards
+  src/lib/cards-db.ts      # cards collection CRUD; listCardMeta for dashboards
   src/lib/cards.ts         # shuffle / count helpers
-  scripts/seed-cards.ts    # optional CLI seed
   src/lib/progress.ts      # ProgressProvider + useProgress (one shared client load)
   src/lib/progress-db.ts   # reads/writes the progress document
   src/lib/progress-file.ts # one-time file migration helper
