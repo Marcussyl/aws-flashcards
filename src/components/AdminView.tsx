@@ -420,14 +420,12 @@ export function AdminView() {
                           <span className="inline-flex items-center rounded-md border border-white/10 bg-white/5 px-2 py-0.5 font-mono text-[11px] text-slate-300">
                             slug: {topic.id}
                           </span>
-                          <span className="inline-flex items-center gap-1.5 text-[11px] text-slate-400">
-                            <span
-                              className="h-2.5 w-2.5 rounded-full ring-2 ring-white/10"
-                              style={{ backgroundColor: topic.accent }}
-                              title={topic.accent}
-                            />
-                            {topic.accent}
-                          </span>
+                          <span
+                            className="inline-flex h-2.5 w-2.5 rounded-full ring-2 ring-white/10"
+                            style={{ backgroundColor: topic.accent }}
+                            title={topic.accent}
+                            aria-label={`Accent ${topic.accent}`}
+                          />
                         </div>
                       </div>
                     </div>
