@@ -1,6 +1,15 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react'
 import type { CardStatus, ProgressMap } from '@/data/types'
 
 const LEGACY_STORAGE_KEY = 'aws-flashcards-progress-v1'
@@ -47,7 +56,16 @@ function readLegacyLocalProgress(): ProgressMap | null {
   }
 }
 
-export function useProgress() {
+type ProgressContextValue = {
+  map: ProgressMap
+  ready: boolean
+  mark: (id: string, status: CardStatus) => void
+  reset: (ids?: string[]) => void
+}
+
+const ProgressContext = createContext<ProgressContextValue | null>(null)
+
+export function ProgressProvider({ children }: { children: ReactNode }) {
   const [map, setMap] = useState<ProgressMap>({})
   const [ready, setReady] = useState(false)
   const writes = useRef(Promise.resolve())
@@ -109,22 +127,38 @@ export function useProgress() {
     [persist],
   )
 
-  const reset = useCallback((ids?: string[]) => {
-    setMap((prev) => {
-      if (!ids) {
-        persist({})
-        return {}
-      }
-      const next = { ...prev }
-      ids.forEach((id) => {
-        delete next[id]
+  const reset = useCallback(
+    (ids?: string[]) => {
+      setMap((prev) => {
+        if (!ids) {
+          persist({})
+          return {}
+        }
+        const next = { ...prev }
+        ids.forEach((id) => {
+          delete next[id]
+        })
+        persist(next)
+        return next
       })
-      persist(next)
-      return next
-    })
-  }, [persist])
+    },
+    [persist],
+  )
 
-  return { map, ready, mark, reset }
+  const value = useMemo(
+    () => ({ map, ready, mark, reset }),
+    [map, ready, mark, reset],
+  )
+
+  return <ProgressContext.Provider value={value}>{children}</ProgressContext.Provider>
+}
+
+export function useProgress() {
+  const ctx = useContext(ProgressContext)
+  if (!ctx) {
+    throw new Error('useProgress must be used within a ProgressProvider')
+  }
+  return ctx
 }
 
 export function countByStatus(map: ProgressMap, ids: string[]) {

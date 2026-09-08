@@ -11,7 +11,11 @@ import { countByStatus, useProgress } from '@/lib/progress'
 
 const MotionLink = motion.create(Link)
 
-export function TopicLibrary({ cardsByTopic }: { cardsByTopic: Record<TopicId, Card[]> }) {
+export function TopicLibrary({
+  cardsByTopic,
+}: {
+  cardsByTopic: Record<TopicId, Array<Pick<Card, 'id' | 'topic' | 'category'>>>
+}) {
   const { map, ready } = useProgress()
   const reduce = useReducedMotion()
   const totalCards = TOPICS.reduce((sum, topic) => sum + (cardsByTopic[topic.id]?.length ?? 0), 0)
