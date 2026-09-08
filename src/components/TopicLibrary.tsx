@@ -3,22 +3,23 @@
 import Link from 'next/link'
 import { motion, useReducedMotion } from 'motion/react'
 import { AnimatedNumber } from '@/components/AnimatedNumber'
-import { TOPICS, type TopicId } from '@/data/topics'
-import type { Card } from '@/data/types'
+import type { Card, TopicId } from '@/data/types'
 import { fadeUp, stagger, tapSpring } from '@/lib/motion'
 import { topicHref } from '@/lib/paths'
 import { countByStatus, useProgress } from '@/lib/progress'
+import { useTaxonomy } from '@/lib/taxonomy'
 
 const MotionLink = motion.create(Link)
 
 export function TopicLibrary({
   cardsByTopic,
 }: {
-  cardsByTopic: Record<TopicId, Array<Pick<Card, 'id' | 'topic' | 'category'>>>
+  cardsByTopic: Record<string, Array<Pick<Card, 'id' | 'topic' | 'category'>>>
 }) {
   const { map, ready } = useProgress()
+  const { topics } = useTaxonomy()
   const reduce = useReducedMotion()
-  const totalCards = TOPICS.reduce((sum, topic) => sum + (cardsByTopic[topic.id]?.length ?? 0), 0)
+  const totalCards = topics.reduce((sum, topic) => sum + (cardsByTopic[topic.id]?.length ?? 0), 0)
 
   return (
     <motion.div
@@ -36,17 +37,17 @@ export function TopicLibrary({
         </h1>
         <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-300 sm:text-base sm:leading-7">
           Separate decks for each subject you are learning. Progress stays on the
-          card, so AWS and Proxmox do not overwrite each other.
+          card, so topics do not overwrite each other.
         </p>
-        <p className="mt-3 text-xs text-slate-500">{totalCards} cards across {TOPICS.length} topics</p>
+        <p className="mt-3 text-xs text-slate-500">{totalCards} cards across {topics.length} topics</p>
       </motion.section>
 
       <motion.section
         className="grid gap-4 lg:grid-cols-2"
         variants={reduce ? undefined : stagger}
       >
-        {TOPICS.map((topic) => {
-          const topicCards = cardsByTopic[topic.id] ?? []
+        {topics.map((topic) => {
+          const topicCards = cardsByTopic[topic.id as TopicId] ?? []
           const ids = topicCards.map((card) => card.id)
           const totals = countByStatus(map, ids)
           const pct = ready && ids.length ? Math.round((totals.known / ids.length) * 100) : 0
@@ -55,6 +56,7 @@ export function TopicLibrary({
               key={topic.id}
               href={topicHref(topic.id)}
               data-topic={topic.id}
+              style={{ ['--accent' as string]: topic.accent, ['--accent-fg' as string]: topic.accentFg }}
               variants={reduce ? undefined : fadeUp}
               whileHover={reduce ? undefined : { y: -4, scale: 1.01 }}
               whileTap={reduce ? undefined : { scale: 0.98 }}

@@ -5,9 +5,10 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { IconChevronDown } from '@/components/icons'
-import { TOPICS, type TopicId } from '@/data/topics'
+import type { TopicId } from '@/data/types'
 import { countByStatus, useProgress } from '@/lib/progress'
 import { topicHref } from '@/lib/paths'
+import { useTaxonomy } from '@/lib/taxonomy'
 
 function destForTopic(pathname: string, topic: TopicId) {
   if (pathname.includes('/study')) {
@@ -19,7 +20,7 @@ function destForTopic(pathname: string, topic: TopicId) {
   return topicHref(topic)
 }
 
-type IdsByTopic = Partial<Record<TopicId, string[]>>
+type IdsByTopic = Record<string, string[]>
 
 const IDS_TTL_MS = 60_000
 let idsModuleCache: { at: number; data: IdsByTopic } | null = null
@@ -63,6 +64,7 @@ async function loadIdsByTopic(): Promise<IdsByTopic> {
 export function TopicSwitcher({ topicId }: { topicId: TopicId }) {
   const pathname = usePathname()
   const { map, ready } = useProgress()
+  const { topics, getTopic } = useTaxonomy()
   const [openForPath, setOpenForPath] = useState<string | null>(null)
   const [idsByTopic, setIdsByTopic] = useState<IdsByTopic>(
     () => idsModuleCache?.data ?? {},
@@ -70,7 +72,7 @@ export function TopicSwitcher({ topicId }: { topicId: TopicId }) {
   const open = openForPath === pathname
   const menuId = useId()
   const reduce = useReducedMotion()
-  const current = TOPICS.find((item) => item.id === topicId)
+  const current = getTopic(topicId)
 
   useEffect(() => {
     if (!open) {
@@ -85,7 +87,6 @@ export function TopicSwitcher({ topicId }: { topicId: TopicId }) {
     return () => document.removeEventListener('keydown', onKeyDown)
   }, [open])
 
-  // Fetch ids only when the menu opens — never pull full card payloads on header mount.
   useEffect(() => {
     if (!open) {
       return
@@ -128,7 +129,7 @@ export function TopicSwitcher({ topicId }: { topicId: TopicId }) {
             exit={reduce ? undefined : { opacity: 0, y: -8, scale: 0.96 }}
             transition={{ duration: 0.16 }}
           >
-            {TOPICS.map((topic) => {
+            {topics.map((topic) => {
               const ids = idsByTopic[topic.id] ?? []
               const totals = countByStatus(map, ids)
               const pct = ready && ids.length ? Math.round((totals.known / ids.length) * 100) : 0

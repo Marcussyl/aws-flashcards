@@ -1,5 +1,5 @@
-import { getCategoriesForTopic } from '@/data/categories'
-import type { TopicId } from '@/data/topics'
+import { getSeedCategoriesForTopic } from '@/data/categories'
+import type { TopicId } from '@/data/types'
 import type { Card } from '@/data/types'
 
 export function getCardsByTopic(cards: Card[], topic: TopicId): Card[] {
@@ -24,8 +24,9 @@ export function getCategoryCounts(
   }, {})
 }
 
+/** Seed-only sync helper; prefer useTaxonomy / listCategories at runtime. */
 export function findCategory(name: string, topic?: TopicId) {
-  const pool = topic ? getCategoriesForTopic(topic) : getCategoriesForTopic('aws')
+  const pool = getSeedCategoriesForTopic(topic ?? 'aws')
   return pool.find((item) => item.name === name)
 }
 

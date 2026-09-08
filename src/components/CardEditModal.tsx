@@ -5,14 +5,17 @@ import { createPortal } from 'react-dom'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { MarkdownContent } from '@/components/MarkdownContent'
 import { RichTextEditor } from '@/components/RichTextEditor'
-import { useIsClient } from '@/lib/use-is-client'
+import { IconTrash } from '@/components/icons'
 import type { Card } from '@/data/types'
+import { useIsClient } from '@/lib/use-is-client'
+import { useTaxonomy } from '@/lib/taxonomy'
 
 type CardEditModalProps = {
   card: Card
   open: boolean
   onClose: () => void
   onSaved: (card: Card) => void
+  onDeleted?: (id: string) => void
 }
 
 type Draft = {
@@ -22,9 +25,11 @@ type Draft = {
   category: string
 }
 
-export function CardEditModal({ card, open, onClose, onSaved }: CardEditModalProps) {
+export function CardEditModal({ card, open, onClose, onSaved, onDeleted }: CardEditModalProps) {
   const isClient = useIsClient()
   const reduce = useReducedMotion()
+  const { getCategoriesForTopic } = useTaxonomy()
+  const categories = getCategoriesForTopic(card.topic)
   const [draft, setDraft] = useState<Draft>({
     question: card.question,
     summary: card.summary,
@@ -33,6 +38,8 @@ export function CardEditModal({ card, open, onClose, onSaved }: CardEditModalPro
   })
   const [preview, setPreview] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -47,6 +54,7 @@ export function CardEditModal({ card, open, onClose, onSaved }: CardEditModalPro
     })
     setPreview(false)
     setError(null)
+    setConfirmDelete(false)
   }, [open, card])
 
   useEffect(() => {
@@ -57,7 +65,11 @@ export function CardEditModal({ card, open, onClose, onSaved }: CardEditModalPro
     document.body.style.overflow = 'hidden'
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        onClose()
+        if (confirmDelete) {
+          setConfirmDelete(false)
+        } else {
+          onClose()
+        }
       }
     }
     window.addEventListener('keydown', onKey)
@@ -65,7 +77,7 @@ export function CardEditModal({ card, open, onClose, onSaved }: CardEditModalPro
       document.body.style.overflow = previous
       window.removeEventListener('keydown', onKey)
     }
-  }, [open, onClose])
+  }, [open, onClose, confirmDelete])
 
   async function save() {
     setSaving(true)
@@ -94,9 +106,34 @@ export function CardEditModal({ card, open, onClose, onSaved }: CardEditModalPro
     }
   }
 
+  async function remove() {
+    setDeleting(true)
+    setError(null)
+    try {
+      const response = await fetch(`/api/cards/${encodeURIComponent(card.id)}`, {
+        method: 'DELETE',
+      })
+      const payload = (await response.json().catch(() => ({}))) as { error?: string }
+      if (!response.ok) {
+        throw new Error(payload.error ?? 'Failed to delete card')
+      }
+      onDeleted?.(card.id)
+      onClose()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete card')
+      setConfirmDelete(false)
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   if (!isClient) {
     return null
   }
+
+  const categoryOptions = categories.some((item) => item.name === draft.category)
+    ? categories
+    : [{ id: '_current', topic: card.topic, name: draft.category, emoji: '⚡', blurb: '' }, ...categories]
 
   return createPortal(
     <AnimatePresence>
@@ -147,12 +184,20 @@ export function CardEditModal({ card, open, onClose, onSaved }: CardEditModalPro
             </div>
 
             <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-4 sm:px-6">
-              <PlainField
-                label="Category"
-                help="Topic / grouping for this card"
-                value={draft.category}
-                onChange={(category) => setDraft((current) => ({ ...current, category }))}
-              />
+              <label className="block space-y-2">
+                <FieldLabel label="Category" help="Topic / grouping for this card" />
+                <select
+                  value={draft.category}
+                  onChange={(event) => setDraft((current) => ({ ...current, category: event.target.value }))}
+                  className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2.5 text-sm text-white outline-none ring-accent/40 focus:ring-2"
+                >
+                  {categoryOptions.map((item) => (
+                    <option key={item.id} value={item.name}>
+                      {item.emoji} {item.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
               <RichField
                 label="Question"
                 help="What this card asks — the prompt shown on the front"
@@ -181,25 +226,62 @@ export function CardEditModal({ card, open, onClose, onSaved }: CardEditModalPro
                 minHeightClassName="min-h-[14rem]"
               />
               {error ? <p className="text-sm text-rose-300">{error}</p> : null}
+              {confirmDelete ? (
+                <div className="rounded-2xl border border-rose-400/30 bg-rose-500/10 p-4 text-sm text-rose-100">
+                  <p className="font-medium">Delete card {card.id}?</p>
+                  <p className="mt-1 text-rose-200/80">
+                    This removes the card from MongoDB. Progress for this id will become orphaned until reused.
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      className="rounded-full bg-rose-500 px-4 py-2 text-xs font-semibold text-white hover:bg-rose-400 disabled:opacity-60"
+                      disabled={deleting}
+                      onClick={() => void remove()}
+                    >
+                      {deleting ? 'Deleting…' : 'Yes, delete'}
+                    </button>
+                    <button
+                      type="button"
+                      className="rounded-full border border-white/15 px-4 py-2 text-xs text-white hover:border-white/40"
+                      disabled={deleting}
+                      onClick={() => setConfirmDelete(false)}
+                    >
+                      Keep card
+                    </button>
+                  </div>
+                </div>
+              ) : null}
             </div>
 
-            <div className="flex flex-col-reverse gap-2 border-t border-white/10 px-5 py-4 sm:flex-row sm:justify-end sm:px-6">
+            <div className="flex flex-col-reverse gap-2 border-t border-white/10 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
               <button
                 type="button"
-                className="rounded-full border border-white/15 px-5 py-2.5 text-sm text-white hover:border-white/40"
-                onClick={onClose}
-                disabled={saving}
+                className="inline-flex items-center justify-center gap-1.5 rounded-full border border-rose-400/30 px-4 py-2.5 text-sm text-rose-300 hover:bg-rose-500/10 disabled:opacity-60"
+                onClick={() => setConfirmDelete(true)}
+                disabled={saving || deleting || confirmDelete}
               >
-                Cancel
+                <IconTrash className="h-4 w-4" />
+                Delete
               </button>
-              <button
-                type="button"
-                className="rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-accent-fg hover:opacity-90 disabled:opacity-60"
-                onClick={() => void save()}
-                disabled={saving}
-              >
-                {saving ? 'Saving…' : 'Save changes'}
-              </button>
+              <div className="flex flex-col-reverse gap-2 sm:flex-row">
+                <button
+                  type="button"
+                  className="rounded-full border border-white/15 px-5 py-2.5 text-sm text-white hover:border-white/40"
+                  onClick={onClose}
+                  disabled={saving || deleting}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-accent-fg hover:opacity-90 disabled:opacity-60"
+                  onClick={() => void save()}
+                  disabled={saving || deleting}
+                >
+                  {saving ? 'Saving…' : 'Save changes'}
+                </button>
+              </div>
             </div>
           </motion.div>
         </motion.div>
@@ -215,29 +297,6 @@ function FieldLabel({ label, help }: { label: string; help: string }) {
       <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">{label}</span>
       <p className="text-xs leading-relaxed text-slate-500">{help}</p>
     </div>
-  )
-}
-
-function PlainField({
-  label,
-  help,
-  value,
-  onChange,
-}: {
-  label: string
-  help: string
-  value: string
-  onChange: (value: string) => void
-}) {
-  return (
-    <label className="block space-y-2">
-      <FieldLabel label={label} help={help} />
-      <input
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2.5 text-sm text-white outline-none ring-accent/40 focus:ring-2"
-      />
-    </label>
   )
 }
 

@@ -1,25 +1,11 @@
-import type { TopicId } from '@/data/topics'
+import type { CategoryMeta, TopicId } from '@/data/types'
 
-export type CategoryMeta = {
-  topic: TopicId
-  name: string
-  emoji: string
-  blurb: string
-}
+export type { CategoryMeta }
 
-export function getCategoryEmoji(name: string, topic?: TopicId) {
-  return (
-    CATEGORIES.find(
-      (item) => item.name === name && (!topic || item.topic === topic),
-    )?.emoji ?? '⚡'
-  )
-}
+type SeedCategory = Omit<CategoryMeta, 'id'>
 
-export function getCategoriesForTopic(topic: TopicId) {
-  return CATEGORIES.filter((item) => item.topic === topic)
-}
-
-export const CATEGORIES: CategoryMeta[] = [
+/** Static seed categories — Mongo is the runtime source of truth after seeding. */
+export const SEED_CATEGORIES: SeedCategory[] = [
   {
     topic: 'aws',
     name: 'Exam & Architecture',
@@ -123,3 +109,34 @@ export const CATEGORIES: CategoryMeta[] = [
     blurb: 'Linux bridge, vmbr, guest NICs',
   },
 ]
+
+/** @deprecated Prefer SEED_CATEGORIES or DB-backed listCategories(). */
+export const CATEGORIES = SEED_CATEGORIES
+
+export function categoryIdFor(topic: TopicId, name: string): string {
+  const slug = name
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, 'and')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 64)
+  return `${topic}__${slug || 'category'}`
+}
+
+export function getSeedCategoriesForTopic(topic: TopicId) {
+  return SEED_CATEGORIES.filter((item) => item.topic === topic)
+}
+
+/** Sync seed lookup — prefer useTaxonomy / listCategories at runtime. */
+export function getCategoriesForTopic(topic: TopicId) {
+  return getSeedCategoriesForTopic(topic)
+}
+
+export function getCategoryEmoji(name: string, topic?: TopicId) {
+  return (
+    SEED_CATEGORIES.find(
+      (item) => item.name === name && (!topic || item.topic === topic),
+    )?.emoji ?? '⚡'
+  )
+}

@@ -1,4 +1,4 @@
-import type { TopicId } from '@/data/topics'
+import type { TopicId } from '@/data/types'
 
 export function topicHref(
   topic: TopicId,

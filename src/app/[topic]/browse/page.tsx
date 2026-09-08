@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import { BrowseView } from '@/components/BrowseView'
-import { isTopicId } from '@/data/topics'
 import { listCards } from '@/lib/cards-db'
+import { topicExists } from '@/lib/taxonomy-db'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,7 +11,7 @@ export default async function TopicBrowsePage({
   params: Promise<{ topic: string }>
 }) {
   const { topic } = await params
-  if (!isTopicId(topic)) {
+  if (!(await topicExists(topic))) {
     notFound()
   }
   const cards = await listCards({ topic })

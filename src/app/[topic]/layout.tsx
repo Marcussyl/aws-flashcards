@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { getTopic, isTopicId, TOPIC_IDS } from '@/data/topics'
+import { TOPIC_IDS } from '@/data/topics'
+import { getTopic, topicExists } from '@/lib/taxonomy-db'
 
 export function generateStaticParams() {
   return TOPIC_IDS.map((topic) => ({ topic }))
@@ -13,7 +14,7 @@ export async function generateMetadata({
   params: Promise<{ topic: string }>
 }): Promise<Metadata> {
   const { topic } = await params
-  const meta = getTopic(topic)
+  const meta = await getTopic(topic)
   return {
     title: meta?.name ?? 'Topic',
   }
@@ -27,7 +28,7 @@ export default async function TopicLayout({
   params: Promise<{ topic: string }>
 }) {
   const { topic } = await params
-  if (!isTopicId(topic)) {
+  if (!(await topicExists(topic))) {
     notFound()
   }
   return children

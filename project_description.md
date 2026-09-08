@@ -71,12 +71,14 @@ Cards are grouped by service area rather than only by the four SAA exam domains.
 
 ## How to add another topic
 
-To add a subject (JSON seed plus optional in-app edits):
+Preferred (runtime, no redeploy of taxonomy): open `/admin` and create a topic (slug, name, emoji, tagline, blurb, accent hex) plus categories. Routes `/[topic]/...` use the Mongo topic id string.
 
-1. Add an id and accent in `src/data/topics.ts` and `src/app/globals.css` (`[data-topic='...']`).
-2. Add categories in `src/data/categories.ts`.
+Optional seed / code path for a new JSON deck:
+
+1. Add seed metadata in `src/data/topics.ts` (and optional `[data-topic]` fallback in `globals.css`).
+2. Add seed categories in `src/data/categories.ts`.
 3. Add a JSON file of cards (`topic`, unique `id`, `category`, `question`, `summary`, `answer`, `sourceQuestion`).
-4. Register the JSON in cards-db seeding, then seed MongoDB.
+4. Register the JSON in cards-db seeding, then seed MongoDB. Taxonomy collections also auto-seed from the TS files when empty.
 
 ## Product features
 
@@ -89,6 +91,9 @@ To add a subject (JSON seed plus optional in-app edits):
 - Topic switcher in the header.
 - Progress is written to MongoDB (`progress` collection).
 - Cards stored in MongoDB with pencil-icon editing (markdown textarea + preview)
+- Delete card (browse trash + edit modal confirm)
+- Admin taxonomy UI at `/admin` (topics/categories CRUD, rename, merge)
+- Dynamic topic accents via CSS variables from Mongo
 
 ## Tech stack
 
@@ -99,6 +104,17 @@ To add a subject (JSON seed plus optional in-app edits):
 - MongoDB cards collection + progress document APIs
 
 ## Data model
+
+### Topics & categories (Mongo)
+
+- `topics` collection: `_id` (slug), `name`, `emoji`, `tagline`, `blurb`, `accent`, `accentFg`, timestamps. Seeded from `src/data/topics.ts`.
+- `categories` collection: `_id` (`{topic}__{slug}`), `topic`, `name`, `emoji`, `blurb`, timestamps. Seeded from `src/data/categories.ts`. Unique on `{topic, name}`.
+- Rename category updates the category doc and all cards in that topic with the old name.
+- Merge moves cards source→target then deletes the source category.
+- Safe deletes refuse topics/categories that still have cards (or leftover categories on a topic).
+- APIs: `/api/topics`, `/api/topics/[id]`, `/api/categories`, `/api/categories/[id]`, `/api/categories/[id]/merge`.
+- Cards: `DELETE /api/cards/[id]`.
+
 
 Each card:
 
