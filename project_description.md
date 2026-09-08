@@ -29,7 +29,6 @@ Progress reset on a dashboard clears only that topic's card ids.
 - `/[topic]` dashboard with known / learning / unseen counts and category tiles
 - `/[topic]/study` flip session (`category`, `mode=due|learning|known`)
 - `/[topic]/browse` search inside that topic
-- `/study` and `/browse` redirect to `/aws/study` and `/aws/browse`
 
 ## AWS content pipeline
 
