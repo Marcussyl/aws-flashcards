@@ -16,7 +16,13 @@ import { countByStatus, useProgress } from '@/lib/progress'
 
 const MotionLink = motion.create(Link)
 
-export function HomeView({ topicId, cards }: { topicId: TopicId; cards: Card[] }) {
+export function HomeView({
+  topicId,
+  cards,
+}: {
+  topicId: TopicId
+  cards: Array<Pick<Card, 'id' | 'topic' | 'category'>>
+}) {
   const topic = getTopic(topicId)
   const { map, ready, reset } = useProgress()
   const [creating, setCreating] = useState(false)

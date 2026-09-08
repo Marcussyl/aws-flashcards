@@ -13,8 +13,11 @@ export function getCardsByCategory(cards: Card[], category: string, topic?: Topi
   })
 }
 
-export function getCategoryCounts(cards: Card[], topic?: TopicId): Record<string, number> {
-  const list = topic ? getCardsByTopic(cards, topic) : cards
+export function getCategoryCounts(
+  cards: Array<{ category: string; topic?: TopicId }>,
+  topic?: TopicId,
+): Record<string, number> {
+  const list = topic ? cards.filter((card) => card.topic === topic) : cards
   return list.reduce<Record<string, number>>((acc, card) => {
     acc[card.category] = (acc[card.category] ?? 0) + 1
     return acc

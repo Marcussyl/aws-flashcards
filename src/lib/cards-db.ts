@@ -6,6 +6,8 @@ import { getDb } from '@/lib/mongo'
 
 export const CARDS_COLLECTION = 'cards'
 
+export type CardMeta = Pick<Card, 'id' | 'topic' | 'category'>
+
 type AwsCardSource = Omit<Card, 'topic'>
 
 const globalForCards = globalThis as typeof globalThis & {
@@ -13,6 +15,7 @@ const globalForCards = globalThis as typeof globalThis & {
   _cardsSeeded?: Promise<number>
   _cardsListCache?: Map<string, { at: number; cards: Card[] }>
   _cardsIdCache?: Map<string, { at: number; ids: Array<{ id: string; topic: TopicId }> }>
+  _cardsMetaCache?: Map<string, { at: number; cards: CardMeta[] }>
 }
 
 /** Short in-memory TTL so topic/study/browse navigations reuse a warm Mongo result. */
@@ -32,9 +35,17 @@ function idCache() {
   return globalForCards._cardsIdCache
 }
 
+function metaCache() {
+  if (!globalForCards._cardsMetaCache) {
+    globalForCards._cardsMetaCache = new Map()
+  }
+  return globalForCards._cardsMetaCache
+}
+
 export function invalidateCardsCache() {
   listCache().clear()
   idCache().clear()
+  metaCache().clear()
 }
 
 function toCard(doc: CardDocument): Card {
@@ -257,6 +268,50 @@ export async function listCardIds(options: { topic?: TopicId } = {}): Promise<
   return ids
 }
 
+function metaCacheKey(topic?: TopicId): string {
+  return `meta|${topic ?? ''}`
+}
+
+/** Lightweight id+topic+category projection for library/topic dashboards. */
+export async function listCardMeta(options: { topic?: TopicId } = {}): Promise<CardMeta[]> {
+  const key = metaCacheKey(options.topic)
+  const hit = metaCache().get(key)
+  if (hit && Date.now() - hit.at < CARDS_CACHE_TTL_MS) {
+    return hit.cards
+  }
+
+  // Prefer deriving from a warm full-list cache when present.
+  const listKey = listCacheKey({ topic: options.topic })
+  const listHit = listCache().get(listKey)
+  if (listHit && Date.now() - listHit.at < CARDS_CACHE_TTL_MS) {
+    const cards = listHit.cards.map((card) => ({
+      id: card.id,
+      topic: card.topic,
+      category: card.category,
+    }))
+    metaCache().set(key, { at: Date.now(), cards })
+    return cards
+  }
+
+  await seedCardsIfEmpty()
+  const collection = await getCardsCollection()
+  const filter: Record<string, unknown> = {}
+  if (options.topic) {
+    filter.topic = options.topic
+  }
+  const docs = await collection
+    .find(filter, { projection: { _id: 1, topic: 1, category: 1 } })
+    .sort({ _id: 1 })
+    .toArray()
+  const cards: CardMeta[] = docs.map((doc) => ({
+    id: doc._id,
+    topic: doc.topic,
+    category: doc.category,
+  }))
+  metaCache().set(key, { at: Date.now(), cards })
+  return cards
+}
+
 export async function getCard(id: string): Promise<Card | null> {
   await seedCardsIfEmpty()
   const collection = await getCardsCollection()
@@ -415,7 +470,7 @@ export async function syncSummariesFromJson(): Promise<SyncSummariesResult> {
   }
 }
 
-export function getCategoryCounts(cards: Card[]): Record<string, number> {
+export function getCategoryCounts(cards: { category: string }[]): Record<string, number> {
   return cards.reduce<Record<string, number>>((acc, card) => {
     acc[card.category] = (acc[card.category] ?? 0) + 1
     return acc

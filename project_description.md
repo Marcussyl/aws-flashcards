@@ -157,10 +157,10 @@ recall/
   src/data/topics.ts       # topic metadata
   src/data/categories.ts   # categories per topic
   src/lib/mongo.ts         # MongoDB client
-  src/lib/cards-db.ts      # cards collection + seed
+  src/lib/cards-db.ts      # cards collection + seed; listCardMeta for dashboards
   src/lib/cards.ts         # shuffle / count helpers
   scripts/seed-cards.ts    # optional CLI seed
-  src/lib/progress.ts      # client progress hook
+  src/lib/progress.ts      # ProgressProvider + useProgress (one shared client load)
   src/lib/progress-db.ts   # reads/writes the progress document
   src/lib/progress-file.ts # one-time file migration helper
 ```
