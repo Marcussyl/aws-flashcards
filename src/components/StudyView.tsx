@@ -80,7 +80,8 @@ export function StudyView({ topicId, cards }: { topicId: TopicId; cards: Card[] 
 
   const [session, setSession] = useState<StudySession | null>(null)
 
-  if (session?.key !== sessionKey) {
+  // Rebuild only when sessionKey changes — never reshuffle mid-session on progress map updates.
+  useEffect(() => {
     const nextDeck =
       usesProgress && !ready
         ? null
@@ -93,11 +94,20 @@ export function StudyView({ topicId, cards }: { topicId: TopicId; cards: Card[] 
     setIndex(0)
     setFlipped(false)
     setSwipe({ dir: 1, exit: 'next' })
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- map/baseList intentionally captured at key change only
+  }, [sessionKey])
 
   const deck = session?.key === sessionKey ? session.deck : null
   const card = deck?.[index]
-  const total = deck?.length ?? 0
+  const remaining = deck?.length ?? 0
+  const originalCount = session?.key === sessionKey ? session.original.length : 0
+  const position =
+    originalCount <= 0
+      ? 0
+      : remaining <= 0
+        ? originalCount
+        : Math.min(originalCount, originalCount - remaining + index + 1)
+  const total = remaining
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -199,7 +209,9 @@ export function StudyView({ topicId, cards }: { topicId: TopicId; cards: Card[] 
     return <EmptyDeck topicId={topicId} category={category} mode={mode} />
   }
 
-  const progressPct = total ? Math.round(((index + 1) / total) * 100) : 0
+  const progressPct = originalCount
+    ? Math.round((position / originalCount) * 100)
+    : 0
   const topicEmoji = getCategoryEmoji(category ?? card.category, topicId)
   const topicLabel = category ?? topic?.name ?? 'All topics'
   const modeLabel = sessionHint
@@ -231,8 +243,8 @@ export function StudyView({ topicId, cards }: { topicId: TopicId; cards: Card[] 
           <div className="shrink-0 rounded-2xl border border-white/10 bg-slate-900/70 px-3 py-2 text-right">
             <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Card</p>
             <p className="text-sm font-semibold text-white">
-              {index + 1}
-              <span className="text-slate-500"> / {total}</span>
+              {position}
+              <span className="text-slate-500"> / {originalCount}</span>
             </p>
           </div>
         </div>
