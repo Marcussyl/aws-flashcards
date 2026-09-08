@@ -168,13 +168,15 @@ export function StudyView({ topicId, cards }: { topicId: TopicId; cards: Card[] 
   }
 
   function startOver() {
-    const original = session?.original ?? []
-    if (!original.length) {
+    // Full category (or topic) deck — not the last session's filtered subset.
+    const full = baseList
+    if (!full.length) {
       return
     }
+    const nextDeck = shuffleCards(full)
     setSession((current) =>
       current
-        ? { ...current, deck: shuffleCards(original) }
+        ? { ...current, deck: nextDeck, original: [...nextDeck] }
         : current,
     )
     setIndex(0)
@@ -434,8 +436,9 @@ function SessionComplete({
       </span>
       <h1 className="mt-4 text-2xl font-semibold">You have finished the session</h1>
       <p className="mt-3 max-w-sm text-sm leading-6 text-slate-400">
-        You marked all {count} {count === 1 ? 'card' : 'cards'} as known. Would you
-        like to start over with this round, or head back to the dashboard?
+        You marked all {count} {count === 1 ? 'card' : 'cards'} as known. Start over
+        shuffles every card in {category ? 'this category' : 'this topic'} again, not
+        only this session's pile. Or head back to the dashboard.
       </p>
       <div className="mt-6 flex flex-col gap-3 sm:flex-row">
         <motion.button
