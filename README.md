@@ -25,3 +25,11 @@ flowchart LR
 
 Non-mermaid fences stay as normal code. Mermaid renders client-side (dark theme) inside the card; wide diagrams scroll horizontally within the card instead of widening the page.
 
+## Install as app
+
+Memori is installable as a progressive web app (manifest only — no service worker / offline cache).
+
+- **Android / Desktop (Chrome, Edge, etc.):** open the site → browser menu → **Install app** / **Install Memori** (or the install icon in the address bar).
+- **iOS (Safari):** Share → **Add to Home Screen**.
+
+After deploy, hard-refresh or reinstall the home-screen shortcut if an older icon or name still shows.
