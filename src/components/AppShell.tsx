@@ -32,7 +32,11 @@ export function AppShell({ children }: { children: ReactNode }) {
               <span className="rounded-md bg-white/10 px-1.5 py-0.5 text-[10px] font-medium text-slate-400">
                 v{APP_VERSION}
               </span>
-              {topicId ? <TopicSwitcher topicId={topicId} /> : null}
+              {topicId ? (
+                <div className="hidden min-w-0 sm:block">
+                  <TopicSwitcher topicId={topicId} />
+                </div>
+              ) : null}
             </div>
             <SiteNav topicId={topicId} />
           </div>
