@@ -4,22 +4,25 @@ import { useEffect, useMemo, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { CardCreateModal } from '@/components/CardCreateModal'
 import { CardEditModal } from '@/components/CardEditModal'
-import { IconPencil, IconPlus } from '@/components/icons'
+import { IconPencil, IconPlus, IconTrash } from '@/components/icons'
 import { MarkdownContent } from '@/components/MarkdownContent'
-import { getCategoriesForTopic } from '@/data/categories'
-import type { TopicId } from '@/data/topics'
-import type { Card } from '@/data/types'
+import type { Card, TopicId } from '@/data/types'
 import { easeOutExpo } from '@/lib/motion'
 import { useProgress } from '@/lib/progress'
+import { useTaxonomy } from '@/lib/taxonomy'
 
 export function BrowseView({ topicId, cards }: { topicId: TopicId; cards: Card[] }) {
   const { map } = useProgress()
+  const { getCategoriesForTopic } = useTaxonomy()
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('All')
   const [openId, setOpenId] = useState<string | null>(null)
   const [editing, setEditing] = useState<Card | null>(null)
   const [creating, setCreating] = useState(false)
   const [topicCards, setTopicCards] = useState(cards)
+  const [pendingDelete, setPendingDelete] = useState<Card | null>(null)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
   const reduce = useReducedMotion()
   const categories = getCategoriesForTopic(topicId)
 
@@ -45,13 +48,39 @@ export function BrowseView({ topicId, cards }: { topicId: TopicId; cards: Card[]
     })
   }, [query, category, topicCards])
 
+  async function confirmDelete() {
+    if (!pendingDelete) {
+      return
+    }
+    setDeleting(true)
+    setDeleteError(null)
+    try {
+      const response = await fetch(`/api/cards/${encodeURIComponent(pendingDelete.id)}`, {
+        method: 'DELETE',
+      })
+      const payload = (await response.json().catch(() => ({}))) as { error?: string }
+      if (!response.ok) {
+        throw new Error(payload.error ?? 'Failed to delete card')
+      }
+      setTopicCards((current) => current.filter((item) => item.id !== pendingDelete.id))
+      if (openId === pendingDelete.id) {
+        setOpenId(null)
+      }
+      setPendingDelete(null)
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : 'Failed to delete card')
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-3xl font-semibold">Browse cards</h1>
           <p className="mt-2 text-slate-400">
-            Search questions or notes in this topic. Use the pencil to edit markdown.
+            Search questions or notes in this topic. Use the pencil to edit markdown, or trash to delete.
           </p>
         </div>
         <button
@@ -77,7 +106,7 @@ export function BrowseView({ topicId, cards }: { topicId: TopicId; cards: Card[]
         >
           <option value="All">All categories</option>
           {categories.map((item) => (
-            <option key={item.name} value={item.name}>
+            <option key={item.id} value={item.name}>
               {item.name}
             </option>
           ))}
@@ -130,6 +159,17 @@ export function BrowseView({ topicId, cards }: { topicId: TopicId; cards: Card[]
                   >
                     <IconPencil className="h-4 w-4" />
                   </button>
+                  <button
+                    type="button"
+                    className="flex size-8 shrink-0 items-center justify-center rounded-lg text-slate-400 hover:bg-rose-500/15 hover:text-rose-300"
+                    aria-label={`Delete ${card.id}`}
+                    onClick={() => {
+                      setDeleteError(null)
+                      setPendingDelete(card)
+                    }}
+                  >
+                    <IconTrash className="h-4 w-4" />
+                  </button>
                 </div>
                 <AnimatePresence initial={false}>
                   {open ? (
@@ -173,6 +213,10 @@ export function BrowseView({ topicId, cards }: { topicId: TopicId; cards: Card[]
             setTopicCards((current) => current.map((item) => (item.id === next.id ? next : item)))
             setEditing(null)
           }}
+          onDeleted={(id) => {
+            setTopicCards((current) => current.filter((item) => item.id !== id))
+            setEditing(null)
+          }}
         />
       ) : null}
       <CardCreateModal
@@ -183,10 +227,38 @@ export function BrowseView({ topicId, cards }: { topicId: TopicId; cards: Card[]
         onCreated={(card) => {
           setTopicCards((current) => [...current, card])
           setCreating(false)
-          // Local list is already updated; skip router.refresh so create stays snappy.
-          // Server cards-db cache is invalidated by POST /api/cards.
         }}
       />
+      {pendingDelete ? (
+        <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/70 p-3 sm:items-center">
+          <div className="w-full max-w-md rounded-3xl border border-white/10 bg-slate-900 p-5 shadow-2xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-rose-300/80">
+              Delete card
+            </p>
+            <h2 className="mt-2 text-lg font-semibold text-white">{pendingDelete.id}</h2>
+            <p className="mt-2 text-sm text-slate-400 line-clamp-3">{pendingDelete.question}</p>
+            {deleteError ? <p className="mt-3 text-sm text-rose-300">{deleteError}</p> : null}
+            <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                className="rounded-full border border-white/15 px-5 py-2.5 text-sm text-white hover:border-white/40"
+                disabled={deleting}
+                onClick={() => setPendingDelete(null)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="rounded-full bg-rose-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-rose-400 disabled:opacity-60"
+                disabled={deleting}
+                onClick={() => void confirmDelete()}
+              >
+                {deleting ? 'Deleting…' : 'Delete permanently'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }

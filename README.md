@@ -6,6 +6,10 @@ Full spec: [project_description.md](./project_description.md)
 More docs in project_description.md.
 Install deps and run the app as usual.
 
+## Configurable taxonomy
+
+Topics and categories live in MongoDB (`topics`, `categories`) and seed from `src/data/topics.ts` / `categories.ts` on first read. Manage them at `/admin` (add/edit/delete, rename, merge). Card create/edit category dropdowns read from the DB. Topic accent colors apply via CSS variables on `AppShell`.
+
 ## Cards in MongoDB
 
 First cards read seeds an empty collection from src/data JSON. Ids stay stable for progress.

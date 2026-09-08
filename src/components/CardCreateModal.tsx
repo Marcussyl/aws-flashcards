@@ -1,14 +1,13 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { MarkdownContent } from '@/components/MarkdownContent'
 import { RichTextEditor } from '@/components/RichTextEditor'
-import { getCategoriesForTopic } from '@/data/categories'
-import { TOPICS, type TopicId } from '@/data/topics'
-import type { Card } from '@/data/types'
+import type { Card, TopicId } from '@/data/types'
 import { useIsClient } from '@/lib/use-is-client'
+import { useTaxonomy } from '@/lib/taxonomy'
 
 type CardCreateModalProps = {
   open: boolean
@@ -42,18 +41,22 @@ export function CardCreateModal({
 }: CardCreateModalProps) {
   const isClient = useIsClient()
   const reduce = useReducedMotion()
-  const [draft, setDraft] = useState<Draft>(() => ({
-    topic: topicId,
-    category: defaultCategory ?? getCategoriesForTopic(topicId)[0]?.name ?? '',
-    question: '',
-    summary: '',
-    answer: '',
-  }))
+  const { topics, getCategoriesForTopic } = useTaxonomy()
+  const [draft, setDraft] = useState<Draft>(() => {
+    const cats = getCategoriesForTopic(topicId)
+    return {
+      topic: topicId,
+      category: defaultCategory ?? cats[0]?.name ?? '',
+      question: '',
+      summary: '',
+      answer: '',
+    }
+  })
   const [preview, setPreview] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const categories = useMemo(() => getCategoriesForTopic(draft.topic), [draft.topic])
+  const categories = getCategoriesForTopic(draft.topic)
 
   useEffect(() => {
     if (!open) {
@@ -73,7 +76,7 @@ export function CardCreateModal({
     })
     setPreview(false)
     setError(null)
-  }, [open, topicId, defaultCategory])
+  }, [open, topicId, defaultCategory, getCategoriesForTopic])
 
   useEffect(() => {
     if (!open) {
@@ -194,10 +197,10 @@ export function CardCreateModal({
                   <FieldLabel label="Topic" help="Which deck this card belongs to" />
                   <select
                     value={draft.topic}
-                    onChange={(event) => setTopic(event.target.value as TopicId)}
+                    onChange={(event) => setTopic(event.target.value)}
                     className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2.5 text-sm text-white outline-none ring-accent/40 focus:ring-2"
                   >
-                    {TOPICS.map((topic) => (
+                    {topics.map((topic) => (
                       <option key={topic.id} value={topic.id}>
                         {topic.emoji} {topic.name}
                       </option>
@@ -215,7 +218,7 @@ export function CardCreateModal({
                   className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2.5 text-sm text-white outline-none ring-accent/40 focus:ring-2"
                 >
                   {categories.map((item) => (
-                    <option key={item.name} value={item.name}>
+                    <option key={item.id} value={item.name}>
                       {item.emoji} {item.name}
                     </option>
                   ))}

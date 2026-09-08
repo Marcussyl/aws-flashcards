@@ -1,17 +1,20 @@
 import { TopicLibrary } from '@/components/TopicLibrary'
-import { TOPIC_IDS, type TopicId } from '@/data/topics'
-import { listCardMeta, type CardMeta } from '@/lib/cards-db'
+import { listCardMeta } from '@/lib/cards-db'
+import { listTopics } from '@/lib/taxonomy-db'
 
 export const dynamic = 'force-dynamic'
 
 export default async function HomePage() {
-  const all = await listCardMeta()
-  const cardsByTopic = TOPIC_IDS.reduce(
-    (acc, topic) => {
-      acc[topic] = all.filter((card) => card.topic === topic)
-      return acc
-    },
-    {} as Record<TopicId, CardMeta[]>,
-  )
+  const [all, topics] = await Promise.all([listCardMeta(), listTopics()])
+  const cardsByTopic: Record<string, typeof all> = {}
+  for (const topic of topics) {
+    cardsByTopic[topic.id] = all.filter((card) => card.topic === topic.id)
+  }
+  // Include any card topics not yet in taxonomy (should be rare)
+  for (const card of all) {
+    if (!cardsByTopic[card.topic]) {
+      cardsByTopic[card.topic] = all.filter((item) => item.topic === card.topic)
+    }
+  }
   return <TopicLibrary cardsByTopic={cardsByTopic} />
 }

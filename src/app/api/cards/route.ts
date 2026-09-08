@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server'
-import { getCategoriesForTopic, type CategoryMeta } from '@/data/categories'
-import { isTopicId, type TopicId } from '@/data/topics'
 import type { CardCreate } from '@/data/types'
 import { createCard, forceSeedCards, listCardIds, listCards, seedCardsIfEmpty, syncSummariesFromJson } from '@/lib/cards-db'
+import { categoryAllowed, topicExists } from '@/lib/taxonomy-db'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -21,7 +20,7 @@ function isCreateBody(value: unknown): value is CardCreate {
     return false
   }
   const body = value as Record<string, unknown>
-  if (!isTopicId(String(body.topic ?? ''))) {
+  if (!isNonEmptyString(body.topic)) {
     return false
   }
   return (
@@ -32,10 +31,6 @@ function isCreateBody(value: unknown): value is CardCreate {
   )
 }
 
-function categoryAllowed(topic: TopicId, category: string): boolean {
-  return getCategoriesForTopic(topic).some((item: CategoryMeta) => item.name === category)
-}
-
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
@@ -43,11 +38,14 @@ export async function GET(request: Request) {
     const category = searchParams.get('category') ?? undefined
     const q = searchParams.get('q') ?? undefined
 
-    if (topicParam && !isTopicId(topicParam)) {
-      return NextResponse.json({ error: 'Invalid topic' }, { status: 400 })
+    if (topicParam) {
+      const ok = await topicExists(topicParam)
+      if (!ok) {
+        return NextResponse.json({ error: 'Invalid topic' }, { status: 400 })
+      }
     }
 
-    const topic = topicParam && isTopicId(topicParam) ? topicParam : undefined
+    const topic = topicParam ?? undefined
     if (searchParams.get('idsOnly') === '1') {
       const ids = await listCardIds({ topic })
       return NextResponse.json(ids)
@@ -82,7 +80,11 @@ export async function POST(request: Request) {
           { status: 400 },
         )
       }
-      if (!categoryAllowed(body.topic, body.category.trim())) {
+      const topicOk = await topicExists(body.topic)
+      if (!topicOk) {
+        return NextResponse.json({ error: `Topic "${body.topic}" does not exist` }, { status: 400 })
+      }
+      if (!(await categoryAllowed(body.topic, body.category.trim()))) {
         return NextResponse.json(
           { error: `Category "${body.category}" is not valid for topic ${body.topic}` },
           { status: 400 },

@@ -1,6 +1,6 @@
 import rawAwsCards from '@/data/cards.json'
 import rawPveCards from '@/data/pve-cards.json'
-import type { TopicId } from '@/data/topics'
+import type { TopicId } from '@/data/types'
 import type { Card, CardCreate, CardDocument, CardUpdate } from '@/data/types'
 import { getDb } from '@/lib/mongo'
 
@@ -350,15 +350,29 @@ export async function updateCard(id: string, patch: CardUpdate): Promise<Card | 
   return null
 }
 
+export async function deleteCard(id: string): Promise<boolean> {
+  await ensureIndexes()
+  const collection = await getCardsCollection()
+  const result = await collection.deleteOne({ _id: id })
+  if (result.deletedCount > 0) {
+    invalidateCardsCache()
+    return true
+  }
+  return false
+}
 
 
-const TOPIC_ID_PREFIX: Record<TopicId, string> = {
-  aws: 'c',
-  pve: 'pve',
+
+/** Stable id prefixes for known decks; new topics use a sanitized slug prefix. */
+function idPrefixForTopic(topic: TopicId): string {
+  if (topic === 'aws') return 'c'
+  if (topic === 'pve') return 'pve'
+  const clean = topic.replace(/[^a-z0-9]/gi, '').toLowerCase()
+  return clean || 't'
 }
 
 function nextIdForTopic(existingIds: string[], topic: TopicId): string {
-  const prefix = TOPIC_ID_PREFIX[topic]
+  const prefix = idPrefixForTopic(topic)
   let max = 0
   for (const id of existingIds) {
     if (!id.startsWith(prefix)) {

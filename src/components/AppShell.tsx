@@ -1,6 +1,6 @@
 'use client'
 
-import type { ReactNode } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { AmbientBackdrop } from '@/components/AmbientBackdrop'
@@ -9,16 +9,26 @@ import { SiteNav } from '@/components/SiteNav'
 import { TopicSwitcher } from '@/components/TopicSwitcher'
 import { topicFromPath } from '@/data/topics'
 import { ProgressProvider } from '@/lib/progress'
+import { TaxonomyProvider, useTaxonomy } from '@/lib/taxonomy'
 import { APP_VERSION } from '@/lib/version'
 
-export function AppShell({ children }: { children: ReactNode }) {
+function ShellInner({ children }: { children: ReactNode }) {
   const pathname = usePathname()
   const topicId = topicFromPath(pathname)
+  const { accentFor, getTopic } = useTaxonomy()
+  const accents = accentFor(topicId)
+  const topic = topicId ? getTopic(topicId) : undefined
 
   return (
     <ProgressProvider>
       <div
         data-topic={topicId ?? 'library'}
+        style={
+          {
+            '--accent': accents.accent,
+            '--accent-fg': accents.accentFg,
+          } as CSSProperties
+        }
         className="relative flex h-dvh min-w-0 flex-col overflow-x-hidden overflow-y-hidden bg-slate-950 text-slate-100"
       >
         <AmbientBackdrop />
@@ -32,7 +42,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <span className="rounded-md bg-white/10 px-1.5 py-0.5 text-[10px] font-medium text-slate-400">
                 v{APP_VERSION}
               </span>
-              {topicId ? (
+              {topicId && topic ? (
                 <div className="hidden min-w-0 sm:block">
                   <TopicSwitcher topicId={topicId} />
                 </div>
@@ -46,5 +56,13 @@ export function AppShell({ children }: { children: ReactNode }) {
         </main>
       </div>
     </ProgressProvider>
+  )
+}
+
+export function AppShell({ children }: { children: ReactNode }) {
+  return (
+    <TaxonomyProvider>
+      <ShellInner>{children}</ShellInner>
+    </TaxonomyProvider>
   )
 }

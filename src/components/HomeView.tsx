@@ -6,13 +6,12 @@ import { motion, useReducedMotion } from 'motion/react'
 import { AnimatedNumber } from '@/components/AnimatedNumber'
 import { CardCreateModal } from '@/components/CardCreateModal'
 import { IconPlus } from '@/components/icons'
-import { getCategoriesForTopic } from '@/data/categories'
-import { getTopic, type TopicId } from '@/data/topics'
-import type { Card } from '@/data/types'
+import type { Card, TopicId } from '@/data/types'
 import { getCategoryCounts } from '@/lib/cards'
 import { fadeUp, stagger, tapSpring } from '@/lib/motion'
 import { topicHref } from '@/lib/paths'
 import { countByStatus, useProgress } from '@/lib/progress'
+import { useTaxonomy } from '@/lib/taxonomy'
 
 const MotionLink = motion.create(Link)
 
@@ -23,6 +22,7 @@ export function HomeView({
   topicId: TopicId
   cards: Array<Pick<Card, 'id' | 'topic' | 'category'>>
 }) {
+  const { getTopic, getCategoriesForTopic } = useTaxonomy()
   const topic = getTopic(topicId)
   const { map, ready, reset } = useProgress()
   const [creating, setCreating] = useState(false)
@@ -161,7 +161,7 @@ export function HomeView({
             const pct = ready && total ? Math.round((stats.known / total) * 100) : 0
             return (
               <MotionLink
-                key={category.name}
+                key={category.id}
                 href={topicHref(topicId, 'study', { category: category.name })}
                 variants={reduce ? undefined : fadeUp}
                 whileHover={reduce ? undefined : { y: -4, scale: 1.01 }}
@@ -201,7 +201,6 @@ export function HomeView({
         onCreated={(card) => {
           setTopicCards((current) => [...current, card])
           setCreating(false)
-          // Optimistic local update; avoid full RSC refresh on create.
         }}
       />
     </motion.div>

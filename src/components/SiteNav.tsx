@@ -8,17 +8,21 @@ import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { layoutSpring } from '@/lib/motion'
 import { topicHref } from '@/lib/paths'
 import { useIsClient } from '@/lib/use-is-client'
-import type { TopicId } from '@/data/topics'
+import type { TopicId } from '@/data/types'
 
 function navItems(topicId: TopicId | null) {
   if (!topicId) {
-    return [{ href: '/', label: 'Library' }]
+    return [
+      { href: '/', label: 'Library' },
+      { href: '/admin', label: 'Admin' },
+    ]
   }
   return [
     { href: '/', label: 'Library' },
     { href: topicHref(topicId), label: 'Dashboard' },
     { href: topicHref(topicId, 'study'), label: 'Study' },
     { href: topicHref(topicId, 'browse'), label: 'Browse' },
+    { href: '/admin', label: 'Admin' },
   ]
 }
 

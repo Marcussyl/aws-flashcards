@@ -17,8 +17,6 @@ import {
   IconShuffle,
   IconSpark,
 } from '@/components/icons'
-import { getCategoryEmoji } from '@/data/categories'
-import { getTopic, type TopicId } from '@/data/topics'
 import { shuffleCards } from '@/lib/cards'
 import {
   cardExitKnown,
@@ -30,7 +28,8 @@ import {
 import { topicHref } from '@/lib/paths'
 import { useProgress } from '@/lib/progress'
 import { advanceStudyDeck, selectStudyCards, studySessionHint } from '@/lib/study-deck'
-import type { Card } from '@/data/types'
+import type { Card, TopicId } from '@/data/types'
+import { useTaxonomy } from '@/lib/taxonomy'
 
 type StudySession = {
   key: string
@@ -60,6 +59,7 @@ export function StudyView({ topicId, cards }: { topicId: TopicId; cards: Card[] 
   const [burstKind, setBurstKind] = useState<BurstKind>('known')
   const [swipe, setSwipe] = useState<Swipe>({ dir: 1, exit: 'next' })
   const reduce = useReducedMotion()
+  const { getTopic, getCategoryEmoji } = useTaxonomy()
   const topic = getTopic(topicId)
 
   const topicCards = cards
@@ -290,6 +290,22 @@ export function StudyView({ topicId, cards }: { topicId: TopicId; cards: Card[] 
                   }
                 })
               }}
+              onDeleted={(id) => {
+                setFlipped(false)
+                setSession((current) => {
+                  if (!current) {
+                    return current
+                  }
+                  const remove = (list: Card[]) => list.filter((item) => item.id !== id)
+                  const deck = current.deck ? remove(current.deck) : current.deck
+                  return {
+                    ...current,
+                    deck,
+                    original: remove(current.original),
+                  }
+                })
+                setIndex((value) => Math.max(0, value))
+              }}
             />
           </motion.div>
         </AnimatePresence>
@@ -360,6 +376,7 @@ function StudyLoading({
   category: string | null
   mode: string | null
 }) {
+  const { getTopic } = useTaxonomy()
   const topic = category ?? getTopic(topicId)?.name ?? 'All topics'
   const modeLabel = mode ? MODE_LABELS[mode] ?? mode : 'Shuffled deck'
 
@@ -391,6 +408,7 @@ function SessionComplete({
   onStartOver: () => void
 }) {
   const reduce = useReducedMotion()
+  const { getTopic, getCategoryEmoji } = useTaxonomy()
   const topic = category ?? getTopic(topicId)?.name ?? 'All topics'
   const modeLabel = mode ? MODE_LABELS[mode] ?? mode : 'Shuffled'
 

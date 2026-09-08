@@ -12,6 +12,8 @@
   --scrollbar-track: transparent;
 }
 
+/* Topic accents: AppShell also sets --accent/--accent-fg inline from Mongo topic docs.
+   These [data-topic] rules remain as fallbacks for seeded aws/pve/library. */
 [data-topic='library'] {
   --accent: #fbbf24;
   --accent-fg: #020617;

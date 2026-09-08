@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import { HomeView } from '@/components/HomeView'
-import { isTopicId } from '@/data/topics'
 import { listCardMeta } from '@/lib/cards-db'
+import { topicExists } from '@/lib/taxonomy-db'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,7 +11,7 @@ export default async function TopicDashboardPage({
   params: Promise<{ topic: string }>
 }) {
   const { topic } = await params
-  if (!isTopicId(topic)) {
+  if (!(await topicExists(topic))) {
     notFound()
   }
   const cards = await listCardMeta({ topic })

@@ -6,7 +6,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { CardEditModal } from '@/components/CardEditModal'
 import { IconFlip, IconPencil } from '@/components/icons'
 import { MarkdownContent } from '@/components/MarkdownContent'
-import { getCategoryEmoji } from '@/data/categories'
+import { useTaxonomy } from '@/lib/taxonomy'
 import { cardNoteRemainder } from '@/lib/paths'
 import { useIsClient } from '@/lib/use-is-client'
 import type { Card } from '@/data/types'
@@ -16,9 +16,11 @@ type FlashCardProps = {
   flipped: boolean
   onFlip: () => void
   onSaved?: (card: Card) => void
+  onDeleted?: (id: string) => void
 }
 
-export function FlashCard({ card, flipped, onFlip, onSaved }: FlashCardProps) {
+export function FlashCard({ card, flipped, onFlip, onSaved, onDeleted }: FlashCardProps) {
+  const { getCategoryEmoji } = useTaxonomy()
   const [ui, setUi] = useState({
     id: card.id,
     expanded: false,
@@ -225,6 +227,10 @@ export function FlashCard({ card, flipped, onFlip, onSaved }: FlashCardProps) {
         onClose={() => setEditing(false)}
         onSaved={(next) => {
           onSaved?.(next)
+          setEditing(false)
+        }}
+        onDeleted={(id) => {
+          onDeleted?.(id)
           setEditing(false)
         }}
       />
