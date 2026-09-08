@@ -12,8 +12,7 @@ Topics and categories live in MongoDB (`topics`, `categories`) and seed from `sr
 
 ## Cards in MongoDB
 
-First cards read seeds an empty collection from src/data JSON. Ids stay stable for progress.
-See project_description for seed and edit details.
+Cards live only in MongoDB (`cards` collection). There is no JSON seed or fallback — an empty database means an empty deck. Create and edit cards in the UI (or via `POST /api/cards`). Ids stay stable for progress.
 
 ## Markdown answers
 

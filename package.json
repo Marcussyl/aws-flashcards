@@ -6,9 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
-    "seed:cards": "tsx --env-file=.env.local scripts/seed-cards.ts",
-    "sync:summaries": "tsx --env-file=.env.local scripts/sync-summaries.ts"
+    "lint": "eslint"
   },
   "dependencies": {
     "@tiptap/core": "^3.31.3",

@@ -1,5 +1,3 @@
-import rawAwsCards from '@/data/cards.json'
-import rawPveCards from '@/data/pve-cards.json'
 import type { TopicId } from '@/data/types'
 import type { Card, CardCreate, CardDocument, CardUpdate } from '@/data/types'
 import { getDb } from '@/lib/mongo'
@@ -8,11 +6,8 @@ export const CARDS_COLLECTION = 'cards'
 
 export type CardMeta = Pick<Card, 'id' | 'topic' | 'category'>
 
-type AwsCardSource = Omit<Card, 'topic'>
-
 const globalForCards = globalThis as typeof globalThis & {
   _cardsIndexesReady?: Promise<void>
-  _cardsSeeded?: Promise<number>
   _cardsListCache?: Map<string, { at: number; cards: Card[] }>
   _cardsIdCache?: Map<string, { at: number; ids: Array<{ id: string; topic: TopicId }> }>
   _cardsMetaCache?: Map<string, { at: number; cards: CardMeta[] }>
@@ -86,103 +81,6 @@ export async function ensureIndexes() {
   return globalForCards._cardsIndexesReady
 }
 
-function seedDocuments(): CardDocument[] {
-  const now = new Date().toISOString()
-  const aws = (rawAwsCards as AwsCardSource[]).map((card) => ({
-    _id: card.id,
-    topic: 'aws' as const,
-    category: card.category,
-    question: card.question,
-    summary: card.summary,
-    answer: card.answer,
-    sourceQuestion: card.sourceQuestion,
-    ...(card.images?.length ? { images: card.images } : {}),
-    createdAt: now,
-    updatedAt: now,
-  }))
-  const pve = (rawPveCards as Card[]).map((card) => ({
-    _id: card.id,
-    topic: card.topic,
-    category: card.category,
-    question: card.question,
-    summary: card.summary,
-    answer: card.answer,
-    sourceQuestion: card.sourceQuestion,
-    ...(card.images?.length ? { images: card.images } : {}),
-    createdAt: now,
-    updatedAt: now,
-  }))
-  return [...aws, ...pve]
-}
-
-export async function seedCardsIfEmpty(): Promise<number> {
-  if (!globalForCards._cardsSeeded) {
-    globalForCards._cardsSeeded = (async () => {
-      await ensureIndexes()
-      const collection = await getCardsCollection()
-      const existing = await collection.estimatedDocumentCount()
-      if (existing > 0) {
-        return 0
-      }
-      const docs = seedDocuments()
-      if (docs.length === 0) {
-        return 0
-      }
-      await collection.bulkWrite(
-        docs.map((doc) => ({
-          updateOne: {
-            filter: { _id: doc._id },
-            update: { $setOnInsert: doc },
-            upsert: true,
-          },
-        })),
-        { ordered: false },
-      )
-      return docs.length
-    })().catch((error) => {
-      globalForCards._cardsSeeded = undefined
-      throw error
-    })
-  }
-  return globalForCards._cardsSeeded
-}
-
-export async function forceSeedCards(): Promise<number> {
-  await ensureIndexes()
-  const collection = await getCardsCollection()
-  const docs = seedDocuments()
-  if (docs.length === 0) {
-    return 0
-  }
-  await collection.bulkWrite(
-    docs.map((doc) => ({
-      updateOne: {
-        filter: { _id: doc._id },
-        update: {
-          $set: {
-            topic: doc.topic,
-            category: doc.category,
-            question: doc.question,
-            summary: doc.summary,
-            answer: doc.answer,
-            sourceQuestion: doc.sourceQuestion,
-            ...(doc.images ? { images: doc.images } : {}),
-            updatedAt: doc.updatedAt,
-          },
-          $setOnInsert: {
-            createdAt: doc.createdAt,
-          },
-        },
-        upsert: true,
-      },
-    })),
-    { ordered: false },
-  )
-  globalForCards._cardsSeeded = Promise.resolve(docs.length)
-  invalidateCardsCache()
-  return docs.length
-}
-
 export type ListCardsOptions = {
   topic?: TopicId
   category?: string
@@ -207,7 +105,6 @@ export async function listCards(options: ListCardsOptions = {}): Promise<Card[]>
     }
   }
 
-  await seedCardsIfEmpty()
   const collection = await getCardsCollection()
   const filter: Record<string, unknown> = {}
   if (options.topic) {
@@ -253,7 +150,6 @@ export async function listCardIds(options: { topic?: TopicId } = {}): Promise<
     return ids
   }
 
-  await seedCardsIfEmpty()
   const collection = await getCardsCollection()
   const filter: Record<string, unknown> = {}
   if (options.topic) {
@@ -293,7 +189,6 @@ export async function listCardMeta(options: { topic?: TopicId } = {}): Promise<C
     return cards
   }
 
-  await seedCardsIfEmpty()
   const collection = await getCardsCollection()
   const filter: Record<string, unknown> = {}
   if (options.topic) {
@@ -313,7 +208,6 @@ export async function listCardMeta(options: { topic?: TopicId } = {}): Promise<C
 }
 
 export async function getCard(id: string): Promise<Card | null> {
-  await seedCardsIfEmpty()
   const collection = await getCardsCollection()
   const doc = await collection.findOne({ _id: id })
   return doc ? toCard(doc) : null
@@ -360,8 +254,6 @@ export async function deleteCard(id: string): Promise<boolean> {
   }
   return false
 }
-
-
 
 /** Stable id prefixes for known decks; new topics use a sanitized slug prefix. */
 function idPrefixForTopic(topic: TopicId): string {
@@ -431,57 +323,6 @@ export async function createCard(input: CardCreate): Promise<Card> {
   }
   invalidateCardsCache()
   return toCard(doc)
-}
-
-export type SyncSummariesResult = {
-  matched: number
-  modified: number
-  upserted: number
-}
-
-/**
- * Upsert only summary and updatedAt from JSON decks by _id.
- * Leaves question/answer/category/sourceQuestion/images untouched so user edits survive.
- * Missing docs are inserted with the full seed document for that id.
- */
-export async function syncSummariesFromJson(): Promise<SyncSummariesResult> {
-  await ensureIndexes()
-  const collection = await getCardsCollection()
-  const docs = seedDocuments()
-  if (docs.length === 0) {
-    return { matched: 0, modified: 0, upserted: 0 }
-  }
-  const now = new Date().toISOString()
-  const result = await collection.bulkWrite(
-    docs.map((doc) => ({
-      updateOne: {
-        filter: { _id: doc._id },
-        update: {
-          $set: {
-            summary: doc.summary,
-            updatedAt: now,
-          },
-          $setOnInsert: {
-            topic: doc.topic,
-            category: doc.category,
-            question: doc.question,
-            answer: doc.answer,
-            sourceQuestion: doc.sourceQuestion,
-            ...(doc.images ? { images: doc.images } : {}),
-            createdAt: doc.createdAt,
-          },
-        },
-        upsert: true,
-      },
-    })),
-    { ordered: false },
-  )
-  invalidateCardsCache()
-  return {
-    matched: result.matchedCount,
-    modified: result.modifiedCount,
-    upserted: result.upsertedCount,
-  }
 }
 
 export function getCategoryCounts(cards: { category: string }[]): Record<string, number> {

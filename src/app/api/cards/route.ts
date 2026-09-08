@@ -1,15 +1,10 @@
 import { NextResponse } from 'next/server'
 import type { CardCreate } from '@/data/types'
-import { createCard, forceSeedCards, listCardIds, listCards, seedCardsIfEmpty, syncSummariesFromJson } from '@/lib/cards-db'
+import { createCard, listCardIds, listCards } from '@/lib/cards-db'
 import { categoryAllowed, topicExists } from '@/lib/taxonomy-db'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
-
-type SeedBody = {
-  force?: boolean
-  summariesOnly?: boolean
-}
 
 function isNonEmptyString(value: unknown): value is string {
   return typeof value === 'string' && value.trim().length > 0
@@ -65,7 +60,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const body = (await request.json().catch(() => ({}))) as SeedBody & Partial<CardCreate> & {
+    const body = (await request.json().catch(() => ({}))) as Partial<CardCreate> & {
       question?: string
     }
 
@@ -100,12 +95,13 @@ export async function POST(request: Request) {
       return NextResponse.json(card, { status: 201 })
     }
 
-    if (body.summariesOnly) {
-      const synced = await syncSummariesFromJson()
-      return NextResponse.json({ ok: true, summariesOnly: true, ...synced })
-    }
-    const seeded = body.force ? await forceSeedCards() : await seedCardsIfEmpty()
-    return NextResponse.json({ ok: true, seeded })
+    return NextResponse.json(
+      {
+        error:
+          'Invalid request. To create a card, POST a body with non-empty topic, category, question, summary, and answer.',
+      },
+      { status: 400 },
+    )
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to process cards request'
     return NextResponse.json({ error: message }, { status: 500 })
