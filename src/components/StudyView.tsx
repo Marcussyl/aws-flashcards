@@ -134,26 +134,21 @@ export function StudyView({ topicId, cards }: { topicId: TopicId; cards: Card[] 
     return () => window.removeEventListener('keydown', onKey)
   })
 
-  function advance(nextSwipe: Swipe) {
-    setSwipe(nextSwipe)
-    setIndex((current) => {
-      const next = current + nextSwipe.dir
-      if (next < 0) {
-        return total ? total - 1 : 0
-      }
-      if (next >= total) {
-        return 0
-      }
-      return next
-    })
-    setFlipped(false)
-  }
-
   function go(step: number) {
-    advance({
+    if (!total) {
+      return
+    }
+    const next = index + step
+    // Stay within the remaining deck — no wrap (avoids 2/9 Previous → 9/9).
+    if (next < 0 || next >= total) {
+      return
+    }
+    setSwipe({
       dir: step > 0 ? 1 : -1,
       exit: step > 0 ? 'next' : 'prev',
     })
+    setIndex(next)
+    setFlipped(false)
   }
 
   function markCurrent(status: 'learning' | 'known') {
@@ -303,10 +298,11 @@ export function StudyView({ topicId, cards }: { topicId: TopicId; cards: Card[] 
       <div className="grid min-w-0 shrink-0 grid-cols-2 gap-2 sm:grid-cols-[auto_1fr_1fr_auto] sm:items-center">
         <motion.button
           type="button"
-          className="order-3 inline-flex items-center justify-center gap-1.5 rounded-full border border-white/15 px-4 py-3 text-sm hover:border-white/40 sm:order-1"
+          className="order-3 inline-flex items-center justify-center gap-1.5 rounded-full border border-white/15 px-4 py-3 text-sm hover:border-white/40 disabled:cursor-not-allowed disabled:opacity-40 sm:order-1"
           onClick={() => go(-1)}
-          whileHover={reduce ? undefined : { scale: 1.02 }}
-          whileTap={reduce ? undefined : { scale: 0.96 }}
+          disabled={index <= 0}
+          whileHover={reduce || index <= 0 ? undefined : { scale: 1.02 }}
+          whileTap={reduce || index <= 0 ? undefined : { scale: 0.96 }}
           transition={tapSpring}
         >
           <IconChevronLeft className="h-4 w-4" />
@@ -336,10 +332,11 @@ export function StudyView({ topicId, cards }: { topicId: TopicId; cards: Card[] 
         </motion.button>
         <motion.button
           type="button"
-          className="order-4 inline-flex items-center justify-center gap-1.5 rounded-full border border-white/15 px-4 py-3 text-sm hover:border-white/40"
+          className="order-4 inline-flex items-center justify-center gap-1.5 rounded-full border border-white/15 px-4 py-3 text-sm hover:border-white/40 disabled:cursor-not-allowed disabled:opacity-40"
           onClick={() => go(1)}
-          whileHover={reduce ? undefined : { scale: 1.02 }}
-          whileTap={reduce ? undefined : { scale: 0.96 }}
+          disabled={index >= total - 1}
+          whileHover={reduce || index >= total - 1 ? undefined : { scale: 1.02 }}
+          whileTap={reduce || index >= total - 1 ? undefined : { scale: 0.96 }}
           transition={tapSpring}
         >
           Next
