@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Geist } from 'next/font/google'
 import { AppShell } from '@/components/AppShell'
 import './globals.css'
@@ -15,6 +15,15 @@ export const metadata: Metadata = {
     template: '%s · Memori',
   },
   description: 'Personal flip-card review for AWS, Proxmox, and other topics you are learning.',
+  appleWebApp: {
+    capable: true,
+    title: 'Memori',
+    statusBarStyle: 'black-translucent',
+  },
+}
+
+export const viewport: Viewport = {
+  themeColor: '#020617',
 }
 
 export default function RootLayout({ children }: { children: ReactNode }) {
