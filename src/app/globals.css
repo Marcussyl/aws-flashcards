@@ -90,6 +90,17 @@ body {
   color: var(--foreground);
 }
 
+/* Clickable controls: browsers default buttons to an arrow cursor. */
+button:not(:disabled),
+[role='button']:not([aria-disabled='true']) {
+  cursor: pointer;
+}
+
+button:disabled,
+[role='button'][aria-disabled='true'] {
+  cursor: not-allowed;
+}
+
 .markdown-body {
   max-width: 100%;
   min-width: 0;
