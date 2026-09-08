@@ -10,7 +10,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import type { CardStatus, ProgressMap } from '@/data/types'
+import type { CardStatus, ProgressEntry, ProgressMap } from '@/data/types'
 
 const LEGACY_STORAGE_KEY = 'aws-flashcards-progress-v1'
 
@@ -43,6 +43,14 @@ async function saveProgress(map: ProgressMap) {
   })
 }
 
+async function saveProgressEntry(cardId: string, entry: ProgressEntry) {
+  await fetch('/api/progress', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ cardId, entry }),
+  })
+}
+
 function readLegacyLocalProgress(): ProgressMap | null {
   try {
     const raw = window.localStorage.getItem(LEGACY_STORAGE_KEY)
@@ -70,11 +78,19 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false)
   const writes = useRef(Promise.resolve())
 
-  const persist = useCallback((next: ProgressMap) => {
+  const persistMap = useCallback((next: ProgressMap) => {
     writes.current = writes.current
       .then(() => saveProgress(next))
       .catch((error) => {
         console.error('Failed to save progress', error)
+      })
+  }, [])
+
+  const persistEntry = useCallback((cardId: string, entry: ProgressEntry) => {
+    writes.current = writes.current
+      .then(() => saveProgressEntry(cardId, entry))
+      .catch((error) => {
+        console.error('Failed to save progress entry', error)
       })
   }, [])
 
@@ -113,36 +129,37 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     (id: string, status: CardStatus) => {
       setMap((prev) => {
         const current = prev[id]
+        const entry: ProgressEntry = {
+          status,
+          seen: (current?.seen ?? 0) + 1,
+        }
         const next: ProgressMap = {
           ...prev,
-          [id]: {
-            status,
-            seen: (current?.seen ?? 0) + 1,
-          },
+          [id]: entry,
         }
-        persist(next)
+        persistEntry(id, entry)
         return next
       })
     },
-    [persist],
+    [persistEntry],
   )
 
   const reset = useCallback(
     (ids?: string[]) => {
       setMap((prev) => {
         if (!ids) {
-          persist({})
+          persistMap({})
           return {}
         }
         const next = { ...prev }
         ids.forEach((id) => {
           delete next[id]
         })
-        persist(next)
+        persistMap(next)
         return next
       })
     },
-    [persist],
+    [persistMap],
   )
 
   const value = useMemo(
