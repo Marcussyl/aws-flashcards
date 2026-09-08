@@ -49,11 +49,23 @@ export type ProgressEntry = {
 
 export type ProgressMap = Record<string, ProgressEntry>
 
+/** One Mongo document per card in the `progress` collection. */
 export type ProgressDocument = {
+  userId: string
+  cardId: string
+  status: CardStatus
+  seen: number
+  updatedAt: string
+}
+
+/** Pre-refactor mega-document (`_id: "default"`) kept for one-shot migration. */
+export type LegacyProgressDocument = {
   _id: 'default'
   cards: ProgressMap
   updatedAt: string
 }
+
+export const LOCAL_PROGRESS_USER_ID = 'local'
 
 /** Topic metadata stored in Mongo `topics` collection (_id = slug). */
 export type TopicMeta = {

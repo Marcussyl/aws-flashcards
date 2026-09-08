@@ -4,7 +4,7 @@
 
 A Next.js study app for private flip-card review across more than one subject. The first deck is personal AWS Solutions Architect notes (from the Notion export `random notes 35199f70bc56802a8800fbb944e0c856.html`). A Proxmox VE deck sits beside it so the same UI can review other topics.
 
-Short questions on the front, a condensed summary on the back, then an optional full note. Card decks live in MongoDB (`cards` collection, one document per card) and can be edited in the study/browse UI. Progress stays in a separate `progress` document via `GET`/`PUT /api/progress`. Card ids stay unique across topics (`c001` for AWS, `pve001` for PVE), so existing progress keeps working.
+Short questions on the front, a condensed summary on the back, then an optional full note. Card decks live in MongoDB (`cards` collection, one document per card) and can be edited in the study/browse UI. Progress lives in the `progress` collection as **one document per card** (keyed by `userId` + `cardId`), exposed via `GET`/`PUT`/`PATCH /api/progress`. Card ids stay unique across topics (`c001` for AWS, `pve001` for PVE), so existing progress keeps working.
 
 ## Goals
 
@@ -101,7 +101,7 @@ Optional code seed for taxonomy only (not cards):
 - Next.js App Router (TypeScript)
 - React client components for study/browse interactions
 - Tailwind CSS
-- MongoDB cards collection (source of truth; no JSON card seed) + progress document APIs
+- MongoDB cards collection (source of truth; no JSON card seed) + per-card progress APIs
 
 ## Data model
 
@@ -129,14 +129,22 @@ Each card:
 
 MongoDB cards docs also store createdAt/updatedAt. Indexes: unique _id; {topic:1, category:1}; text on question+sourceQuestion+answer. Cards live in Mongo only — there is no JSON seed/fallback. An empty collection returns an empty deck (`[]` / `null`), not an auto-seed.
 
-Progress document in MongoDB collection `progress` (`_id: "default"`):
+Progress in MongoDB collection `progress` — **one document per card** (collection name unchanged):
 
-- `cards`: map of card id → `{ status, seen }`
+```json
+{ "userId": "local", "cardId": "c001", "status": "known", "seen": 3, "updatedAt": "..." }
+```
+
+- `userId`: `"local"` until real auth lands
+- `cardId`: stable card id
 - `status`: `unseen` | `learning` | `known`
 - `seen`: how many times the card was rated
 - `updatedAt`: ISO timestamp of the last write
+- Unique index: `{ userId: 1, cardId: 1 }`
 
-If MongoDB has no cards yet and `data/progress.json` still has local data, the API copies that file into MongoDB once. An older browser `localStorage` copy is also migrated once if the database document is empty.
+`GET /api/progress` still returns a `ProgressMap` (`cardId → { status, seen }`) for the client. `PATCH` upserts one card; `PUT` bulk-syncs the whole map (used for reset).
+
+On first load, `migrateLegacyDefaultDocIfNeeded` expands any legacy mega-doc (`_id: "default"` with a nested `cards` map) into per-card upserts for `userId: "local"`, then deletes the legacy doc. If neither legacy nor per-card docs exist and `data/progress.json` still has data, that file is copied in once. An older browser `localStorage` copy is also migrated once if the API map is empty.
 
 ## How to run
 
@@ -174,7 +182,7 @@ recall/
   src/lib/cards-db.ts      # cards collection CRUD; listCardMeta for dashboards
   src/lib/cards.ts         # shuffle / count helpers
   src/lib/progress.ts      # ProgressProvider + useProgress (one shared client load)
-  src/lib/progress-db.ts   # reads/writes the progress document
+  src/lib/progress-db.ts   # per-card progress CRUD + legacy mega-doc migration
   src/lib/progress-file.ts # one-time file migration helper
 ```
 
@@ -182,7 +190,7 @@ recall/
 
 - Full WYSIWYG editor (markdown textarea + preview is supported)
 - Topic metadata editor
-- User accounts or sharing decks (progress is one MongoDB document)
+- User accounts or sharing decks (progress uses `userId: "local"` until auth)
 - Spaced-repetition algorithm (SM-2 / Anki)
 - Importing new Notion exports from the UI
 - Official AWS practice-exam scoring
