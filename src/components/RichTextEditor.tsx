@@ -5,6 +5,7 @@ import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
 import { Markdown } from '@tiptap/markdown'
+import { SlashCommand } from './editor/slashCommand'
 
 type RichTextEditorProps = {
   value: string
@@ -91,6 +92,7 @@ export function RichTextEditor({
         indentation: { style: 'space', size: 2 },
         markedOptions: { gfm: true, breaks: false },
       }),
+      SlashCommand,
     ],
     content: value || '',
     contentType: 'markdown',
