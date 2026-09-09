@@ -57,6 +57,21 @@ const emptyCategory = (topic: string): CategoryForm => ({
 const fieldClass =
   'w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-sm outline-none ring-accent/40 focus:ring-2'
 
+const TOPIC_EMOJI_PRESETS = ['📘', '☁️', '🖥️', '🐧', '🗄️', '🌐', '🔒', '⚡', '🧩', '🛠️'] as const
+
+const TOPIC_ACCENT_SWATCHES = [
+  '#fbbf24',
+  '#f97316',
+  '#38bdf8',
+  '#34d399',
+  '#a78bfa',
+  '#f472b6',
+  '#fb7185',
+  '#e2e8f0',
+] as const
+
+const labelClass = 'text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500'
+
 export function AdminView() {
   const { topics, categories, refresh, getCategoriesForTopic } = useTaxonomy()
   const [zone, setZone] = useState<Zone>('topics')
@@ -619,68 +634,179 @@ export function AdminView() {
 
       {/* Topic modal */}
       {topicModalOpen ? (
-        <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/70 p-3 sm:items-center sm:p-8">
-          <div className="flex max-h-[94vh] w-full max-w-lg flex-col overflow-hidden rounded-3xl border border-white/10 bg-slate-900 shadow-2xl">
-            <div className="flex items-start justify-between gap-3 border-b border-white/10 px-5 py-4">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">
-                  {editingTopicId ? 'Edit topic' : 'Add topic'}
-                </p>
-                <h2 className="mt-1 text-lg font-semibold text-white">
-                  {editingTopicId ? editingTopicId : 'New topic'}
-                </h2>
+        <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/70 p-3 sm:items-center sm:p-6">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="topic-modal-title"
+            className="flex max-h-[94vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl border border-white/10 bg-slate-900 shadow-2xl"
+          >
+            <div className="flex items-start justify-between gap-3 border-b border-white/10 px-5 py-4 sm:px-6">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2.5">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-slate-950 text-xl">
+                    {topicForm.emoji || '📘'}
+                  </span>
+                  <div className="min-w-0">
+                    <h2 id="topic-modal-title" className="truncate text-lg font-semibold text-white sm:text-xl">
+                      {editingTopicId ? 'Edit Topic' : 'Add Topic'}
+                      {topicForm.name.trim() ? (
+                        <>
+                          {' — '}
+                          <span style={{ color: previewAccent }}>{topicForm.name.trim()}</span>
+                        </>
+                      ) : null}
+                    </h2>
+                    <p className="mt-0.5 text-xs text-slate-400 sm:text-sm">
+                      Modify display names, path slug, and visual accent styling.
+                    </p>
+                  </div>
+                </div>
               </div>
               <button
                 type="button"
-                className="cursor-pointer rounded-full border border-white/15 px-3 py-1 text-sm text-slate-300 hover:border-white/40"
+                aria-label="Close"
+                className="cursor-pointer rounded-full border border-white/15 px-2.5 py-1 text-sm text-slate-300 hover:border-white/40"
                 onClick={closeTopicModal}
               >
-                Close
+                ✕
               </button>
             </div>
-            <div className="space-y-3 overflow-y-auto px-5 py-4">
-              {!editingTopicId ? (
+
+            <div className="space-y-5 overflow-y-auto px-5 py-5 sm:px-6">
+              <div className="grid gap-4 sm:grid-cols-2">
                 <label className="block space-y-1.5">
-                  <span className="text-xs font-medium text-slate-400">Slug / id (create-only)</span>
+                  <span className={labelClass}>URI slug identifier</span>
+                  {editingTopicId ? (
+                    <>
+                      <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-slate-950 px-3 py-2">
+                        <span className="font-mono text-sm text-slate-200">{editingTopicId}</span>
+                        <span className="ml-auto inline-flex items-center gap-1 rounded-full border border-amber-400/30 bg-amber-400/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-200">
+                          Locked
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-500">
+                        Immutable path root: <span className="font-mono">/{editingTopicId}/*</span>
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <input
+                        value={topicForm.id}
+                        onChange={(event) =>
+                          setTopicForm((current) => ({ ...current, id: event.target.value }))
+                        }
+                        placeholder="e.g. k8s"
+                        className={`${fieldClass} font-mono`}
+                      />
+                      <p className="text-[11px] text-slate-500">Becomes the URL path for this deck.</p>
+                    </>
+                  )}
+                </label>
+
+                <label className="block space-y-1.5">
+                  <span className={labelClass}>Display name</span>
                   <input
-                    value={topicForm.id}
+                    value={topicForm.name}
                     onChange={(event) =>
-                      setTopicForm((current) => ({ ...current, id: event.target.value }))
+                      setTopicForm((current) => ({ ...current, name: event.target.value }))
                     }
-                    placeholder="e.g. k8s"
+                    placeholder="Display name"
                     className={fieldClass}
                   />
+                  <p className="text-[11px] text-slate-500">Appears on navigation and topic cards.</p>
                 </label>
-              ) : (
-                <p className="rounded-xl border border-white/10 bg-slate-950/60 px-3 py-2 text-xs text-slate-400">
-                  Slug locked: <span className="font-mono text-slate-200">{editingTopicId}</span>
-                </p>
-              )}
+              </div>
+
+              <div className="space-y-2">
+                <span className={labelClass}>Topic emoji icon</span>
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-slate-950 text-3xl">
+                    {topicForm.emoji || '📘'}
+                  </span>
+                  <div className="min-w-0 flex-1 space-y-2">
+                    <div className="flex flex-wrap gap-1.5">
+                      {TOPIC_EMOJI_PRESETS.map((emoji) => {
+                        const selected = topicForm.emoji === emoji
+                        return (
+                          <button
+                            key={emoji}
+                            type="button"
+                            aria-label={`Use emoji ${emoji}`}
+                            className={`cursor-pointer rounded-xl border px-2.5 py-1.5 text-lg transition ${
+                              selected
+                                ? 'border-accent/50 bg-accent/15'
+                                : 'border-white/10 bg-slate-950 hover:border-white/30'
+                            }`}
+                            onClick={() => setTopicForm((current) => ({ ...current, emoji }))}
+                          >
+                            {emoji}
+                          </button>
+                        )
+                      })}
+                    </div>
+                    <input
+                      value={topicForm.emoji}
+                      onChange={(event) =>
+                        setTopicForm((current) => ({ ...current, emoji: event.target.value }))
+                      }
+                      placeholder="Custom unicode…"
+                      className={fieldClass}
+                    />
+                  </div>
+                </div>
+              </div>
+
               <label className="block space-y-1.5">
-                <span className="text-xs font-medium text-slate-400">Name</span>
+                <span className={labelClass}>Card sub-tagline</span>
                 <input
-                  value={topicForm.name}
+                  value={topicForm.tagline}
                   onChange={(event) =>
-                    setTopicForm((current) => ({ ...current, name: event.target.value }))
+                    setTopicForm((current) => ({ ...current, tagline: event.target.value }))
                   }
-                  placeholder="Display name"
+                  placeholder="Short tagline"
                   className={fieldClass}
                 />
               </label>
-              <div className="grid grid-cols-2 gap-3">
-                <label className="block space-y-1.5">
-                  <span className="text-xs font-medium text-slate-400">Emoji</span>
-                  <input
-                    value={topicForm.emoji}
-                    onChange={(event) =>
-                      setTopicForm((current) => ({ ...current, emoji: event.target.value }))
-                    }
-                    placeholder="📘"
-                    className={fieldClass}
-                  />
-                </label>
-                <label className="block space-y-1.5">
-                  <span className="text-xs font-medium text-slate-400">Accent</span>
+
+              <label className="block space-y-1.5">
+                <span className={labelClass}>Topic blurb</span>
+                <textarea
+                  value={topicForm.blurb}
+                  onChange={(event) =>
+                    setTopicForm((current) => ({ ...current, blurb: event.target.value }))
+                  }
+                  placeholder="Longer description shown on the library card"
+                  rows={3}
+                  className={fieldClass}
+                />
+              </label>
+
+              <div className="space-y-2">
+                <span className={labelClass}>Accent color token</span>
+                <div className="flex flex-wrap items-center gap-2">
+                  {TOPIC_ACCENT_SWATCHES.map((swatch) => {
+                    const selected = previewAccent.toLowerCase() === swatch.toLowerCase()
+                    return (
+                      <button
+                        key={swatch}
+                        type="button"
+                        aria-label={`Accent ${swatch}`}
+                        title={swatch}
+                        className={`h-8 w-8 cursor-pointer rounded-full border-2 transition ${
+                          selected ? 'border-white scale-110' : 'border-transparent hover:border-white/40'
+                        }`}
+                        style={{ backgroundColor: swatch }}
+                        onClick={() =>
+                          setTopicForm((current) => ({
+                            ...current,
+                            accent: swatch,
+                            accentFg: contrastAccentFg(swatch),
+                          }))
+                        }
+                      />
+                    )
+                  })}
                   <input
                     value={topicForm.accent}
                     onChange={(event) => {
@@ -692,71 +818,60 @@ export function AdminView() {
                       }))
                     }}
                     placeholder="#fbbf24"
-                    className={fieldClass}
+                    className={`${fieldClass} max-w-[9rem] font-mono`}
                   />
-                </label>
+                </div>
               </div>
-              <label className="block space-y-1.5">
-                <span className="text-xs font-medium text-slate-400">Accent foreground (optional)</span>
-                <input
-                  value={topicForm.accentFg}
-                  onChange={(event) =>
-                    setTopicForm((current) => ({ ...current, accentFg: event.target.value }))
-                  }
-                  placeholder="auto contrast"
-                  className={fieldClass}
-                />
-              </label>
-              <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-slate-950/50 px-3 py-3">
-                <span className="text-xs text-slate-400">Preview</span>
-                <span
-                  className="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold"
-                  style={{ backgroundColor: previewAccent, color: previewAccentFg }}
-                >
-                  {topicForm.emoji || '📘'} {topicForm.name || 'Topic name'}
-                </span>
+
+              <div className="rounded-2xl border border-white/10 bg-slate-950/60 p-4">
+                <p className={labelClass}>Live card &amp; badge preview</p>
+                <div className="mt-3 flex flex-wrap items-center gap-3">
+                  <span
+                    className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold"
+                    style={{ backgroundColor: previewAccent, color: previewAccentFg }}
+                  >
+                    <span aria-hidden>{topicForm.emoji || '📘'}</span>
+                    {topicForm.name.trim() || 'Topic name'}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-white">
+                      {topicForm.tagline.trim() || 'Sample card title'}
+                    </p>
+                    <p className="mt-0.5 font-mono text-[11px] text-slate-500">
+                      /{editingTopicId || topicForm.id.trim() || 'slug'}
+                    </p>
+                  </div>
+                </div>
+                <p className="mt-3 font-mono text-[10px] text-slate-500">
+                  {previewAccentFg} on {previewAccent}
+                </p>
               </div>
-              <label className="block space-y-1.5">
-                <span className="text-xs font-medium text-slate-400">Tagline</span>
-                <input
-                  value={topicForm.tagline}
-                  onChange={(event) =>
-                    setTopicForm((current) => ({ ...current, tagline: event.target.value }))
-                  }
-                  placeholder="Short tagline"
-                  className={fieldClass}
-                />
-              </label>
-              <label className="block space-y-1.5">
-                <span className="text-xs font-medium text-slate-400">Blurb</span>
-                <textarea
-                  value={topicForm.blurb}
-                  onChange={(event) =>
-                    setTopicForm((current) => ({ ...current, blurb: event.target.value }))
-                  }
-                  placeholder="Longer description"
-                  rows={3}
-                  className={fieldClass}
-                />
-              </label>
             </div>
-            <div className="flex flex-col-reverse gap-2 border-t border-white/10 px-5 py-4 sm:flex-row sm:justify-end">
-              <button
-                type="button"
-                className="cursor-pointer rounded-full border border-white/15 px-5 py-2.5 text-sm text-white hover:border-white/40"
-                onClick={closeTopicModal}
-                disabled={busy}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="cursor-pointer rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-accent-fg hover:opacity-90 disabled:opacity-60"
-                disabled={busy || !topicForm.name.trim()}
-                onClick={() => void saveTopic()}
-              >
-                {busy ? 'Saving…' : editingTopicId ? 'Save topic' : 'Create topic'}
-              </button>
+
+            <div className="flex flex-col-reverse gap-2 border-t border-white/10 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+              <p className="text-[11px] text-slate-500">
+                {editingTopicId
+                  ? `${categoryCountByTopic.get(editingTopicId) ?? 0} categories in this topic`
+                  : 'Slug can only be set at create time'}
+              </p>
+              <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                <button
+                  type="button"
+                  className="cursor-pointer rounded-full border border-white/15 px-5 py-2.5 text-sm text-white hover:border-white/40"
+                  onClick={closeTopicModal}
+                  disabled={busy}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="cursor-pointer rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-accent-fg hover:opacity-90 disabled:opacity-60"
+                  disabled={busy || !topicForm.name.trim()}
+                  onClick={() => void saveTopic()}
+                >
+                  {busy ? 'Saving…' : editingTopicId ? 'Save changes' : 'Create topic'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
