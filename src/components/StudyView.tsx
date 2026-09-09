@@ -120,10 +120,14 @@ export function StudyView({ topicId, cards }: { topicId: TopicId; cards: Card[] 
       if (event.key === ' ' || event.key === 'Enter') {
         event.preventDefault()
         setFlipped((value) => !value)
-      } else if (event.key === 'ArrowRight') {
+      } else if (event.key === 'ArrowUp') {
+        go(-1)
+      } else if (event.key === 'ArrowDown') {
         go(1)
       } else if (event.key === 'ArrowLeft') {
-        go(-1)
+        markCurrent('learning')
+      } else if (event.key === 'ArrowRight') {
+        markCurrent('known')
       } else if (event.key === '1') {
         markCurrent('learning')
       } else if (event.key === '2') {
@@ -362,7 +366,7 @@ export function StudyView({ topicId, cards }: { topicId: TopicId; cards: Card[] 
         </motion.button>
       </div>
       <p className="hidden shrink-0 text-center text-xs text-slate-500 sm:block">
-        Space = flip · arrows = navigate · 1 = learning · 2 = known
+        Space = flip · ↑↓ = navigate · ← = learning · → = known
       </p>
       <CelebrateBurst burstId={burstId} kind={burstKind} />
     </div>
