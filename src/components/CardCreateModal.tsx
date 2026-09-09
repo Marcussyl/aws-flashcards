@@ -148,7 +148,7 @@ export function CardCreateModal({
       {open ? (
         <motion.div
           key="card-create-modal"
-          className="fixed inset-0 z-[60] flex items-end bg-black/70 p-3 sm:items-center sm:p-8"
+          className="fixed inset-0 z-[60] flex items-end bg-black/70 p-3 sm:items-center sm:p-6"
           data-card-create="true"
           initial={reduce ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -156,7 +156,7 @@ export function CardCreateModal({
           onClick={onClose}
         >
           <motion.div
-            className="flex max-h-[94vh] w-full max-w-3xl flex-col rounded-3xl border border-white/10 bg-slate-900 shadow-2xl sm:mx-auto sm:max-h-[90vh]"
+            className="flex max-h-[94vh] w-full max-w-5xl flex-col rounded-3xl border border-white/10 bg-slate-900 shadow-2xl sm:mx-auto sm:max-h-[92vh]"
             initial={reduce ? false : { y: 28, opacity: 0, scale: 0.98 }}
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={reduce ? undefined : { y: 16, opacity: 0, scale: 0.98 }}
@@ -165,17 +165,17 @@ export function CardCreateModal({
           >
             <div className="flex items-center justify-between gap-3 border-b border-white/10 px-5 py-4 sm:px-6">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-300/80">
-                  New card
-                </p>
-                <p className="mt-1 text-sm text-slate-400">
-                  summary = brief takeaway · answer = full note
+                <h2 className="text-base font-semibold tracking-tight text-white sm:text-lg">
+                  New Card
+                </h2>
+                <p className="mt-1 text-xs text-slate-500">
+                  Summary = brief takeaway · Answer = full note
                 </p>
               </div>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-slate-300 hover:bg-white/10 hover:text-white"
+                  className="rounded-lg border border-white/10 bg-slate-950/80 px-3 py-1.5 text-[11px] font-semibold tracking-wide text-slate-300 hover:bg-white/10 hover:text-accent"
                   onClick={() => setPreview((value) => !value)}
                 >
                   {preview ? 'Edit' : 'Preview'}
