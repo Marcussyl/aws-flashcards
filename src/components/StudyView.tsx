@@ -38,7 +38,7 @@ type StudySession = {
 }
 
 const MODE_LABELS: Record<string, string> = {
-  due: 'Due cards',
+  due: 'Remaining',
   known: 'Known',
   learning: 'Still learning',
 }
