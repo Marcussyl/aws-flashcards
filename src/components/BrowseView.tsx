@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { CardCreateModal } from '@/components/CardCreateModal'
+import { ConfirmModal } from '@/components/ConfirmModal'
 import { CardEditModal } from '@/components/CardEditModal'
 import { IconPencil, IconPlus, IconTrash } from '@/components/icons'
 import { MarkdownContent } from '@/components/MarkdownContent'
@@ -229,36 +230,26 @@ export function BrowseView({ topicId, cards }: { topicId: TopicId; cards: Card[]
           setCreating(false)
         }}
       />
-      {pendingDelete ? (
-        <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/70 p-3 sm:items-center">
-          <div className="w-full max-w-md rounded-3xl border border-white/10 bg-slate-900 p-5 shadow-2xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-rose-300/80">
-              Delete card
-            </p>
-            <h2 className="mt-2 text-lg font-semibold text-white">{pendingDelete.id}</h2>
-            <p className="mt-2 text-sm text-slate-400 line-clamp-3">{pendingDelete.question}</p>
-            {deleteError ? <p className="mt-3 text-sm text-rose-300">{deleteError}</p> : null}
-            <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-              <button
-                type="button"
-                className="rounded-full border border-white/15 px-5 py-2.5 text-sm text-white hover:border-white/40"
-                disabled={deleting}
-                onClick={() => setPendingDelete(null)}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="rounded-full bg-rose-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-rose-400 disabled:opacity-60"
-                disabled={deleting}
-                onClick={() => void confirmDelete()}
-              >
-                {deleting ? 'Deleting…' : 'Delete permanently'}
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <ConfirmModal
+        open={Boolean(pendingDelete)}
+        tone="danger"
+        title={pendingDelete ? `Delete ${pendingDelete.id}?` : 'Delete card?'}
+        description={
+          pendingDelete ? (
+            <p className="line-clamp-3">{pendingDelete.question}</p>
+          ) : null
+        }
+        confirmLabel="Delete permanently"
+        busy={deleting}
+        error={deleteError}
+        onCancel={() => {
+          if (!deleting) {
+            setPendingDelete(null)
+            setDeleteError(null)
+          }
+        }}
+        onConfirm={() => void confirmDelete()}
+      />
     </div>
   )
 }
