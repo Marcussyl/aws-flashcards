@@ -75,7 +75,7 @@ export function HomeView({
             whileTap={reduce ? undefined : { scale: 0.97 }}
             transition={tapSpring}
           >
-            Study due cards
+            Study remaining
           </MotionLink>
           <MotionLink
             href={topicHref(topicId, 'study')}
