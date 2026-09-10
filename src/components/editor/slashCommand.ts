@@ -153,6 +153,35 @@ export function getSlashCommandItems(query: string): SlashCommandItem[] {
       },
     },
     {
+      title: 'Table',
+      description: '3×3 table with header',
+      keywords: ['table', 'grid', 'spreadsheet', 'columns', 'rows', 'gfm'],
+      icon: '▦',
+      command: ({ editor, range }) => {
+        applyBlockCommand(editor, range, (chain) =>
+          chain.insertTable({ rows: 3, cols: 3, withHeaderRow: true }),
+        )
+      },
+    },
+    {
+      title: 'Add column',
+      description: 'Insert column after current',
+      keywords: ['table', 'column', 'col', 'add column', 'insert column'],
+      icon: '⊞',
+      command: ({ editor, range }) => {
+        applyBlockCommand(editor, range, (chain) => chain.addColumnAfter())
+      },
+    },
+    {
+      title: 'Add row',
+      description: 'Insert row after current',
+      keywords: ['table', 'row', 'add row', 'insert row'],
+      icon: '⊟',
+      command: ({ editor, range }) => {
+        applyBlockCommand(editor, range, (chain) => chain.addRowAfter())
+      },
+    },
+    {
       title: 'Code block',
       description: 'Fenced code',
       keywords: ['code', 'codeblock', 'pre', 'snippet'],
