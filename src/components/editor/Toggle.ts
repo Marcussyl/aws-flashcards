@@ -112,7 +112,12 @@ export const Toggle = Node.create({
         open: 'true',
         class: 'memori-toggle',
       }),
-      ['summary', { class: 'memori-toggle__summary' }, title],
+      [
+        'summary',
+        { class: 'memori-toggle__summary' },
+        ['span', { class: 'memori-toggle__chevron', 'aria-hidden': 'true' }, '▾'],
+        ['span', { class: 'memori-toggle__title' }, title],
+      ],
       ['div', { class: 'memori-toggle__body' }, 0],
     ]
   },
@@ -126,18 +131,25 @@ export const Toggle = Node.create({
 
       const summary = document.createElement('summary')
       summary.className = 'memori-toggle__summary'
-      summary.contentEditable = editor.isEditable ? 'true' : 'false'
-      summary.textContent = String(node.attrs.title || 'Toggle')
+      const chevron = document.createElement('span')
+      chevron.className = 'memori-toggle__chevron'
+      chevron.setAttribute('aria-hidden', 'true')
+      chevron.textContent = '▾'
+      const titleSpan = document.createElement('span')
+      titleSpan.className = 'memori-toggle__title'
+      titleSpan.contentEditable = editor.isEditable ? 'true' : 'false'
+      titleSpan.textContent = String(node.attrs.title || 'Toggle')
+      summary.append(chevron, titleSpan)
 
-      summary.addEventListener('mousedown', (event) => {
-        if (editor.isEditable && event.target === summary) {
+      titleSpan.addEventListener('mousedown', (event) => {
+        if (editor.isEditable) {
           event.preventDefault()
-          summary.focus()
+          titleSpan.focus()
         }
       })
 
       const syncTitle = () => {
-        const nextTitle = summary.textContent?.replace(/\u00a0/g, ' ').trim() || 'Toggle'
+        const nextTitle = titleSpan.textContent?.replace(/\u00a0/g, ' ').trim() || 'Toggle'
         if (typeof getPos !== 'function') {
           return
         }
@@ -161,16 +173,16 @@ export const Toggle = Node.create({
           .run()
       }
 
-      summary.addEventListener('keydown', (event) => {
+      titleSpan.addEventListener('keydown', (event) => {
         if (event.key === 'Enter') {
           event.preventDefault()
-          summary.blur()
+          titleSpan.blur()
           editor.commands.focus()
         }
       })
-      summary.addEventListener('blur', syncTitle)
-      summary.addEventListener('input', () => {
-        details.dataset.title = summary.textContent?.trim() || 'Toggle'
+      titleSpan.addEventListener('blur', syncTitle)
+      titleSpan.addEventListener('input', () => {
+        details.dataset.title = titleSpan.textContent?.trim() || 'Toggle'
       })
 
       const body = document.createElement('div')
@@ -182,21 +194,21 @@ export const Toggle = Node.create({
       return {
         dom: details,
         contentDOM: body,
-        ignoreMutation: (mutation) => summary.contains(mutation.target as globalThis.Node),
+        ignoreMutation: (mutation) => titleSpan.contains(mutation.target as globalThis.Node),
         update: (updated) => {
           if (updated.type !== this.type) {
             return false
           }
           const nextTitle = String(updated.attrs.title || 'Toggle')
           details.dataset.title = nextTitle
-          if (document.activeElement !== summary && summary.textContent !== nextTitle) {
-            summary.textContent = nextTitle
+          if (document.activeElement !== titleSpan && titleSpan.textContent !== nextTitle) {
+            titleSpan.textContent = nextTitle
           }
-          summary.contentEditable = editor.isEditable ? 'true' : 'false'
+          titleSpan.contentEditable = editor.isEditable ? 'true' : 'false'
           return true
         },
         destroy: () => {
-          summary.removeEventListener('blur', syncTitle)
+          titleSpan.removeEventListener('blur', syncTitle)
         },
       }
     }

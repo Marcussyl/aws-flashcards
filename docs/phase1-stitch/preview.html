@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Phase 1 rich blocks preview</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background: #020617; color: #e2e8f0; font-family: ui-sans-serif, system-ui, sans-serif; }
+  </style>
+</head>
+<body class="p-8 max-w-3xl mx-auto space-y-4">
+  <h1 class="text-xl font-bold text-white">Memori Phase 1 — Callout / Checklist / Toggle</h1>
+  <p class="text-sm text-slate-400">Visual parity check vs Stitch rich-note content blocks sheet.</p>
+
+  <aside class="flex items-start gap-3.5 rounded-2xl border border-sky-500/25 bg-slate-900/60 p-4">
+    <div class="mt-0.5 flex h-6 w-6 items-center justify-center rounded-lg border border-sky-500/25 bg-sky-500/10 text-sky-300 text-xs">i</div>
+    <div class="space-y-1">
+      <div class="text-xs font-semibold uppercase text-sky-200">Note</div>
+      <p class="text-xs text-slate-300">Read replicas use asynchronous replication.</p>
+    </div>
+  </aside>
+
+  <aside class="flex items-start gap-3.5 rounded-2xl border border-amber-500/30 bg-amber-950/20 p-4">
+    <div class="mt-0.5 flex h-6 w-6 items-center justify-center rounded-lg border border-amber-500/20 bg-amber-500/10 text-amber-400 text-xs">*</div>
+    <div class="space-y-1">
+      <div class="text-xs font-semibold uppercase text-amber-300">Exam tip</div>
+      <p class="text-xs text-slate-300">Reporting dashboard saturation then add a Read Replica.</p>
+    </div>
+  </aside>
+
+  <aside class="flex items-start gap-3.5 rounded-2xl border border-rose-500/30 bg-rose-950/20 p-4">
+    <div class="mt-0.5 flex h-6 w-6 items-center justify-center rounded-lg border border-rose-500/20 bg-rose-500/10 text-rose-400 text-xs">!</div>
+    <div class="space-y-1">
+      <div class="text-xs font-semibold uppercase text-rose-300">Warning</div>
+      <p class="text-xs text-slate-300">Multi-AZ standby cannot serve read traffic.</p>
+    </div>
+  </aside>
+
+  <aside class="relative flex items-start gap-3.5 overflow-hidden rounded-2xl border border-amber-400/40 bg-gradient-to-r from-rose-950/25 to-amber-950/20 p-4">
+    <div class="mt-0.5 flex h-6 w-6 items-center justify-center rounded-lg border border-amber-400/40 bg-amber-500/20 text-amber-300 text-xs">!!</div>
+    <div class="space-y-1">
+      <div class="text-xs font-bold uppercase text-amber-300">Exam trap</div>
+      <p class="text-xs text-slate-200">DNS CNAME stays identical after Multi-AZ failover; IP changes.</p>
+    </div>
+  </aside>
+
+  <ul class="space-y-2 list-none p-0">
+    <li class="flex items-start gap-3 rounded-xl border border-white/5 bg-white/[0.02] p-2">
+      <span class="mt-0.5 flex h-4 w-4 items-center justify-center rounded border border-emerald-500/30 bg-emerald-500/20 text-[10px] text-emerald-400">v</span>
+      <span class="text-xs text-slate-200">Scalable query throughput then Read Replicas</span>
+    </li>
+    <li class="flex items-start gap-3 rounded-xl border border-white/5 bg-white/[0.02] p-2">
+      <span class="mt-0.5 flex h-4 w-4 items-center justify-center rounded border border-slate-500/40 bg-slate-900 text-[10px]"></span>
+      <span class="text-xs text-slate-200">High availability then Multi-AZ</span>
+    </li>
+  </ul>
+
+  <details open class="overflow-hidden rounded-2xl border border-white/10 bg-slate-900/70">
+    <summary class="flex cursor-pointer list-none items-center gap-2 px-4 py-3 text-sm font-semibold text-slate-100">
+      <span class="inline-flex h-5 w-5 items-center justify-center rounded-md border border-white/10 bg-slate-800/80 text-[10px] text-amber-400">v</span>
+      Toggle title
+    </summary>
+    <div class="border-t border-white/5 px-4 py-3 text-xs text-slate-300">Collapsed disclosure body for deeper notes.</div>
+  </details>
+</body>
+</html>
