@@ -259,6 +259,61 @@ button:disabled,
 }
 
 
+/* —— Editor: editable TipTap GFM tables —— */
+.ProseMirror table.memori-editor-table,
+.ProseMirror table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-block: 0.75em;
+  table-layout: auto;
+  overflow: hidden;
+}
+
+.ProseMirror th,
+.ProseMirror td {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  padding: 0.45rem 0.65rem;
+  vertical-align: top;
+  min-width: 4.5rem;
+  position: relative;
+}
+
+.ProseMirror th {
+  background: rgba(15, 23, 42, 0.9);
+  color: rgb(255 255 255);
+  font-weight: 600;
+  border-bottom-color: color-mix(in oklab, var(--accent) 45%, rgba(255, 255, 255, 0.18));
+}
+
+.ProseMirror td {
+  background: rgba(15, 23, 42, 0.35);
+  color: rgb(226 232 240);
+}
+
+.ProseMirror tr:nth-child(even) td {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.ProseMirror .selectedCell::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: color-mix(in oklab, var(--accent) 18%, transparent);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.ProseMirror th p,
+.ProseMirror td p {
+  margin: 0;
+}
+
+.ProseMirror .tableWrapper {
+  overflow-x: auto;
+  margin-block: 0.75em;
+  max-width: 100%;
+}
+
 /* —— Editor + study: task lists, callouts, toggles (Stitch Phase 1) —— */
 .memori-task-list {
   list-style: none;

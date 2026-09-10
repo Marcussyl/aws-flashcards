@@ -7,6 +7,7 @@ import Placeholder from '@tiptap/extension-placeholder'
 import { Markdown } from '@tiptap/markdown'
 import TaskList from '@tiptap/extension-task-list'
 import TaskItem from '@tiptap/extension-task-item'
+import { TableKit } from '@tiptap/extension-table'
 import { SlashCommand } from './editor/slashCommand'
 import { Callout } from './editor/Callout'
 import { Toggle } from './editor/Toggle'
@@ -102,6 +103,14 @@ export function RichTextEditor({
       }),
       Callout,
       Toggle,
+      TableKit.configure({
+        table: {
+          resizable: false,
+          HTMLAttributes: {
+            class: 'memori-editor-table',
+          },
+        },
+      }),
       Placeholder.configure({
         placeholder,
       }),
@@ -233,6 +242,39 @@ export function RichTextEditor({
           ariaLabel="Link"
           active={editor.isActive('link')}
           onClick={setLink}
+        />
+        <span className="mx-1 h-4 w-px bg-white/10" aria-hidden />
+        <ToolbarButton
+          label="Table"
+          ariaLabel="Insert table"
+          active={editor.isActive('table')}
+          onClick={() =>
+            editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
+          }
+        />
+        <ToolbarButton
+          label="+Col"
+          ariaLabel="Add column after"
+          disabled={!editor.can().addColumnAfter()}
+          onClick={() => editor.chain().focus().addColumnAfter().run()}
+        />
+        <ToolbarButton
+          label="+Row"
+          ariaLabel="Add row after"
+          disabled={!editor.can().addRowAfter()}
+          onClick={() => editor.chain().focus().addRowAfter().run()}
+        />
+        <ToolbarButton
+          label="−Col"
+          ariaLabel="Delete column"
+          disabled={!editor.can().deleteColumn()}
+          onClick={() => editor.chain().focus().deleteColumn().run()}
+        />
+        <ToolbarButton
+          label="−Row"
+          ariaLabel="Delete row"
+          disabled={!editor.can().deleteRow()}
+          onClick={() => editor.chain().focus().deleteRow().run()}
         />
       </div>
       <EditorContent editor={editor} />
