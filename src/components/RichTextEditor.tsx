@@ -10,6 +10,9 @@ import TaskItem from '@tiptap/extension-task-item'
 import { SlashCommand } from './editor/slashCommand'
 import { Callout } from './editor/Callout'
 import { Toggle } from './editor/Toggle'
+import { Comparison } from './editor/Comparison'
+import { Steps } from './editor/Steps'
+import { Formula } from './editor/Formula'
 
 type RichTextEditorProps = {
   value: string
@@ -102,6 +105,9 @@ export function RichTextEditor({
       }),
       Callout,
       Toggle,
+      Comparison,
+      Steps,
+      Formula,
       Placeholder.configure({
         placeholder,
       }),

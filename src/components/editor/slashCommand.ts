@@ -153,6 +153,82 @@ export function getSlashCommandItems(query: string): SlashCommandItem[] {
       },
     },
     {
+      title: 'Comparison',
+      description: 'A vs B feature matrix',
+      keywords: ['comparison', 'compare', 'matrix', 'table', 'vs', 'versus'],
+      icon: '⧉',
+      command: ({ editor, range }) => {
+        applyBlockCommand(editor, range, (chain) =>
+          chain.insertContent({
+            type: 'comparison',
+            attrs: {
+              preferred: 2,
+              label: 'Comparison Table',
+              headersJson: JSON.stringify(['Feature', 'Option A', 'Option B']),
+              rowsJson: JSON.stringify([
+                ['Purpose', 'Describe A', 'Describe B'],
+                ['Sync model', '…', '…'],
+                ['Failover', '…', '…'],
+              ]),
+            },
+          }),
+        )
+      },
+    },
+    {
+      title: 'Steps',
+      description: 'Numbered sequence with exam clues',
+      keywords: ['steps', 'sequence', 'procedure', 'decision', 'ordered', 'exam clue'],
+      icon: '①',
+      command: ({ editor, range }) => {
+        applyBlockCommand(editor, range, (chain) =>
+          chain.insertContent({
+            type: 'steps',
+            attrs: {
+              title: 'Failover Sequence',
+              meta: 'Chronological',
+              stepsJson: JSON.stringify([
+                {
+                  title: 'Primary Instance Outage Detected',
+                  description: 'AWS health-checks fail on primary host hardware or AZ loss.',
+                },
+                {
+                  title: 'Standby Synchronous Replica Promoted',
+                  description: 'Standby storage volume is already completely up to date (RPO ≈ 0).',
+                  examClue: 'Zero data loss because of synchronous physical write replication.',
+                },
+                {
+                  title: 'Endpoint CNAME Flips to Standby',
+                  description: 'RDS updates DNS record. Connection takes 60–120s without code modification.',
+                },
+              ]),
+            },
+          }),
+        )
+      },
+    },
+    {
+      title: 'Formula',
+      description: 'KaTeX formula surface',
+      keywords: ['formula', 'math', 'katex', 'latex', 'equation', 'iops'],
+      icon: 'ƒ',
+      command: ({ editor, range }) => {
+        applyBlockCommand(editor, range, (chain) =>
+          chain.insertContent({
+            type: 'formula',
+            attrs: {
+              label: 'EBS IOPS Throughput Formula',
+              meta: 'gp3 / io2 Block',
+              caption:
+                'Throughput scales with I/O block size until hitting instance EC2 EBS-bandwidth limit.',
+              latex:
+                '\\text{Throughput (MiB/s)} = \\min\\left(\\text{IOPS} \\times \\frac{\\text{I/O Size (KiB)}}{1024}, \\text{Cap}\\right)',
+            },
+          }),
+        )
+      },
+    },
+    {
       title: 'Code block',
       description: 'Fenced code',
       keywords: ['code', 'codeblock', 'pre', 'snippet'],

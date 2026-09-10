@@ -10,13 +10,24 @@ import {
 import dynamic from 'next/dynamic'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import remarkMath from 'remark-math'
+import rehypeKatex from 'rehype-katex'
 import {
   CalloutBlock,
+  ComparisonBlock,
+  FormulaBlock,
+  StepsBlock,
   ToggleBlock,
+  extractLatexFromFormulaBody,
   normalizeCalloutType,
+  parseGfmTable,
+  parseStepsMarkdown,
   type CalloutType,
+  type GfmTable,
+  type StepItem,
 } from '@/components/blocks'
 import { StudyTaskCheckbox } from '@/components/StudyTaskCheckbox'
+import 'katex/dist/katex.min.css'
 
 const MermaidBlock = dynamic(
   () => import('@/components/MermaidBlock').then((mod) => mod.MermaidBlock),
@@ -71,28 +82,136 @@ function decodeBasicEntities(value: string) {
     .replace(/&amp;/g, '&')
 }
 
+function readDataAttr(attrBlob: string, name: string): string | undefined {
+  const re = new RegExp(`data-${name}=["']([^"']*)["']`, 'i')
+  const match = re.exec(attrBlob)
+  return match ? decodeBasicEntities(match[1]) : undefined
+}
+
 type ContentSegment =
   | { kind: 'markdown'; value: string }
   | { kind: 'toggle'; title: string; body: string }
+  | {
+      kind: 'comparison'
+      preferred?: number
+      label?: string
+      table: GfmTable
+    }
+  | {
+      kind: 'steps'
+      title?: string
+      meta?: string
+      steps: StepItem[]
+    }
+  | {
+      kind: 'formula'
+      label?: string
+      meta?: string
+      caption?: string
+      latex: string
+    }
 
-/** Split HTML <details>/<summary> toggles out so study view can render them as React. */
-function splitToggleSegments(content: string): ContentSegment[] {
-  const pattern =
-    /<details\b[^>]*>\s*<summary\b[^>]*>([\s\S]*?)<\/summary>\s*([\s\S]*?)<\/details>/gi
+const MEMORI_BLOCK_RE =
+  /<div\b([^>]*)\bdata-memori=["'](comparison|steps|formula)["']([^>]*)>([\s\S]*?)<\/div>/gi
+
+const TOGGLE_RE =
+  /<details\b[^>]*>\s*<summary\b[^>]*>([\s\S]*?)<\/summary>\s*([\s\S]*?)<\/details>/gi
+
+/** Split HTML toggles + memori wrappers so study view can render dedicated React chrome. */
+function splitRichSegments(content: string): ContentSegment[] {
+  type Hit =
+    | { index: number; length: number; segment: ContentSegment }
+  const hits: Hit[] = []
+
+  MEMORI_BLOCK_RE.lastIndex = 0
+  let memoriMatch: RegExpExecArray | null
+  while ((memoriMatch = MEMORI_BLOCK_RE.exec(content)) !== null) {
+    const attrBlob = `${memoriMatch[1]} ${memoriMatch[3]}`
+    const kind = memoriMatch[2].toLowerCase() as 'comparison' | 'steps' | 'formula'
+    const body = memoriMatch[4].trim()
+
+    if (kind === 'comparison') {
+      const table = parseGfmTable(body)
+      if (!table) {
+        continue
+      }
+      const preferredRaw = readDataAttr(attrBlob, 'preferred')
+      hits.push({
+        index: memoriMatch.index,
+        length: memoriMatch[0].length,
+        segment: {
+          kind: 'comparison',
+          preferred: preferredRaw ? Number.parseInt(preferredRaw, 10) : undefined,
+          label: readDataAttr(attrBlob, 'label'),
+          table,
+        },
+      })
+      continue
+    }
+
+    if (kind === 'steps') {
+      const steps = parseStepsMarkdown(body)
+      if (steps.length === 0) {
+        continue
+      }
+      hits.push({
+        index: memoriMatch.index,
+        length: memoriMatch[0].length,
+        segment: {
+          kind: 'steps',
+          title: readDataAttr(attrBlob, 'title'),
+          meta: readDataAttr(attrBlob, 'meta'),
+          steps,
+        },
+      })
+      continue
+    }
+
+    const latex = extractLatexFromFormulaBody(body)
+    if (!latex) {
+      continue
+    }
+    hits.push({
+      index: memoriMatch.index,
+      length: memoriMatch[0].length,
+      segment: {
+        kind: 'formula',
+        label: readDataAttr(attrBlob, 'label'),
+        meta: readDataAttr(attrBlob, 'meta'),
+        caption: readDataAttr(attrBlob, 'caption'),
+        latex,
+      },
+    })
+  }
+
+  TOGGLE_RE.lastIndex = 0
+  let toggleMatch: RegExpExecArray | null
+  while ((toggleMatch = TOGGLE_RE.exec(content)) !== null) {
+    hits.push({
+      index: toggleMatch.index,
+      length: toggleMatch[0].length,
+      segment: {
+        kind: 'toggle',
+        title:
+          decodeBasicEntities(toggleMatch[1].replace(/<[^>]+>/g, '')).trim() || 'Toggle',
+        body: toggleMatch[2].replace(/^\n+/, '').replace(/\n+$/, ''),
+      },
+    })
+  }
+
+  hits.sort((a, b) => a.index - b.index)
+
   const segments: ContentSegment[] = []
   let lastIndex = 0
-  let match: RegExpExecArray | null
-
-  while ((match = pattern.exec(content)) !== null) {
-    if (match.index > lastIndex) {
-      segments.push({ kind: 'markdown', value: content.slice(lastIndex, match.index) })
+  for (const hit of hits) {
+    if (hit.index < lastIndex) {
+      continue
     }
-    segments.push({
-      kind: 'toggle',
-      title: decodeBasicEntities(match[1].replace(/<[^>]+>/g, '')).trim() || 'Toggle',
-      body: match[2].replace(/^\n+/, '').replace(/\n+$/, ''),
-    })
-    lastIndex = match.index + match[0].length
+    if (hit.index > lastIndex) {
+      segments.push({ kind: 'markdown', value: content.slice(lastIndex, hit.index) })
+    }
+    segments.push(hit.segment)
+    lastIndex = hit.index + hit.length
   }
 
   if (lastIndex < content.length) {
@@ -138,6 +257,32 @@ function detectCallout(children: ReactNode): { type: CalloutType; body: ReactNod
   return { type, body }
 }
 
+/** Detect HTML-comment marker before a GFM table: <!-- memori:comparison preferred="2" --> */
+function detectComparisonComment(content: string): {
+  before: string
+  after: string
+  preferred?: number
+  label?: string
+  tableMarkdown: string
+} | null {
+  const re =
+    /<!--\s*memori:comparison\b([^>]*)-->\s*((?:\|[^\n]*\n)+)/i
+  const match = re.exec(content)
+  if (!match) {
+    return null
+  }
+  const attrs = match[1] || ''
+  const preferredMatch = /preferred=["']?(\d+)/i.exec(attrs)
+  const labelMatch = /label=["']([^"']*)["']/i.exec(attrs)
+  return {
+    before: content.slice(0, match.index),
+    after: content.slice(match.index + match[0].length),
+    preferred: preferredMatch ? Number.parseInt(preferredMatch[1], 10) : undefined,
+    label: labelMatch ? decodeBasicEntities(labelMatch[1]) : undefined,
+    tableMarkdown: match[2],
+  }
+}
+
 function StudyToggle({ title, body }: { title: string; body: string }) {
   return (
     <ToggleBlock title={title}>
@@ -148,15 +293,39 @@ function StudyToggle({ title, body }: { title: string; body: string }) {
 
 function MarkdownBlock({ content }: { content: string }) {
   const enableMermaid = hasMermaidFence(content)
-  const normalized = normalizeMarkdown(content)
+  let working = normalizeMarkdown(content)
 
-  if (!normalized.trim()) {
+  // Optional HTML-comment comparison marker (TipTap-safe fallback).
+  const commentComparison = detectComparisonComment(working)
+  if (commentComparison) {
+    const table = parseGfmTable(commentComparison.tableMarkdown)
+    if (table) {
+      return (
+        <>
+          {commentComparison.before.trim() ? (
+            <MarkdownBlock content={commentComparison.before} />
+          ) : null}
+          <ComparisonBlock
+            table={table}
+            preferred={commentComparison.preferred}
+            label={commentComparison.label}
+          />
+          {commentComparison.after.trim() ? (
+            <MarkdownBlock content={commentComparison.after} />
+          ) : null}
+        </>
+      )
+    }
+  }
+
+  if (!working.trim()) {
     return null
   }
 
   return (
     <Markdown
-      remarkPlugins={[remarkGfm]}
+      remarkPlugins={[remarkGfm, remarkMath]}
+      rehypePlugins={[rehypeKatex]}
       components={{
         a({ href, children }) {
           return (
@@ -237,7 +406,7 @@ function MarkdownBlock({ content }: { content: string }) {
           const isTaskCheckbox = (node: ReactNode) =>
             isValidElement<{ type?: string }>(node) && node.props.type === 'checkbox'
           const checkboxes = nodes.filter(isTaskCheckbox)
-          const content = nodes.filter((node) => !isTaskCheckbox(node))
+          const contentNodes = nodes.filter((node) => !isTaskCheckbox(node))
 
           return (
             <li
@@ -250,7 +419,7 @@ function MarkdownBlock({ content }: { content: string }) {
               {...props}
             >
               {checkboxes}
-              <div>{content}</div>
+              <div>{contentNodes}</div>
             </li>
           )
         },
@@ -262,16 +431,32 @@ function MarkdownBlock({ content }: { content: string }) {
           }
           return <input {...props} />
         },
+        // Bare display math ($$) from remark-math → rehype-katex lands as span.katex-display.
+        // Wrap standalone math paragraphs with Formula chrome when the whole paragraph is math.
+        p({ children, ...props }) {
+          const nodes = Children.toArray(children)
+          if (
+            nodes.length === 1 &&
+            isValidElement<{ className?: string; children?: ReactNode }>(nodes[0])
+          ) {
+            const className = nodes[0].props.className || ''
+            if (/(?:^|\s)katex(?:\s|$)/.test(className) || className.includes('katex-display')) {
+              // Already rendered by rehype-katex — leave inline/display as-is inside prose.
+              return <p {...props}>{children}</p>
+            }
+          }
+          return <p {...props}>{children}</p>
+        },
       }}
     >
-      {normalized}
+      {working}
     </Markdown>
   )
 }
 
 function MarkdownContentInner({ content, className = '' }: MarkdownContentProps) {
   const segments = useMemo(
-    () => splitToggleSegments(normalizeMarkdown(content || '')),
+    () => splitRichSegments(normalizeMarkdown(content || '')),
     [content],
   )
 
@@ -286,6 +471,37 @@ function MarkdownContentInner({ content, className = '' }: MarkdownContentProps)
               key={`toggle-${index}-${segment.title}`}
               title={segment.title}
               body={segment.body}
+            />
+          )
+        }
+        if (segment.kind === 'comparison') {
+          return (
+            <ComparisonBlock
+              key={`comparison-${index}`}
+              table={segment.table}
+              preferred={segment.preferred}
+              label={segment.label}
+            />
+          )
+        }
+        if (segment.kind === 'steps') {
+          return (
+            <StepsBlock
+              key={`steps-${index}`}
+              steps={segment.steps}
+              title={segment.title}
+              meta={segment.meta}
+            />
+          )
+        }
+        if (segment.kind === 'formula') {
+          return (
+            <FormulaBlock
+              key={`formula-${index}`}
+              latex={segment.latex}
+              label={segment.label}
+              meta={segment.meta}
+              caption={segment.caption}
             />
           )
         }

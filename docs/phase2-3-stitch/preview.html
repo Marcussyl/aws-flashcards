@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Phase 2+3 rich blocks preview</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
+  <style>
+    body { background: #020617; color: #e2e8f0; font-family: ui-sans-serif, system-ui, sans-serif; }
+  </style>
+</head>
+<body class="p-8 max-w-3xl mx-auto space-y-6">
+  <h1 class="text-xl font-bold text-white">Memori Phase 2+3 — Comparison / Steps / Formula</h1>
+  <p class="text-sm text-slate-400">Static visual parity check vs Stitch (amber/slate).</p>
+
+  <div class="space-y-3 rounded-2xl border border-white/10 bg-slate-900/70 p-5">
+    <div class="flex items-center justify-between border-b border-white/5 pb-2.5 text-xs text-slate-400">
+      <div class="font-mono text-[11px] uppercase tracking-wider text-amber-400/90">Comparison Table</div>
+      <span class="rounded-full border border-white/5 bg-white/5 px-2 py-0.5 font-mono text-[10px]">3 Feature Rows</span>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full min-w-[520px] border-collapse text-left text-xs">
+        <thead>
+          <tr class="border-b border-white/10">
+            <th class="px-3.5 py-3 font-mono text-[11px] uppercase tracking-wider text-slate-400">Feature</th>
+            <th class="px-3.5 py-3 font-semibold text-white">🗄️ Option A</th>
+            <th class="rounded-t-xl border border-b-0 border-amber-400/20 bg-amber-500/[0.04] px-3.5 py-3 font-semibold text-white">⚡ Option B <span class="ml-2 rounded bg-amber-400/20 px-1.5 py-0.5 font-mono text-[10px] uppercase text-amber-300">Preferred</span></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-white/5">
+          <tr><td class="px-3.5 py-3 font-mono text-[11px] text-slate-400">Purpose</td><td class="px-3.5 py-3 text-slate-300">Describe A</td><td class="border-x border-amber-400/10 bg-amber-500/[0.02] px-3.5 py-3 font-medium text-slate-200">Describe B</td></tr>
+          <tr><td class="px-3.5 py-3 font-mono text-[11px] text-slate-400">Sync</td><td class="px-3.5 py-3 text-slate-300">…</td><td class="border-x border-amber-400/10 bg-amber-500/[0.02] px-3.5 py-3 font-medium text-slate-200">…</td></tr>
+          <tr><td class="px-3.5 py-3 font-mono text-[11px] text-slate-400">Failover</td><td class="px-3.5 py-3 text-slate-300">…</td><td class="rounded-b-xl border-x border-b border-amber-400/20 bg-amber-500/[0.02] px-3.5 py-3 font-medium text-slate-200">…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="space-y-4 rounded-2xl border border-white/10 bg-slate-900/70 p-5">
+    <div class="flex items-center justify-between border-b border-white/5 pb-2.5 text-xs">
+      <span class="font-semibold text-slate-200">Failover Sequence</span>
+      <span class="font-mono text-[10px] text-slate-400">Chronological</span>
+    </div>
+    <div class="flex items-start gap-3">
+      <div class="mt-0.5 flex h-5 w-5 items-center justify-center rounded-full border border-white/15 bg-slate-800 font-mono text-[10px] font-bold text-amber-400">1</div>
+      <div>
+        <div class="text-xs font-semibold text-slate-200">Primary Outage Detected</div>
+        <div class="text-[11px] text-slate-400">Health-checks fail on primary.</div>
+      </div>
+    </div>
+    <div class="flex items-start gap-3">
+      <div class="mt-0.5 flex h-5 w-5 items-center justify-center rounded-full border border-white/15 bg-slate-800 font-mono text-[10px] font-bold text-amber-400">2</div>
+      <div>
+        <div class="text-xs font-semibold text-slate-200">Standby Promoted</div>
+        <div class="text-[11px] text-slate-400">RPO ≈ 0.</div>
+        <div class="mt-1 inline-block rounded border border-amber-400/10 bg-amber-400/5 px-2 py-0.5 font-mono text-[10px] text-amber-300/80">⚡ Exam clue: Synchronous replication.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="space-y-3 rounded-2xl border border-white/10 bg-slate-900/70 p-5">
+    <div class="flex items-center justify-between border-b border-white/5 pb-2 text-xs text-slate-400">
+      <span class="font-mono text-[11px] uppercase tracking-wider">EBS IOPS Throughput Formula</span>
+      <span class="font-mono text-[10px] text-slate-500">gp3 / io2 Block</span>
+    </div>
+    <div class="rounded-xl border border-white/10 bg-slate-950/80 px-6 py-4 text-center font-mono text-sm text-amber-300">
+      Throughput (MiB/s) = min(IOPS × I/O Size / 1024, Cap)
+    </div>
+    <p class="text-center font-mono text-[11px] text-slate-400">Caption: Scales until EC2 EBS bandwidth limit.</p>
+  </div>
+</body>
+</html>
