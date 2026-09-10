@@ -152,8 +152,8 @@ export function RichTextEditor({
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-white/10 bg-slate-950 ring-accent/40 focus-within:ring-2">
-      <div className="flex flex-wrap items-center gap-0.5 border-b border-white/10 bg-slate-900/80 px-1.5 py-1">
+    <div className="overflow-visible rounded-xl border border-white/10 bg-slate-950 ring-accent/40 focus-within:ring-2">
+      <div className="flex flex-wrap items-center gap-0.5 overflow-hidden rounded-t-[0.7rem] border-b border-white/10 bg-slate-900/80 px-1.5 py-1">
         <ToolbarButton
           label={<span className="font-bold">B</span>}
           ariaLabel="Bold"

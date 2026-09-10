@@ -116,9 +116,36 @@ export function getSlashCommandItems(query: string): SlashCommandItem[] {
 
 type SlashSuggestionOptions = Omit<SuggestionOptions<SlashCommandItem>, 'editor'>
 
+function positionSlashMenu(
+  element: HTMLElement,
+  clientRect?: (() => DOMRect | null) | null,
+) {
+  const rect = clientRect?.()
+  if (!rect) {
+    return
+  }
+
+  element.style.position = 'fixed'
+  element.style.zIndex = '100'
+
+  // Measure after layout so we can clamp to the viewport.
+  const menuRect = element.getBoundingClientRect()
+  const padding = 8
+  let top = rect.bottom + 6
+  let left = rect.left
+
+  const maxLeft = Math.max(padding, window.innerWidth - menuRect.width - padding)
+  const maxTop = Math.max(padding, window.innerHeight - menuRect.height - padding)
+  left = Math.min(Math.max(left, padding), maxLeft)
+  top = Math.min(Math.max(top, padding), maxTop)
+
+  element.style.top = `${top}px`
+  element.style.left = `${left}px`
+}
+
 function renderSlashMenu() {
   let component: ReactRenderer<SlashCommandListRef> | null = null
-  let unmount: (() => void) | null = null
+  let wrapper: HTMLDivElement | null = null
 
   return {
     onStart(props: SuggestionProps<SlashCommandItem>) {
@@ -129,7 +156,15 @@ function renderSlashMenu() {
         },
         editor: props.editor,
       })
-      unmount = props.mount(component.element)
+
+      // Portal to document.body so overflow/stacking from the editor or
+      // CardEditModal (z-[60]) cannot clip or bury the menu.
+      wrapper = document.createElement('div')
+      wrapper.style.position = 'fixed'
+      wrapper.style.zIndex = '100'
+      wrapper.appendChild(component.element)
+      document.body.appendChild(wrapper)
+      positionSlashMenu(wrapper, props.clientRect)
     },
 
     onUpdate(props: SuggestionProps<SlashCommandItem>) {
@@ -137,6 +172,9 @@ function renderSlashMenu() {
         items: props.items,
         command: props.command,
       })
+      if (wrapper) {
+        positionSlashMenu(wrapper, props.clientRect)
+      }
     },
 
     onKeyDown(props: SuggestionKeyDownProps) {
@@ -147,8 +185,10 @@ function renderSlashMenu() {
     },
 
     onExit() {
-      unmount?.()
-      unmount = null
+      if (wrapper) {
+        wrapper.remove()
+        wrapper = null
+      }
       component?.destroy()
       component = null
     },

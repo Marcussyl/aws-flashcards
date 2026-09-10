@@ -73,7 +73,7 @@ export const SlashCommandList = forwardRef<SlashCommandListRef, SlashCommandList
 
     if (items.length === 0) {
       return (
-        <div className="z-50 min-w-[14rem] overflow-hidden rounded-xl border border-white/10 bg-slate-900 px-3 py-2.5 text-sm text-slate-400 shadow-2xl">
+        <div className="z-[100] min-w-[14rem] overflow-hidden rounded-xl border border-white/10 bg-slate-900 px-3 py-2.5 text-sm text-slate-400 shadow-2xl">
           No matching commands
         </div>
       )
@@ -81,7 +81,7 @@ export const SlashCommandList = forwardRef<SlashCommandListRef, SlashCommandList
 
     return (
       <div
-        className="z-50 max-h-72 min-w-[16rem] overflow-y-auto rounded-xl border border-white/10 bg-slate-900 p-1 shadow-2xl"
+        className="z-[100] max-h-72 min-w-[16rem] overflow-y-auto rounded-xl border border-white/10 bg-slate-900 p-1 shadow-2xl"
         role="listbox"
         aria-label="Slash commands"
       >
