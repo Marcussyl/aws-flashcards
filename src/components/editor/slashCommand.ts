@@ -103,7 +103,7 @@ export function getSlashCommandItems(query: string): SlashCommandItem[] {
     },
     {
       title: 'Callout / Note',
-      description: 'Slate info callout',
+      description: 'Sky info callout',
       keywords: ['callout', 'note', 'info', 'admonition', 'alert'],
       icon: 'ℹ',
       command: ({ editor, range }) => {
@@ -111,9 +111,9 @@ export function getSlashCommandItems(query: string): SlashCommandItem[] {
       },
     },
     {
-      title: 'Tip',
-      description: 'Amber tip callout',
-      keywords: ['callout', 'tip', 'hint', 'admonition', 'alert'],
+      title: 'Exam tip',
+      description: 'Amber exam-tip callout',
+      keywords: ['callout', 'tip', 'exam tip', 'hint', 'admonition', 'alert'],
       icon: '💡',
       command: ({ editor, range }) => {
         insertCallout(editor, range, 'tip')
@@ -130,9 +130,9 @@ export function getSlashCommandItems(query: string): SlashCommandItem[] {
     },
     {
       title: 'Exam trap',
-      description: 'Exam gotcha callout',
-      keywords: ['callout', 'exam', 'trap', 'gotcha', 'admonition', 'alert'],
-      icon: '🎯',
+      description: 'Amber-rose exam trap callout',
+      keywords: ['callout', 'exam', 'trap', 'examtrap', 'gotcha', 'admonition', 'alert'],
+      icon: '⚠️',
       command: ({ editor, range }) => {
         insertCallout(editor, range, 'exam')
       },

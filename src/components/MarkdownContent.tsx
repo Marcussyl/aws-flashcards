@@ -5,12 +5,17 @@ import {
   isValidElement,
   memo,
   useMemo,
-  useState,
   type ReactNode,
 } from 'react'
 import dynamic from 'next/dynamic'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import {
+  CalloutBlock,
+  ToggleBlock,
+  normalizeCalloutType,
+  type CalloutType,
+} from '@/components/blocks'
 
 const MermaidBlock = dynamic(
   () => import('@/components/MermaidBlock').then((mod) => mod.MermaidBlock),
@@ -27,34 +32,6 @@ const MermaidBlock = dynamic(
 type MarkdownContentProps = {
   content: string
   className?: string
-}
-
-type CalloutKind = 'note' | 'tip' | 'warning' | 'exam'
-
-const CALLOUT_META: Record<
-  CalloutKind,
-  { label: string; className: string; labelClassName: string }
-> = {
-  note: {
-    label: 'Note',
-    className: 'border-slate-500/40 bg-slate-900/70',
-    labelClassName: 'text-slate-300',
-  },
-  tip: {
-    label: 'Tip',
-    className: 'border-amber-400/40 bg-amber-500/10',
-    labelClassName: 'text-amber-300',
-  },
-  warning: {
-    label: 'Warning',
-    className: 'border-rose-400/40 bg-rose-500/10',
-    labelClassName: 'text-rose-300',
-  },
-  exam: {
-    label: 'Exam trap',
-    className: 'border-amber-400/30 bg-gradient-to-br from-amber-500/10 to-rose-500/10',
-    labelClassName: 'text-amber-200',
-  },
 }
 
 // Notes sometimes use a unicode bullet instead of markdown list syntax.
@@ -124,7 +101,7 @@ function splitToggleSegments(content: string): ContentSegment[] {
   return segments.length > 0 ? segments : [{ kind: 'markdown', value: content }]
 }
 
-function detectCallout(children: ReactNode): { type: CalloutKind; body: ReactNode } | null {
+function detectCallout(children: ReactNode): { type: CalloutType; body: ReactNode } | null {
   const nodes = Children.toArray(children)
   if (nodes.length === 0) {
     return null
@@ -136,12 +113,12 @@ function detectCallout(children: ReactNode): { type: CalloutKind; body: ReactNod
   }
 
   const firstText = extractText(first.props.children).trim()
-  const match = /^\[!(NOTE|TIP|WARNING|EXAM)\](?:\s+(.*))?$/i.exec(firstText)
+  const match = /^\[!(NOTE|TIP|WARNING|EXAMTRAP|EXAM|TRAP)\](?:\s+(.*))?$/i.exec(firstText)
   if (!match) {
     return null
   }
 
-  const type = match[1].toLowerCase() as CalloutKind
+  const type = normalizeCalloutType(match[1])
   const leftover = match[2]?.trim()
   const rest = nodes.slice(1)
 
@@ -161,41 +138,10 @@ function detectCallout(children: ReactNode): { type: CalloutKind; body: ReactNod
 }
 
 function StudyToggle({ title, body }: { title: string; body: string }) {
-  const [open, setOpen] = useState(false)
-
   return (
-    <details
-      className="memori-toggle my-3 overflow-hidden rounded-xl border border-white/10 bg-slate-950/70"
-      open={open}
-      onToggle={(event) => setOpen((event.target as HTMLDetailsElement).open)}
-    >
-      <summary className="memori-toggle__summary cursor-pointer list-none px-3 py-2.5 text-sm font-semibold text-slate-100 marker:content-none [&::-webkit-details-marker]:hidden">
-        <span className="mr-2 inline-block text-accent transition-transform" aria-hidden>
-          {open ? '▾' : '▸'}
-        </span>
-        {title}
-      </summary>
-      <div className="memori-toggle__body border-t border-white/10 px-3 py-2.5">
-        <MarkdownBlock content={body} />
-      </div>
-    </details>
-  )
-}
-
-function CalloutBlock({ type, children }: { type: CalloutKind; children: ReactNode }) {
-  const meta = CALLOUT_META[type]
-  return (
-    <aside
-      className={`memori-callout memori-callout--${type} my-3 rounded-xl border-l-4 px-3 py-2.5 ${meta.className}`}
-      data-callout={type}
-    >
-      <div className={`mb-1 text-[11px] font-bold uppercase tracking-wide ${meta.labelClassName}`}>
-        {meta.label}
-      </div>
-      <div className="memori-callout__body text-slate-100 [&_p:first-child]:mt-0 [&_p:last-child]:mb-0">
-        {children}
-      </div>
-    </aside>
+    <ToggleBlock title={title}>
+      <MarkdownBlock content={body} />
+    </ToggleBlock>
   )
 }
 
@@ -263,7 +209,10 @@ function MarkdownBlock({ content }: { content: string }) {
             typeof className === 'string' && className.includes('contains-task-list')
           return (
             <ul
-              className={[className, isTaskList ? 'memori-task-list list-none pl-0' : null]
+              className={[
+                className,
+                isTaskList ? 'memori-task-list list-none space-y-2 pl-0' : null,
+              ]
                 .filter(Boolean)
                 .join(' ')}
               {...props}
@@ -277,7 +226,12 @@ function MarkdownBlock({ content }: { content: string }) {
             typeof className === 'string' && className.includes('task-list-item')
           return (
             <li
-              className={[className, isTaskItem ? 'memori-task-item' : null]
+              className={[
+                className,
+                isTaskItem
+                  ? 'memori-task-item rounded-xl border border-white/5 bg-white/[0.02] px-2 py-2'
+                  : null,
+              ]
                 .filter(Boolean)
                 .join(' ')}
               {...props}
@@ -288,10 +242,14 @@ function MarkdownBlock({ content }: { content: string }) {
         },
         input(props) {
           if (props.type === 'checkbox') {
+            const checked = Boolean(props.checked)
             return (
               <input
                 {...props}
-                className="memori-task-checkbox mr-2 align-middle accent-amber-400"
+                className={[
+                  'memori-task-checkbox mr-2 align-middle',
+                  checked ? 'memori-task-checkbox--checked' : 'memori-task-checkbox--unchecked',
+                ].join(' ')}
                 disabled
                 readOnly
               />

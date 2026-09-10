@@ -1,19 +1,16 @@
 import { mergeAttributes, Node } from '@tiptap/core'
+import {
+  CALLOUT_HEADER_RE,
+  CALLOUT_LABELS,
+  CALLOUT_MARKDOWN_TAG,
+  CALLOUT_TYPES,
+  normalizeCalloutType,
+  type CalloutType,
+} from '@/components/blocks/calloutMeta'
+import { CALLOUT_ICON_HTML } from '@/components/blocks/CalloutIcons'
 
-export const CALLOUT_TYPES = ['note', 'tip', 'warning', 'exam'] as const
-export type CalloutType = (typeof CALLOUT_TYPES)[number]
-
-const CALLOUT_LABELS: Record<CalloutType, string> = {
-  note: 'Note',
-  tip: 'Tip',
-  warning: 'Warning',
-  exam: 'Exam trap',
-}
-
-function normalizeCalloutType(value: unknown): CalloutType {
-  const raw = String(value ?? 'note').toLowerCase()
-  return (CALLOUT_TYPES as readonly string[]).includes(raw) ? (raw as CalloutType) : 'note'
-}
+export { CALLOUT_TYPES, normalizeCalloutType }
+export type { CalloutType }
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -25,15 +22,20 @@ declare module '@tiptap/core' {
   }
 }
 
+function buildCalloutChrome(type: CalloutType, labelEl: HTMLElement, iconEl: HTMLElement) {
+  labelEl.textContent = CALLOUT_LABELS[type]
+  iconEl.innerHTML = CALLOUT_ICON_HTML[type]
+}
+
 /**
  * GitHub-style alert callouts.
  *
- * Markdown format (documented in PR #44):
+ * Markdown format (documented in PR #44, aliases extended in Phase 1):
  * ```
  * > [!NOTE]
  * > body
  * ```
- * Also supports TIP / WARNING / EXAM.
+ * Supports TIP / WARNING / EXAM (canonical). Parse also accepts EXAMTRAP / TRAP → exam.
  */
 export const Callout = Node.create({
   name: 'callout',
@@ -71,12 +73,24 @@ export const Callout = Node.create({
       [
         'div',
         {
-          class: 'memori-callout__label',
+          class: 'memori-callout__icon',
           contenteditable: 'false',
+          'aria-hidden': 'true',
         },
-        CALLOUT_LABELS[type],
       ],
-      ['div', { class: 'memori-callout__body' }, 0],
+      [
+        'div',
+        { class: 'memori-callout__content' },
+        [
+          'div',
+          {
+            class: 'memori-callout__label',
+            contenteditable: 'false',
+          },
+          CALLOUT_LABELS[type],
+        ],
+        ['div', { class: 'memori-callout__body' }, 0],
+      ],
     ]
   },
 
@@ -87,15 +101,24 @@ export const Callout = Node.create({
       dom.dataset.callout = type
       dom.className = `memori-callout memori-callout--${type}`
 
+      const icon = document.createElement('div')
+      icon.className = 'memori-callout__icon'
+      icon.contentEditable = 'false'
+      icon.setAttribute('aria-hidden', 'true')
+
+      const content = document.createElement('div')
+      content.className = 'memori-callout__content'
+
       const label = document.createElement('div')
       label.className = 'memori-callout__label'
       label.contentEditable = 'false'
-      label.textContent = CALLOUT_LABELS[type]
 
       const body = document.createElement('div')
       body.className = 'memori-callout__body'
 
-      dom.append(label, body)
+      buildCalloutChrome(type, label, icon)
+      content.append(label, body)
+      dom.append(icon, content)
 
       return {
         dom,
@@ -107,7 +130,7 @@ export const Callout = Node.create({
           const nextType = normalizeCalloutType(updated.attrs.type)
           dom.dataset.callout = nextType
           dom.className = `memori-callout memori-callout--${nextType}`
-          label.textContent = CALLOUT_LABELS[nextType]
+          buildCalloutChrome(nextType, label, icon)
           return true
         },
       }
@@ -135,11 +158,11 @@ export const Callout = Node.create({
     name: 'callout',
     level: 'block',
     start: (src) => {
-      const match = src.match(/^>\s*\[!(NOTE|TIP|WARNING|EXAM)\]/im)
+      const match = src.match(new RegExp(`^>\\s*\\[!(${CALLOUT_HEADER_RE})\\]`, 'im'))
       return match?.index ?? -1
     },
     tokenize(src, _tokens, lexer) {
-      const header = /^>\s*\[!(NOTE|TIP|WARNING|EXAM)\][^\n]*\n?/.exec(src)
+      const header = new RegExp(`^>\\s*\\[!(${CALLOUT_HEADER_RE})\\][^\\n]*\\n?`, 'i').exec(src)
       if (!header) {
         return undefined
       }
@@ -155,9 +178,7 @@ export const Callout = Node.create({
           break
         }
         const rawLine = lineMatch[1]
-        // Blank quote line (">" or "> ") ends only if followed by non-quote; keep blank lines inside.
         if (/^>\s*$/.test(rawLine.replace(/\n$/, '')) && !/^>/.test(rest.slice(rawLine.length))) {
-          // trailing blank blockquote line — include then stop
           bodyLines.push('')
           consumed += rawLine
           rest = rest.slice(rawLine.length)
@@ -190,7 +211,8 @@ export const Callout = Node.create({
   },
 
   renderMarkdown: (node, helpers) => {
-    const type = normalizeCalloutType(node.attrs?.type).toUpperCase()
+    const type = normalizeCalloutType(node.attrs?.type)
+    const tag = CALLOUT_MARKDOWN_TAG[type]
     const rendered = helpers.renderChildren(node.content || [], '\n\n').replace(/\n$/, '')
     const quoted =
       rendered.length === 0
@@ -199,7 +221,7 @@ export const Callout = Node.create({
             .split('\n')
             .map((line) => `> ${line}`)
             .join('\n')
-    return `> [!${type}]\n${quoted}`
+    return `> [!${tag}]\n${quoted}`
   },
 })
 
