@@ -16,6 +16,7 @@ import {
   normalizeCalloutType,
   type CalloutType,
 } from '@/components/blocks'
+import { StudyTaskCheckbox } from '@/components/StudyTaskCheckbox'
 
 const MermaidBlock = dynamic(
   () => import('@/components/MermaidBlock').then((mod) => mod.MermaidBlock),
@@ -224,35 +225,39 @@ function MarkdownBlock({ content }: { content: string }) {
         li({ className, children, ...props }) {
           const isTaskItem =
             typeof className === 'string' && className.includes('task-list-item')
+          if (!isTaskItem) {
+            return (
+              <li className={className} {...props}>
+                {children}
+              </li>
+            )
+          }
+
+          const nodes = Children.toArray(children)
+          const isTaskCheckbox = (node: ReactNode) =>
+            isValidElement<{ type?: string }>(node) && node.props.type === 'checkbox'
+          const checkboxes = nodes.filter(isTaskCheckbox)
+          const content = nodes.filter((node) => !isTaskCheckbox(node))
+
           return (
             <li
               className={[
                 className,
-                isTaskItem
-                  ? 'memori-task-item rounded-xl border border-white/5 bg-white/[0.02] px-2 py-2'
-                  : null,
+                'memori-task-item rounded-xl border border-white/5 bg-white/[0.02] px-2 py-2',
               ]
                 .filter(Boolean)
                 .join(' ')}
               {...props}
             >
-              {children}
+              {checkboxes}
+              <div>{content}</div>
             </li>
           )
         },
         input(props) {
           if (props.type === 'checkbox') {
-            const checked = Boolean(props.checked)
             return (
-              <input
-                {...props}
-                className={[
-                  'memori-task-checkbox mr-2 align-middle',
-                  checked ? 'memori-task-checkbox--checked' : 'memori-task-checkbox--unchecked',
-                ].join(' ')}
-                disabled
-                readOnly
-              />
+              <StudyTaskCheckbox defaultChecked={Boolean(props.checked)} />
             )
           }
           return <input {...props} />
