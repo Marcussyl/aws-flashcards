@@ -13,6 +13,7 @@ import {
   type SlashCommandItem,
   type SlashCommandListRef,
 } from './SlashCommandList'
+import type { CalloutType } from './Callout'
 
 export const slashCommandPluginKey = new PluginKey('slashCommand')
 
@@ -23,6 +24,16 @@ function applyBlockCommand(
 ) {
   const chain = editor.chain().focus().deleteRange(range)
   run(chain).run()
+}
+
+function insertCallout(editor: Editor, range: Range, type: CalloutType) {
+  applyBlockCommand(editor, range, (chain) =>
+    chain.insertContent({
+      type: 'callout',
+      attrs: { type },
+      content: [{ type: 'paragraph' }],
+    }),
+  )
 }
 
 export function getSlashCommandItems(query: string): SlashCommandItem[] {
@@ -73,12 +84,72 @@ export function getSlashCommandItems(query: string): SlashCommandItem[] {
       },
     },
     {
+      title: 'Checklist',
+      description: 'Task list with checkboxes',
+      keywords: ['checklist', 'todo', 'task', 'checkbox', 'tasklist'],
+      icon: '☑',
+      command: ({ editor, range }) => {
+        applyBlockCommand(editor, range, (chain) => chain.toggleTaskList())
+      },
+    },
+    {
       title: 'Quote',
       description: 'Blockquote',
       keywords: ['quote', 'blockquote', 'citation'],
       icon: '❝',
       command: ({ editor, range }) => {
         applyBlockCommand(editor, range, (chain) => chain.toggleBlockquote())
+      },
+    },
+    {
+      title: 'Callout / Note',
+      description: 'Slate info callout',
+      keywords: ['callout', 'note', 'info', 'admonition', 'alert'],
+      icon: 'ℹ',
+      command: ({ editor, range }) => {
+        insertCallout(editor, range, 'note')
+      },
+    },
+    {
+      title: 'Tip',
+      description: 'Amber tip callout',
+      keywords: ['callout', 'tip', 'hint', 'admonition', 'alert'],
+      icon: '💡',
+      command: ({ editor, range }) => {
+        insertCallout(editor, range, 'tip')
+      },
+    },
+    {
+      title: 'Warning',
+      description: 'Rose warning callout',
+      keywords: ['callout', 'warning', 'caution', 'admonition', 'alert'],
+      icon: '⚠',
+      command: ({ editor, range }) => {
+        insertCallout(editor, range, 'warning')
+      },
+    },
+    {
+      title: 'Exam trap',
+      description: 'Exam gotcha callout',
+      keywords: ['callout', 'exam', 'trap', 'gotcha', 'admonition', 'alert'],
+      icon: '🎯',
+      command: ({ editor, range }) => {
+        insertCallout(editor, range, 'exam')
+      },
+    },
+    {
+      title: 'Toggle',
+      description: 'Collapsible section',
+      keywords: ['toggle', 'details', 'summary', 'collapse', 'spoiler', 'accordion'],
+      icon: '▸',
+      command: ({ editor, range }) => {
+        applyBlockCommand(editor, range, (chain) =>
+          chain.insertContent({
+            type: 'toggle',
+            attrs: { title: 'Toggle title' },
+            content: [{ type: 'paragraph' }],
+          }),
+        )
       },
     },
     {

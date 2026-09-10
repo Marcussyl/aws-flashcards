@@ -258,3 +258,165 @@ button:disabled,
     linear-gradient(180deg, #0f172a 0%, #111827 100%);
 }
 
+
+/* —— Editor + study: task lists, callouts, toggles —— */
+.memori-task-list {
+  list-style: none;
+  padding-left: 0;
+  margin-block: 0.5em;
+}
+
+.memori-task-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 0.35em 0;
+}
+
+.memori-task-item > label {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 0.2rem;
+  flex-shrink: 0;
+}
+
+.memori-task-item > div {
+  min-width: 0;
+  flex: 1;
+}
+
+.memori-task-item > div > p {
+  margin: 0;
+}
+
+.memori-task-checkbox,
+.ProseMirror .memori-task-item input[type='checkbox'],
+.markdown-body .memori-task-item input[type='checkbox'],
+.markdown-body input.memori-task-checkbox {
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+  flex-shrink: 0;
+  accent-color: #fbbf24;
+  border-radius: 0.25rem;
+  cursor: pointer;
+}
+
+.markdown-body input.memori-task-checkbox {
+  cursor: default;
+}
+
+.memori-callout {
+  margin: 0.75em 0;
+  border-radius: 0.75rem;
+  border-left-width: 4px;
+  border-left-style: solid;
+  padding: 0.65rem 0.85rem;
+}
+
+.memori-callout__label {
+  margin-bottom: 0.25rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.memori-callout__body > :first-child {
+  margin-top: 0;
+}
+
+.memori-callout__body > :last-child {
+  margin-bottom: 0;
+}
+
+.memori-callout--note {
+  border-left-color: rgb(100 116 139);
+  background: rgba(15, 23, 42, 0.72);
+}
+
+.memori-callout--note .memori-callout__label {
+  color: rgb(203 213 225);
+}
+
+.memori-callout--tip {
+  border-left-color: rgb(251 191 36);
+  background: rgba(245, 158, 11, 0.1);
+}
+
+.memori-callout--tip .memori-callout__label {
+  color: rgb(252 211 77);
+}
+
+.memori-callout--warning {
+  border-left-color: rgb(251 113 133);
+  background: rgba(244, 63, 94, 0.1);
+}
+
+.memori-callout--warning .memori-callout__label {
+  color: rgb(253 164 175);
+}
+
+.memori-callout--exam {
+  border-left-color: rgb(251 191 36);
+  background: linear-gradient(
+    135deg,
+    rgba(245, 158, 11, 0.12),
+    rgba(244, 63, 94, 0.1)
+  );
+}
+
+.memori-callout--exam .memori-callout__label {
+  color: rgb(253 230 138);
+}
+
+.memori-toggle {
+  margin: 0.75em 0;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.75rem;
+  background: rgba(2, 6, 23, 0.55);
+}
+
+.memori-toggle__summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: rgb(241 245 249);
+}
+
+.memori-toggle__summary::-webkit-details-marker {
+  display: none;
+}
+
+.ProseMirror .memori-toggle__summary {
+  outline: none;
+}
+
+.ProseMirror .memori-toggle__summary:focus {
+  box-shadow: inset 0 0 0 1px rgba(251, 191, 36, 0.45);
+}
+
+.memori-toggle__body {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.65rem 0.85rem;
+}
+
+.memori-toggle__body > :first-child {
+  margin-top: 0;
+}
+
+.memori-toggle__body > :last-child {
+  margin-bottom: 0;
+}
+
+@media (max-width: 640px) {
+  .memori-callout,
+  .memori-toggle__summary,
+  .memori-toggle__body {
+    padding-left: 0.7rem;
+    padding-right: 0.7rem;
+  }
+}
