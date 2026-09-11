@@ -1,0 +1,55 @@
+# Rewritten cards (53)
+
+- **c001** — What are the four architecture domains covered in the AWS Solutions Architect Associate exam? — Expanded stub into four SAA domains with exam framing
+- **c002** — What is AWS Control Tower? — Cleaned conversational opening; added structured heading + exam callout
+- **c004** — What is AWS Service Catalog? — Restructured Service Catalog prose into Product/Portfolio/Constraints notes
+- **c006** — What is AWS Lambda SnapStart? — Expanded thin SnapStart blurb into exam-ready cold-start notes
+- **c007** — How do S3 Event Notifications compare with EventBridge for S3 events? — Rewrote blog-link paste into EventBridge vs S3 event notification study notes
+- **c016** — How many security groups can you attach to an EC2 instance in a VPC? — Expanded stub 'five' into exam-ready SG attachment limit notes
+- **c019** — Is there replication lag on RDS cross-Region read replicas? — Expanded stub about RDS cross-Region replica lag
+- **c028** — Is a Web ACL required in order to use AWS WAF? — Removed chatbot follow-up residue; Converted emoji sections to callouts/headings/toggles
+- **c029** — Do Network ACLs apply at the subnet level or the instance level? — Removed chatbot follow-up residue; Converted emoji sections to callouts/headings/toggles
+- **c031** — What is Amazon GuardDuty? — Removed chatbot follow-up residue; Converted emoji sections to callouts/headings/toggles
+- **c033** — What is vpc flow logs? — Removed chatbot follow-up residue; Converted emoji sections to callouts/headings/toggles; removed chatbot transition opening
+- **c039** — Which protocol does Microsoft Active Directory implement? — Expanded SAML one-liner into federation study notes
+- **c051** — What is the allowed transition waterfall between S3 storage classes? — Restructured single-block prose into Overview + NOTE/TIP callouts (facts preserved)
+- **c052** — What is Amazon Kendra? — Clarified Kendra vs Macie confusion in original prose
+- **c059** — How user can get the cloudfront signed url or signed cookie? — Removed chatbot follow-up residue; Converted emoji sections to callouts/headings/toggles
+- **c061** — How does AWS WAF relate to AWS Firewall Manager? — Removed chatbot follow-up residue; Converted emoji sections to callouts/headings/toggles
+- **c066** — What is SYN floods and UDP reflection attacks? — Removed chatbot follow-up residue; Converted emoji sections to callouts/headings/toggles
+- **c078** — How does OIDC relate to OAuth 2.0? — Replaced YouTube URL stub with OIDC vs OAuth study notes
+- **c092** — What are EC2 On-Demand Capacity Reservations? — Restructured single-block prose into Overview + NOTE/TIP callouts (facts preserved)
+- **c094** — What is a launch template in an Auto Scaling group? — Restructured single-block prose into Overview + NOTE/TIP callouts (facts preserved)
+- **c115** — What is Amazon Data Lifecycle Manager? — Restructured single-block prose into Overview + NOTE/TIP callouts (facts preserved)
+- **c116** — What are the Amazon S3 storage classes? — Restructured single-block prose into Overview + NOTE/TIP callouts (facts preserved)
+- **c130** — What is Recovery Manager on RDS? — Restructured single-block prose into Overview + NOTE/TIP callouts (facts preserved)
+- **c131** — What is AWS Database Migration Service? — Restructured single-block prose into Overview + NOTE/TIP callouts (facts preserved)
+- **c135** — What is the difference between SQS short polling and long polling? — Restructured single-block prose into Overview + NOTE/TIP callouts (facts preserved)
+- **c136** — How do multiple EC2 workers safely process the same SQS queue? — Restructured single-block prose into Overview + NOTE/TIP callouts (facts preserved)
+- **c137** — What timeouts exist in Amazon SQS? — Restructured single-block prose into Overview + NOTE/TIP callouts (facts preserved)
+- **c139** — What does "at least once" and "one destination" mean for S3 Event Notifications? — Restructured single-block prose into Overview + NOTE/TIP callouts (facts preserved)
+- **c140** — What is Amazon SWF (Simple Workflow Service)? — Restructured single-block prose into Overview + NOTE/TIP callouts (facts preserved)
+- **c141** — Must EC2 and RDS resources be deployed inside a VPC? — Restructured single-block prose into Overview + NOTE/TIP callouts (facts preserved)
+- **c142** — What is VPN connection? — Restructured single-block prose into Overview + NOTE/TIP callouts (facts preserved)
+- **c183** — What is IAM Identity Center at a high level? — Restructured single-block prose into Overview + NOTE/TIP callouts (facts preserved)
+- **c203** — What is AWS Data Transfer Terminal? — Restructured single-block prose into Overview + NOTE/TIP callouts (facts preserved)
+- **c204** — What are the Amazon S3 storage classes, and when do you use each? — Restructured single-block prose into Overview + NOTE/TIP callouts (facts preserved)
+- **c206** — How is EC2 billed in running, stopped, and hibernated states? — Restructured single-block prose into Overview + NOTE/TIP callouts (facts preserved)
+- **c208** — What is AWS Cost Explorer? — Restructured single-block prose into Overview + NOTE/TIP callouts (facts preserved)
+- **c224** — How can you improve query performance in Amazon Athena? — Restructured single-block prose into Overview + NOTE/TIP callouts (facts preserved)
+- **c230** — How does simple scaling differ from target tracking scaling? — Restructured single-block prose into Overview + NOTE/TIP callouts (facts preserved)
+- **c231** — Can Amazon WorkDocs integrate with S3 buckets? — Restructured single-block prose into Overview + NOTE/TIP callouts (facts preserved)
+- **c232** — Does Amazon EFS only support Windows? — Corrected/expanded EFS OS support stub
+- **c246** — What is AWS Network Firewall? — Restructured single-block prose into Overview + NOTE/TIP callouts (facts preserved)
+- **c280** — What is job bookmarking in AWS Glue? — Restructured single-block prose into Overview + NOTE/TIP callouts (facts preserved)
+- **c287** — How do RDS Multi-AZ, Multi-Region, and read replicas differ? — Restructured single-block prose into Overview + NOTE/TIP callouts (facts preserved)
+- **c296** — How does an Internet Gateway differ from a Virtual Private Gateway? — Restructured single-block prose into Overview + NOTE/TIP callouts (facts preserved)
+- **c297** — How does an SQS Standard queue differ from a FIFO queue? — Restructured single-block prose into Overview + NOTE/TIP callouts (facts preserved)
+- **c307** — What is Babelfish for Aurora PostgreSQL? — Restructured single-block prose into Overview + NOTE/TIP callouts (facts preserved)
+- **c313** — What is AWS Trusted Advisor? — Restructured single-block prose into Overview + NOTE/TIP callouts (facts preserved)
+- **c321** — What is VPC Network Access Analyzer? — Restructured single-block prose into Overview + NOTE/TIP callouts (facts preserved)
+- **c322** — What is Amazon Detective? — Restructured single-block prose into Overview + NOTE/TIP callouts (facts preserved)
+- **c331** — What is Amazon CloudWatch Application Insights? — Restructured single-block prose into Overview + NOTE/TIP callouts (facts preserved)
+- **c354** — What is AWS Transform MGN? — Restructured single-block prose into Overview + NOTE/TIP callouts (facts preserved)
+- **c357** — What are ALB sticky sessions (session affinity)? — Restructured single-block prose into Overview + NOTE/TIP callouts (facts preserved)
+- **c361** — What are AWS Lake Formation blueprints? — Restructured single-block prose into Overview + NOTE/TIP callouts (facts preserved)

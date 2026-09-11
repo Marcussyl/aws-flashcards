@@ -1,6 +1,7 @@
 import type { TopicId } from '@/data/types'
 import type { Card, CardCreate, CardDocument, CardUpdate } from '@/data/types'
 import { getDb } from '@/lib/mongo'
+import { overlayCardAnswer, overlayCardsAnswers } from '@/lib/answer-drafts'
 
 export const CARDS_COLLECTION = 'cards'
 
@@ -101,7 +102,7 @@ export async function listCards(options: ListCardsOptions = {}): Promise<Card[]>
   if (!needle) {
     const hit = listCache().get(key)
     if (hit && Date.now() - hit.at < CARDS_CACHE_TTL_MS) {
-      return hit.cards
+      return overlayCardsAnswers(hit.cards)
     }
   }
 
@@ -128,7 +129,7 @@ export async function listCards(options: ListCardsOptions = {}): Promise<Card[]>
   if (!needle) {
     listCache().set(key, { at: Date.now(), cards })
   }
-  return cards
+  return overlayCardsAnswers(cards)
 }
 
 /** Lightweight id+topic projection for header progress without full card payloads. */
@@ -210,7 +211,7 @@ export async function listCardMeta(options: { topic?: TopicId } = {}): Promise<C
 export async function getCard(id: string): Promise<Card | null> {
   const collection = await getCardsCollection()
   const doc = await collection.findOne({ _id: id })
-  return doc ? toCard(doc) : null
+  return overlayCardAnswer(doc ? toCard(doc) : null)
 }
 
 export async function updateCard(id: string, patch: CardUpdate): Promise<Card | null> {
