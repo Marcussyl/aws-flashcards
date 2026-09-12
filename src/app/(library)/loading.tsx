@@ -1,3 +1,4 @@
+// Scopes to `/` (library home) only — not other root-layout children.
 export default function LibraryLoading() {
   return (
     <div className="space-y-10" aria-busy="true" aria-label="Loading topic library">
