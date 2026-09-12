@@ -103,7 +103,6 @@ function StudySessionRunner({
 }) {
   const router = useRouter()
   const { map, ready, mark } = useProgress()
-  const [flipped, setFlipped] = useState(false)
   const [burstId, setBurstId] = useState(0)
   const [burstKind, setBurstKind] = useState<BurstKind>('known')
   const [swipe, setSwipe] = useState<Swipe>({ dir: 1, exit: 'next' })
@@ -125,13 +124,51 @@ function StudySessionRunner({
     ? studySessionHint(baseList, map, { category, mode })
     : null
 
-  const [session, setSession] = useState<StudySession | null>(null)
-  const hydratedKeyRef = useRef<string | null>(null)
+  const initialRestoreRef = useRef<ReturnType<typeof rehydrateStudySession> | null | undefined>(
+    undefined,
+  )
+  if (initialRestoreRef.current === undefined) {
+    if (typeof window === 'undefined') {
+      initialRestoreRef.current = null
+    } else {
+      const storage = getStudySessionStorage()
+      const stored = storage ? loadStudySession(storage, persistKey) : null
+      initialRestoreRef.current = stored
+        ? rehydrateStudySession(stored, topicCards)
+        : null
+    }
+  }
+  const initialRestore = initialRestoreRef.current
+
+  const [flipped, setFlipped] = useState(() => Boolean(initialRestore?.flipped))
+  const [session, setSession] = useState<StudySession | null>(() => {
+    if (!initialRestore) {
+      return null
+    }
+    return {
+      key: persistKey,
+      deck: initialRestore.deck,
+      original: initialRestore.original,
+      completed: initialRestore.completed,
+      originalCount: initialRestore.originalCount,
+    }
+  })
+  /** Only `create` shows the shuffling UI; resume / wait stay neutral. */
+  const [bootKind, setBootKind] = useState<'resume' | 'create' | 'wait' | null>(() =>
+    initialRestore ? 'resume' : 'wait',
+  )
+  const hydratedKeyRef = useRef<string | null>(initialRestore ? persistKey : null)
+  const createTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Restore a matching unexpired localStorage session, or shuffle a new deck.
   // Wait for progress only when there is nothing to restore.
   useEffect(() => {
     /* eslint-disable react-hooks/set-state-in-effect -- keyed hydrate from localStorage / shuffle; same pattern as the previous sessionKey rebuild */
+    if (createTimerRef.current) {
+      clearTimeout(createTimerRef.current)
+      createTimerRef.current = null
+    }
+
     if (hydratedKeyRef.current === persistKey) {
       return
     }
@@ -142,6 +179,7 @@ function StudySessionRunner({
 
     if (restored) {
       hydratedKeyRef.current = persistKey
+      setBootKind('resume')
       setSession({
         key: persistKey,
         deck: restored.deck,
@@ -155,6 +193,7 @@ function StudySessionRunner({
     }
 
     if (usesProgress && !ready) {
+      setBootKind('wait')
       setSession({
         key: persistKey,
         deck: null,
@@ -165,18 +204,37 @@ function StudySessionRunner({
     }
 
     const shuffled = shuffleCards(selectStudyCards(baseList, map, { category, mode }))
-    hydratedKeyRef.current = persistKey
-    setSession({
+    const nextSession: StudySession = {
       key: persistKey,
       deck: createStudyDeck(shuffled),
       original: [...shuffled],
       completed: false,
+    }
+    setBootKind('create')
+    setSession({
+      key: persistKey,
+      deck: null,
+      original: [],
+      completed: false,
     })
     setFlipped(false)
     setSwipe({ dir: 1, exit: 'next' })
+    createTimerRef.current = setTimeout(() => {
+      hydratedKeyRef.current = persistKey
+      setSession(nextSession)
+      createTimerRef.current = null
+    }, 650)
     // eslint-disable-next-line react-hooks/exhaustive-deps -- map/baseList captured at persistKey / ready only
   }, [persistKey, ready, usesProgress])
   /* eslint-enable react-hooks/set-state-in-effect */
+
+  useEffect(() => {
+    return () => {
+      if (createTimerRef.current) {
+        clearTimeout(createTimerRef.current)
+      }
+    }
+  }, [])
 
   // Persist after session mutations and bump TTL (last activity).
   useEffect(() => {
@@ -335,7 +393,16 @@ function StudySessionRunner({
   }
 
   if (deck === null) {
-    return <StudyLoading topicId={topicId} category={category} mode={mode} />
+    return (
+      <StudyLoading
+        topicId={topicId}
+        category={category}
+        mode={mode}
+        kind={
+          session?.key === persistKey && bootKind === 'create' ? 'shuffle' : 'resume'
+        }
+      />
+    )
   }
 
   if (session?.completed && originalCount > 0) {
@@ -553,22 +620,47 @@ function StudyLoading({
   topicId,
   category,
   mode,
+  kind,
 }: {
   topicId: TopicId
   category: string | null
   mode: string | null
+  kind: 'shuffle' | 'resume'
 }) {
   const { getTopic } = useTaxonomy()
   const topic = category ?? getTopic(topicId)?.name ?? 'All topics'
   const modeLabel = mode ? MODE_LABELS[mode] ?? mode : 'Shuffled deck'
 
+  if (kind === 'shuffle') {
+    return (
+      <DeckShuffling
+        badge={modeLabel}
+        title="Shuffling deck"
+        subtitle={`Lining up ${topic.toLowerCase()} cards so you can start flipping right away.`}
+        footer="Preparing your session"
+      />
+    )
+  }
+
   return (
-    <DeckShuffling
-      badge={modeLabel}
-      title="Shuffling deck"
-      subtitle={`Lining up ${topic.toLowerCase()} cards so you can start flipping right away.`}
-      footer="Preparing your session"
-    />
+    <div
+      className="mx-auto flex h-full w-full max-w-lg flex-1 flex-col items-center justify-center px-2 text-center"
+      aria-busy="true"
+      aria-label="Resuming session"
+    >
+      <div className="h-14 w-14 animate-pulse rounded-2xl border border-white/10 bg-slate-900/80" />
+      <span className="mt-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-slate-300">
+        {modeLabel}
+      </span>
+      <h1 className="mt-4 text-2xl font-semibold text-white">Resuming session</h1>
+      <p className="mt-2 max-w-sm text-sm leading-6 text-slate-400">
+        Picking up {topic.toLowerCase()} where you left off.
+      </p>
+      <div className="mt-6 flex items-center gap-2 text-xs text-slate-500">
+        <span className="inline-flex size-2 animate-pulse rounded-full bg-accent" />
+        Loading your cards
+      </div>
+    </div>
   )
 }
 

@@ -291,6 +291,11 @@ export function StudySessionPicker({
                 <li key={session.sessionKey} className="relative">
                   <Link
                     href={href}
+                    aria-label={
+                      session.completed
+                        ? `Review ${title.label} again`
+                        : `Continue ${title.label}`
+                    }
                     className="group block rounded-2xl border border-white/10 bg-slate-900/70 p-5 shadow-[0_12px_28px_rgba(0,0,0,0.25)] transition hover:border-accent/25 hover:bg-slate-900 hover:shadow-[0_16px_36px_rgba(251,191,36,0.06)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:p-6"
                   >
                     <div className="flex items-start justify-between gap-4 pr-8">
@@ -325,38 +330,33 @@ export function StudySessionPicker({
                               </span>
                             ) : null}
                           </p>
+                          <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-slate-400">
+                            <span>
+                              <span className="font-semibold tabular-nums text-emerald-300">
+                                {ready ? sessionStats.known : '—'}
+                              </span>{' '}
+                              known
+                            </span>
+                            <span className="text-slate-600">·</span>
+                            <span>
+                              <span className="font-semibold tabular-nums text-sky-300">
+                                {ready ? sessionStats.learning : '—'}
+                              </span>{' '}
+                              learning
+                            </span>
+                            <span className="text-slate-600">·</span>
+                            <span>
+                              <span className="font-semibold tabular-nums text-accent">
+                                {session.remainingCount}
+                              </span>{' '}
+                              left
+                            </span>
+                          </p>
                         </div>
                       </div>
                     </div>
 
-                    <div className="mt-5 grid grid-cols-3 gap-2">
-                      <div className="rounded-xl border border-white/5 bg-white/[0.03] px-3 py-2.5 text-center">
-                        <p className="text-lg font-semibold tabular-nums text-emerald-300">
-                          {ready ? sessionStats.known : '—'}
-                        </p>
-                        <p className="mt-0.5 text-[10px] font-medium uppercase tracking-[0.08em] text-slate-500">
-                          Known
-                        </p>
-                      </div>
-                      <div className="rounded-xl border border-white/5 bg-white/[0.03] px-3 py-2.5 text-center">
-                        <p className="text-lg font-semibold tabular-nums text-sky-300">
-                          {ready ? sessionStats.learning : '—'}
-                        </p>
-                        <p className="mt-0.5 text-[10px] font-medium uppercase tracking-[0.08em] text-slate-500">
-                          Still learning
-                        </p>
-                      </div>
-                      <div className="rounded-xl border border-white/5 bg-white/[0.03] px-3 py-2.5 text-center">
-                        <p className="text-lg font-semibold tabular-nums text-accent">
-                          {session.remainingCount}
-                        </p>
-                        <p className="mt-0.5 text-[10px] font-medium uppercase tracking-[0.08em] text-slate-500">
-                          Left
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="mt-4 flex flex-col gap-2">
+                    <div className="mt-5 flex flex-col gap-2">
                       <div className="flex items-center justify-between text-xs">
                         <span className="text-white">
                           {position} / {session.originalCount}
@@ -375,8 +375,10 @@ export function StudySessionPicker({
                       <p className="text-[11px] text-slate-500">
                         Expires in {formatExpiresIn(session.expiresAt, now)}
                       </p>
-                      <span className="inline-flex items-center gap-1 text-sm font-semibold text-accent transition group-hover:translate-x-0.5">
-                        {session.completed ? 'Review again' : 'Continue'}
+                      <span
+                        className="inline-flex size-8 items-center justify-center rounded-full text-accent transition group-hover:translate-x-0.5 group-hover:bg-accent/10"
+                        aria-hidden="true"
+                      >
                         <IconChevronRight className="h-4 w-4" />
                       </span>
                     </div>
