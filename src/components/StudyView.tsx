@@ -41,6 +41,7 @@ import {
   studySessionHint,
   type StudyDeckState,
 } from '@/lib/study-deck'
+import { StudySessionPicker } from '@/components/StudySessionPicker'
 import {
   clearStudySession,
   getStudySessionStorage,
@@ -67,6 +68,7 @@ const MODE_LABELS: Record<string, string> = {
   due: 'Remaining',
   known: 'Known',
   learning: 'Still learning',
+  shuffle: 'Shuffled',
 }
 
 type Swipe = {
@@ -79,6 +81,27 @@ export function StudyView({ topicId, cards }: { topicId: TopicId; cards: Card[] 
   const params = useSearchParams()
   const category = params.get('category')
   const mode = params.get('mode')
+  // Bare /study with no target → session picker (resume or start new).
+  if (!category && !mode) {
+    return <StudySessionPicker topicId={topicId} />
+  }
+  return (
+    <StudySessionRunner topicId={topicId} cards={cards} category={category} mode={mode} />
+  )
+}
+
+function StudySessionRunner({
+  topicId,
+  cards,
+  category,
+  mode,
+}: {
+  topicId: TopicId
+  cards: Card[]
+  category: string | null
+  mode: string | null
+}) {
+  const router = useRouter()
   const { map, ready, mark } = useProgress()
   const [flipped, setFlipped] = useState(false)
   const [burstId, setBurstId] = useState(0)
