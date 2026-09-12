@@ -1,5 +1,6 @@
 import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
+import { StudyBootFallback } from '@/components/StudyBootFallback'
 import { StudySessionsSkeleton } from '@/components/StudySessionsSkeleton'
 import { StudyView } from '@/components/StudyView'
 import { listCards } from '@/lib/cards-db'
@@ -19,7 +20,13 @@ export default async function TopicStudyPage({
   const cards = await listCards({ topic })
 
   return (
-    <Suspense fallback={<StudySessionsSkeleton />}>
+    <Suspense
+      fallback={
+        <Suspense fallback={<StudySessionsSkeleton />}>
+          <StudyBootFallback />
+        </Suspense>
+      }
+    >
       <StudyView topicId={topic} cards={cards} />
     </Suspense>
   )
