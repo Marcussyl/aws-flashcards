@@ -27,7 +27,7 @@ import {
   tapSpring,
 } from '@/lib/motion'
 import { topicHref } from '@/lib/paths'
-import { useProgress } from '@/lib/progress'
+import { countByStatus, useProgress } from '@/lib/progress'
 import {
   canGoNext,
   canGoPrev,
@@ -441,6 +441,10 @@ function StudySessionRunner({
     : mode
       ? MODE_LABELS[mode] ?? mode
       : 'Shuffled'
+  const statusCounts = countByStatus(
+    map,
+    session.original.map((item) => item.id),
+  )
 
   return (
     <div className="mx-auto flex h-full min-h-0 min-w-0 w-full max-w-3xl flex-1 flex-col gap-3 overflow-x-hidden sm:gap-4">
@@ -455,6 +459,18 @@ function StudySessionRunner({
               <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-slate-300">
                 <IconSpark className="h-3.5 w-3.5 text-sky-300" />
                 {modeLabel}
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-full border border-sky-400/20 bg-sky-400/10 px-2.5 py-1 text-xs font-medium text-sky-200">
+                <span className="tabular-nums">{ready ? statusCounts.learning : '—'}</span>
+                learning
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-full border border-slate-400/20 bg-slate-400/10 px-2.5 py-1 text-xs font-medium text-slate-300">
+                <span className="tabular-nums">{ready ? statusCounts.unseen : '—'}</span>
+                unseen
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2.5 py-1 text-xs font-medium text-emerald-200">
+                <span className="tabular-nums">{ready ? statusCounts.known : '—'}</span>
+                known
               </span>
             </div>
             <motion.button
