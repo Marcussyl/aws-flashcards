@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
@@ -39,6 +39,14 @@ import {
   studySessionHint,
   type StudyDeckState,
 } from '@/lib/study-deck'
+import {
+  clearStudySession,
+  getStudySessionStorage,
+  loadStudySession,
+  rehydrateStudySession,
+  saveStudySession,
+  studySessionStorageKey,
+} from '@/lib/study-session-store'
 import type { Card, TopicId } from '@/data/types'
 import { useTaxonomy } from '@/lib/taxonomy'
 
@@ -49,6 +57,8 @@ type StudySession = {
   original: Card[]
   /** Set when the last remaining card is marked known at the live edge. */
   completed: boolean
+  /** Progress denominator; kept from the persisted snapshot when restoring. */
+  originalCount?: number
 }
 
 const MODE_LABELS: Record<string, string> = {
@@ -84,41 +94,90 @@ export function StudyView({ topicId, cards }: { topicId: TopicId; cards: Card[] 
   }, [category, topicCards])
 
   const usesProgress = Boolean(mode) || Boolean(category)
-  const sessionKey = usesProgress
-    ? `${topicId}|${category ?? ''}|${mode ?? ''}|${ready ? 'ready' : 'pending'}`
-    : `all|${topicId}|${category ?? ''}|${mode ?? ''}`
+  const persistKey = studySessionStorageKey(topicId, category, mode)
   const sessionHint = ready
     ? studySessionHint(baseList, map, { category, mode })
     : null
 
   const [session, setSession] = useState<StudySession | null>(null)
+  const hydratedKeyRef = useRef<string | null>(null)
 
-  // Rebuild only when sessionKey changes — never reshuffle mid-session on progress map updates.
+  // Restore a matching unexpired localStorage session, or shuffle a new deck.
+  // Wait for progress only when there is nothing to restore.
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect -- keyed hydrate from localStorage / shuffle; same pattern as the previous sessionKey rebuild */
+    if (hydratedKeyRef.current === persistKey) {
+      return
+    }
+
+    const storage = getStudySessionStorage()
+    const stored = storage ? loadStudySession(storage, persistKey) : null
+    const restored = stored ? rehydrateStudySession(stored, topicCards) : null
+
+    if (restored) {
+      hydratedKeyRef.current = persistKey
+      setSession({
+        key: persistKey,
+        deck: restored.deck,
+        original: restored.original,
+        completed: restored.completed,
+        originalCount: restored.originalCount,
+      })
+      setFlipped(restored.flipped)
+      setSwipe({ dir: 1, exit: 'next' })
+      return
+    }
+
     if (usesProgress && !ready) {
       setSession({
-        key: sessionKey,
+        key: persistKey,
         deck: null,
         original: [],
         completed: false,
       })
-    } else {
-      const shuffled = shuffleCards(selectStudyCards(baseList, map, { category, mode }))
-      setSession({
-        key: sessionKey,
-        deck: createStudyDeck(shuffled),
-        original: [...shuffled],
-        completed: false,
-      })
+      return
     }
+
+    const shuffled = shuffleCards(selectStudyCards(baseList, map, { category, mode }))
+    hydratedKeyRef.current = persistKey
+    setSession({
+      key: persistKey,
+      deck: createStudyDeck(shuffled),
+      original: [...shuffled],
+      completed: false,
+    })
     setFlipped(false)
     setSwipe({ dir: 1, exit: 'next' })
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- map/baseList intentionally captured at key change only
-  }, [sessionKey])
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- map/baseList captured at persistKey / ready only
+  }, [persistKey, ready, usesProgress])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
-  const deck = session?.key === sessionKey ? session.deck : null
+  // Persist after session mutations and bump TTL (last activity).
+  useEffect(() => {
+    if (!session || session.key !== persistKey || !session.deck) {
+      return
+    }
+    const storage = getStudySessionStorage()
+    if (!storage) {
+      return
+    }
+    saveStudySession(storage, {
+      sessionKey: persistKey,
+      historyIds: session.deck.history.map((item) => item.id),
+      remainingIds: session.deck.remaining.map((item) => item.id),
+      historyIndex: session.deck.historyIndex,
+      originalCount: session.originalCount ?? session.original.length,
+      flipped,
+      completed: session.completed,
+    })
+  }, [session, flipped, persistKey])
+
+  const deck = session?.key === persistKey ? session.deck : null
   const card = deck ? currentStudyCard(deck) : undefined
-  const originalCount = session?.key === sessionKey ? session.original.length : 0
+  const originalCount =
+    session?.key === persistKey
+      ? (session.originalCount ?? session.original.length)
+      : 0
   // Visit position in session history (1-based). Denominator stays original session size.
   const position = deck && deck.history.length > 0 ? deck.historyIndex + 1 : 0
   const prevEnabled = deck ? canGoPrev(deck) : false
@@ -213,16 +272,44 @@ export function StudyView({ topicId, cards }: { topicId: TopicId; cards: Card[] 
     }
     const nextDeck = shuffleCards(full)
     const state = createStudyDeck(nextDeck)
+    hydratedKeyRef.current = persistKey
     setSession((current) =>
       current
         ? {
             ...current,
+            key: persistKey,
             deck: state,
             original: [...nextDeck],
             completed: false,
+            originalCount: nextDeck.length,
           }
-        : current,
+        : {
+            key: persistKey,
+            deck: state,
+            original: [...nextDeck],
+            completed: false,
+            originalCount: nextDeck.length,
+          },
     )
+    setFlipped(false)
+    setSwipe({ dir: 1, exit: 'next' })
+  }
+
+  function endSession() {
+    const storage = getStudySessionStorage()
+    if (storage) {
+      clearStudySession(storage, persistKey)
+    }
+    const shuffled = shuffleCards(selectStudyCards(baseList, map, { category, mode }))
+    const state = createStudyDeck(shuffled)
+    hydratedKeyRef.current = persistKey
+    setSession({
+      key: persistKey,
+      deck: state,
+      original: [...shuffled],
+      completed: false,
+      originalCount: shuffled.length,
+    })
     setFlipped(false)
     setSwipe({ dir: 1, exit: 'next' })
   }
@@ -241,12 +328,20 @@ export function StudyView({ topicId, cards }: { topicId: TopicId; cards: Card[] 
         burstId={burstId}
         burstKind={burstKind}
         onStartOver={startOver}
+        onEndSession={endSession}
       />
     )
   }
 
   if (!card) {
-    return <EmptyDeck topicId={topicId} category={category} mode={mode} />
+    return (
+      <EmptyDeck
+        topicId={topicId}
+        category={category}
+        mode={mode}
+        onEndSession={endSession}
+      />
+    )
   }
 
   const progressPct = originalCount
@@ -280,12 +375,21 @@ export function StudyView({ topicId, cards }: { topicId: TopicId; cards: Card[] 
               Study session
             </h1>
           </div>
-          <div className="shrink-0 rounded-2xl border border-white/10 bg-slate-900/70 px-3 py-2 text-right">
-            <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Card</p>
-            <p className="text-sm font-semibold text-white">
-              {position}
-              <span className="text-slate-500"> / {originalCount}</span>
-            </p>
+          <div className="flex shrink-0 flex-col items-end gap-2">
+            <div className="rounded-2xl border border-white/10 bg-slate-900/70 px-3 py-2 text-right">
+              <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Card</p>
+              <p className="text-sm font-semibold text-white">
+                {position}
+                <span className="text-slate-500"> / {originalCount}</span>
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={endSession}
+              className="text-xs font-medium text-slate-400 underline-offset-4 hover:text-white hover:underline"
+            >
+              End session
+            </button>
           </div>
         </div>
         <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
@@ -454,6 +558,7 @@ function SessionComplete({
   burstId,
   burstKind,
   onStartOver,
+  onEndSession,
 }: {
   topicId: TopicId
   count: number
@@ -462,6 +567,7 @@ function SessionComplete({
   burstId: number
   burstKind: BurstKind
   onStartOver: () => void
+  onEndSession: () => void
 }) {
   const reduce = useReducedMotion()
   const { getTopic, getCategoryEmoji } = useTaxonomy()
@@ -492,9 +598,10 @@ function SessionComplete({
       <p className="mt-3 max-w-sm text-sm leading-6 text-slate-400">
         You marked all {count} {count === 1 ? 'card' : 'cards'} as known. Start over
         shuffles every card in {category ? 'this category' : 'this topic'} again, not
-        only this session&apos;s pile. Or head back to the dashboard.
+        only this session&apos;s pile. End session clears this saved run (not Mongo
+        progress) and reshuffles the current filters.
       </p>
-      <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:justify-center">
         <motion.button
           type="button"
           onClick={onStartOver}
@@ -505,6 +612,16 @@ function SessionComplete({
         >
           <IconRefresh className="h-4 w-4" />
           Start over
+        </motion.button>
+        <motion.button
+          type="button"
+          onClick={onEndSession}
+          className="inline-flex items-center justify-center gap-2 rounded-full border border-white/15 px-5 py-3 text-sm font-semibold text-white hover:border-accent/60"
+          whileHover={reduce ? undefined : { scale: 1.03 }}
+          whileTap={reduce ? undefined : { scale: 0.97 }}
+          transition={tapSpring}
+        >
+          End session
         </motion.button>
         <Link
           href={topicHref(topicId)}
@@ -522,10 +639,12 @@ function EmptyDeck({
   topicId,
   category,
   mode,
+  onEndSession,
 }: {
   topicId: TopicId
   category: string | null
   mode: string | null
+  onEndSession: () => void
 }) {
   const reduce = useReducedMotion()
 
@@ -549,7 +668,7 @@ function EmptyDeck({
         {mode ? `${MODE_LABELS[mode] ?? mode} ` : ''}
         pile is empty. Shuffle everything, or reset progress from the dashboard.
       </p>
-      <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:justify-center">
         <Link
           href={topicHref(topicId, 'study')}
           className="inline-flex items-center justify-center gap-2 rounded-full bg-accent px-5 py-3 text-sm font-semibold text-accent-fg hover:opacity-90"
@@ -557,6 +676,13 @@ function EmptyDeck({
           <IconShuffle className="h-4 w-4" />
           Shuffle all
         </Link>
+        <button
+          type="button"
+          onClick={onEndSession}
+          className="inline-flex items-center justify-center gap-2 rounded-full border border-white/15 px-5 py-3 text-sm font-semibold text-white hover:border-accent/60"
+        >
+          End session
+        </button>
         <Link
           href={topicHref(topicId)}
           className="inline-flex items-center justify-center gap-2 rounded-full border border-white/15 px-5 py-3 text-sm font-semibold text-white hover:border-accent/60"
