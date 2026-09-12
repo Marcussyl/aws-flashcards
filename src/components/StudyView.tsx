@@ -27,14 +27,28 @@ import {
 } from '@/lib/motion'
 import { topicHref } from '@/lib/paths'
 import { useProgress } from '@/lib/progress'
-import { advanceStudyDeck, selectStudyCards, studySessionHint } from '@/lib/study-deck'
+import {
+  canGoNext,
+  canGoPrev,
+  createStudyDeck,
+  currentStudyCard,
+  goStudyNext,
+  goStudyPrev,
+  markStudyCard,
+  selectStudyCards,
+  studySessionHint,
+  type StudyDeckState,
+} from '@/lib/study-deck'
 import type { Card, TopicId } from '@/data/types'
 import { useTaxonomy } from '@/lib/taxonomy'
 
 type StudySession = {
   key: string
-  deck: Card[] | null
+  /** null while progress-backed session is waiting for map readiness */
+  deck: StudyDeckState | null
   original: Card[]
+  /** Set when the last remaining card is marked known at the live edge. */
+  completed: boolean
 }
 
 const MODE_LABELS: Record<string, string> = {
@@ -53,7 +67,6 @@ export function StudyView({ topicId, cards }: { topicId: TopicId; cards: Card[] 
   const category = params.get('category')
   const mode = params.get('mode')
   const { map, ready, mark } = useProgress()
-  const [index, setIndex] = useState(0)
   const [flipped, setFlipped] = useState(false)
   const [burstId, setBurstId] = useState(0)
   const [burstKind, setBurstKind] = useState<BurstKind>('known')
@@ -82,39 +95,41 @@ export function StudyView({ topicId, cards }: { topicId: TopicId; cards: Card[] 
 
   // Rebuild only when sessionKey changes — never reshuffle mid-session on progress map updates.
   useEffect(() => {
-    const nextDeck =
-      usesProgress && !ready
-        ? null
-        : shuffleCards(selectStudyCards(baseList, map, { category, mode }))
-    setSession({
-      key: sessionKey,
-      deck: nextDeck,
-      original: nextDeck ? [...nextDeck] : [],
-    })
-    setIndex(0)
+    if (usesProgress && !ready) {
+      setSession({
+        key: sessionKey,
+        deck: null,
+        original: [],
+        completed: false,
+      })
+    } else {
+      const shuffled = shuffleCards(selectStudyCards(baseList, map, { category, mode }))
+      setSession({
+        key: sessionKey,
+        deck: createStudyDeck(shuffled),
+        original: [...shuffled],
+        completed: false,
+      })
+    }
     setFlipped(false)
     setSwipe({ dir: 1, exit: 'next' })
     // eslint-disable-next-line react-hooks/exhaustive-deps -- map/baseList intentionally captured at key change only
   }, [sessionKey])
 
   const deck = session?.key === sessionKey ? session.deck : null
-  const card = deck?.[index]
-  const remaining = deck?.length ?? 0
+  const card = deck ? currentStudyCard(deck) : undefined
   const originalCount = session?.key === sessionKey ? session.original.length : 0
-  const position =
-    originalCount <= 0
-      ? 0
-      : remaining <= 0
-        ? originalCount
-        : Math.min(originalCount, originalCount - remaining + index + 1)
-  const total = remaining
+  // Visit position in session history (1-based). Denominator stays original session size.
+  const position = deck && deck.history.length > 0 ? deck.historyIndex + 1 : 0
+  const prevEnabled = deck ? canGoPrev(deck) : false
+  const nextEnabled = deck ? canGoNext(deck) : false
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (document.querySelector('[data-card-expanded], [data-card-edit]')) {
         return
       }
-      if (!deck?.length) {
+      if (!deck || deck.history.length === 0) {
         return
       }
       if (event.key === ' ' || event.key === 'Enter') {
@@ -138,20 +153,36 @@ export function StudyView({ topicId, cards }: { topicId: TopicId; cards: Card[] 
     return () => window.removeEventListener('keydown', onKey)
   })
 
+  function updateDeck(next: StudyDeckState, completed?: boolean) {
+    setSession((current) =>
+      current
+        ? {
+            ...current,
+            deck: next,
+            ...(completed === undefined ? {} : { completed }),
+          }
+        : current,
+    )
+  }
+
   function go(step: number) {
-    if (!total) {
+    if (!deck) {
       return
     }
-    const next = index + step
-    // Stay within the remaining deck — no wrap (avoids 2/9 Previous → 9/9).
-    if (next < 0 || next >= total) {
+    if (step < 0) {
+      if (!canGoPrev(deck)) {
+        return
+      }
+      setSwipe({ dir: -1, exit: 'prev' })
+      updateDeck(goStudyPrev(deck))
+      setFlipped(false)
       return
     }
-    setSwipe({
-      dir: step > 0 ? 1 : -1,
-      exit: step > 0 ? 'next' : 'prev',
-    })
-    setIndex(next)
+    if (!canGoNext(deck)) {
+      return
+    }
+    setSwipe({ dir: 1, exit: 'next' })
+    updateDeck(goStudyNext(deck))
     setFlipped(false)
   }
 
@@ -162,12 +193,15 @@ export function StudyView({ topicId, cards }: { topicId: TopicId; cards: Card[] 
     mark(card.id, status)
     setBurstKind(status)
     setBurstId((value) => value + 1)
-    const next = advanceStudyDeck(deck, index, status)
     setSwipe({ dir: 1, exit: status })
-    setSession((current) =>
-      current ? { ...current, deck: next.deck } : current,
-    )
-    setIndex(next.index)
+    const next = markStudyCard(deck, status)
+    // Complete only after known empties the live queue at the edge — browsing
+    // history with an empty remaining list still shows cards.
+    const finished =
+      status === 'known' &&
+      next.remaining.length === 0 &&
+      next.historyIndex >= next.history.length - 1
+    updateDeck(next, finished)
     setFlipped(false)
   }
 
@@ -178,12 +212,17 @@ export function StudyView({ topicId, cards }: { topicId: TopicId; cards: Card[] 
       return
     }
     const nextDeck = shuffleCards(full)
+    const state = createStudyDeck(nextDeck)
     setSession((current) =>
       current
-        ? { ...current, deck: nextDeck, original: [...nextDeck] }
+        ? {
+            ...current,
+            deck: state,
+            original: [...nextDeck],
+            completed: false,
+          }
         : current,
     )
-    setIndex(0)
     setFlipped(false)
     setSwipe({ dir: 1, exit: 'next' })
   }
@@ -192,11 +231,11 @@ export function StudyView({ topicId, cards }: { topicId: TopicId; cards: Card[] 
     return <StudyLoading topicId={topicId} category={category} mode={mode} />
   }
 
-  if (deck.length === 0 && (session?.original.length ?? 0) > 0) {
+  if (session?.completed && originalCount > 0) {
     return (
       <SessionComplete
         topicId={topicId}
-        count={session?.original.length ?? 0}
+        count={originalCount}
         category={category}
         mode={mode}
         burstId={burstId}
@@ -211,7 +250,7 @@ export function StudyView({ topicId, cards }: { topicId: TopicId; cards: Card[] 
   }
 
   const progressPct = originalCount
-    ? Math.round((position / originalCount) * 100)
+    ? Math.min(100, Math.round((position / originalCount) * 100))
     : 0
   const topicEmoji = getCategoryEmoji(category ?? card.category, topicId)
   const topicLabel = category ?? topic?.name ?? 'All topics'
@@ -261,7 +300,7 @@ export function StudyView({ topicId, cards }: { topicId: TopicId; cards: Card[] 
       <div className="relative min-h-0 min-w-0 w-full flex-1 overflow-x-hidden">
         <AnimatePresence initial={false} custom={swipe.dir}>
           <motion.div
-            key={card.id}
+            key={`${card.id}-${deck.historyIndex}`}
             className="absolute inset-0 min-w-0 max-w-full"
             custom={swipe.dir}
             variants={cardSwipe}
@@ -284,14 +323,18 @@ export function StudyView({ topicId, cards }: { topicId: TopicId; cards: Card[] 
               onFlip={() => setFlipped((value) => !value)}
               onSaved={(next) => {
                 setSession((current) => {
-                  if (!current) {
+                  if (!current?.deck) {
                     return current
                   }
                   const patch = (list: Card[]) =>
                     list.map((item) => (item.id === next.id ? next : item))
                   return {
                     ...current,
-                    deck: current.deck ? patch(current.deck) : current.deck,
+                    deck: {
+                      ...current.deck,
+                      history: patch(current.deck.history),
+                      remaining: patch(current.deck.remaining),
+                    },
                     original: patch(current.original),
                   }
                 })
@@ -299,18 +342,25 @@ export function StudyView({ topicId, cards }: { topicId: TopicId; cards: Card[] 
               onDeleted={(id) => {
                 setFlipped(false)
                 setSession((current) => {
-                  if (!current) {
+                  if (!current?.deck) {
                     return current
                   }
                   const remove = (list: Card[]) => list.filter((item) => item.id !== id)
-                  const deck = current.deck ? remove(current.deck) : current.deck
+                  const history = remove(current.deck.history)
+                  const historyIndex = Math.min(
+                    current.deck.historyIndex,
+                    Math.max(0, history.length - 1),
+                  )
                   return {
                     ...current,
-                    deck,
+                    deck: {
+                      history,
+                      historyIndex,
+                      remaining: remove(current.deck.remaining),
+                    },
                     original: remove(current.original),
                   }
                 })
-                setIndex((value) => Math.max(0, value))
               }}
             />
           </motion.div>
@@ -322,9 +372,9 @@ export function StudyView({ topicId, cards }: { topicId: TopicId; cards: Card[] 
           type="button"
           className="order-3 inline-flex items-center justify-center gap-1.5 rounded-full border border-white/15 px-4 py-3 text-sm hover:border-white/40 disabled:cursor-not-allowed disabled:opacity-40 sm:order-1"
           onClick={() => go(-1)}
-          disabled={index <= 0}
-          whileHover={reduce || index <= 0 ? undefined : { scale: 1.02 }}
-          whileTap={reduce || index <= 0 ? undefined : { scale: 0.96 }}
+          disabled={!prevEnabled}
+          whileHover={reduce || !prevEnabled ? undefined : { scale: 1.02 }}
+          whileTap={reduce || !prevEnabled ? undefined : { scale: 0.96 }}
           transition={tapSpring}
         >
           <IconChevronLeft className="h-4 w-4" />
@@ -356,9 +406,9 @@ export function StudyView({ topicId, cards }: { topicId: TopicId; cards: Card[] 
           type="button"
           className="order-4 inline-flex items-center justify-center gap-1.5 rounded-full border border-white/15 px-4 py-3 text-sm hover:border-white/40 disabled:cursor-not-allowed disabled:opacity-40"
           onClick={() => go(1)}
-          disabled={index >= total - 1}
-          whileHover={reduce || index >= total - 1 ? undefined : { scale: 1.02 }}
-          whileTap={reduce || index >= total - 1 ? undefined : { scale: 0.96 }}
+          disabled={!nextEnabled}
+          whileHover={reduce || !nextEnabled ? undefined : { scale: 1.02 }}
+          whileTap={reduce || !nextEnabled ? undefined : { scale: 0.96 }}
           transition={tapSpring}
         >
           Next
@@ -442,7 +492,7 @@ function SessionComplete({
       <p className="mt-3 max-w-sm text-sm leading-6 text-slate-400">
         You marked all {count} {count === 1 ? 'card' : 'cards'} as known. Start over
         shuffles every card in {category ? 'this category' : 'this topic'} again, not
-        only this session's pile. Or head back to the dashboard.
+        only this session&apos;s pile. Or head back to the dashboard.
       </p>
       <div className="mt-6 flex flex-col gap-3 sm:flex-row">
         <motion.button

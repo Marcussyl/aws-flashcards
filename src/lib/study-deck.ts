@@ -49,35 +49,89 @@ export function studySessionHint(
   return null
 }
 
-export function advanceStudyDeck(
-  deck: Card[],
-  index: number,
-  status: 'learning' | 'known',
-): { deck: Card[]; index: number } {
-  const current = deck[index]
-  if (!current) {
-    return { deck, index }
-  }
+/**
+ * Session navigation state:
+ * - `history` — cards visited this session (including the current card), in visit order
+ * - `historyIndex` — pointer into `history` (Previous / Next within the trail)
+ * - `remaining` — cards not yet pulled onto the live edge of history
+ *
+ * Marking **known** drops the card from `remaining`. Marking **learning** ensures the
+ * card is queued at the **end** of `remaining` so it can appear again after the current
+ * forward path (re-insert if it was removed as known; move-to-end if already queued).
+ */
+export type StudyDeckState = {
+  history: Card[]
+  historyIndex: number
+  remaining: Card[]
+}
 
-  if (status === 'known') {
-    const nextDeck = deck.filter((_, itemIndex) => itemIndex !== index)
-    return {
-      deck: nextDeck,
-      index: nextIndexAfterRemoval(nextDeck.length, index),
-    }
+export function createStudyDeck(deck: Card[]): StudyDeckState {
+  if (deck.length === 0) {
+    return { history: [], historyIndex: 0, remaining: [] }
   }
-
-  const nextDeck = [...deck.slice(0, index), ...deck.slice(index + 1), current]
-  const wasLast = index >= deck.length - 1
   return {
-    deck: nextDeck,
-    index: wasLast ? 0 : index,
+    history: [deck[0]],
+    historyIndex: 0,
+    remaining: deck.slice(1),
   }
 }
 
-function nextIndexAfterRemoval(length: number, index: number) {
-  if (length <= 0) {
-    return 0
-  }
-  return index >= length ? 0 : index
+export function currentStudyCard(state: StudyDeckState): Card | undefined {
+  return state.history[state.historyIndex]
 }
+
+
+export function canGoPrev(state: StudyDeckState): boolean {
+  return state.historyIndex > 0
+}
+
+export function canGoNext(state: StudyDeckState): boolean {
+  return state.historyIndex < state.history.length - 1 || state.remaining.length > 0
+}
+
+export function goStudyPrev(state: StudyDeckState): StudyDeckState {
+  if (!canGoPrev(state)) {
+    return state
+  }
+  return { ...state, historyIndex: state.historyIndex - 1 }
+}
+
+export function goStudyNext(state: StudyDeckState): StudyDeckState {
+  if (state.historyIndex < state.history.length - 1) {
+    return { ...state, historyIndex: state.historyIndex + 1 }
+  }
+  if (state.remaining.length === 0) {
+    return state
+  }
+  const [next, ...rest] = state.remaining
+  return {
+    history: [...state.history, next],
+    historyIndex: state.historyIndex + 1,
+    remaining: rest,
+  }
+}
+
+/**
+ * Apply a judgment to the current history card, then advance like Next.
+ *
+ * - known: remove from remaining (if present)
+ * - learning: remove any existing copy from remaining, then append at end
+ *   (re-queues a card that was dropped when marked known)
+ */
+export function markStudyCard(
+  state: StudyDeckState,
+  status: 'learning' | 'known',
+): StudyDeckState {
+  const current = currentStudyCard(state)
+  if (!current) {
+    return state
+  }
+
+  const withoutCurrent = state.remaining.filter((item) => item.id !== current.id)
+  const remaining =
+    status === 'learning' ? [...withoutCurrent, current] : withoutCurrent
+
+  return goStudyNext({ ...state, remaining })
+}
+
+
