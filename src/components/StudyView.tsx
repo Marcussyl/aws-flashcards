@@ -436,11 +436,10 @@ function StudySessionRunner({
     : 0
   const topicEmoji = getCategoryEmoji(category ?? card.category, topicId)
   const topicLabel = category ?? topic?.name ?? 'All topics'
-  const modeLabel = sessionHint
-    ? MODE_LABELS[sessionHint] ?? sessionHint
-    : mode
-      ? MODE_LABELS[mode] ?? mode
-      : 'Shuffled'
+  // Skip "unseen & learning" / category hints — status pills already cover that.
+  const modeLabel = mode
+    ? MODE_LABELS[mode] ?? mode
+    : null
   const statusCounts = countByStatus(
     map,
     (session?.original ?? []).map((item) => item.id),
@@ -456,10 +455,12 @@ function StudySessionRunner({
                 <span aria-hidden="true">{topicEmoji}</span>
                 <span className="truncate">{topicLabel}</span>
               </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-slate-300">
-                <IconSpark className="h-3.5 w-3.5 text-sky-300" />
-                {modeLabel}
-              </span>
+              {modeLabel ? (
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-slate-300">
+                  <IconSpark className="h-3.5 w-3.5 text-sky-300" />
+                  {modeLabel}
+                </span>
+              ) : null}
               <span className="inline-flex items-center gap-1 rounded-full border border-sky-400/20 bg-sky-400/10 px-2.5 py-1 text-xs font-medium text-sky-200">
                 <span className="tabular-nums">{ready ? statusCounts.learning : '—'}</span>
                 learning
