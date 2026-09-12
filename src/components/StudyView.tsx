@@ -38,7 +38,6 @@ import {
   markStudyCard,
   selectStudyCards,
   studyProgressPosition,
-  studySessionHint,
   type StudyDeckState,
 } from '@/lib/study-deck'
 import { StudySessionPicker } from '@/components/StudySessionPicker'
@@ -120,10 +119,6 @@ function StudySessionRunner({
 
   const usesProgress = Boolean(mode) || Boolean(category)
   const persistKey = studySessionStorageKey(topicId, category, mode)
-  const sessionHint = ready
-    ? studySessionHint(baseList, map, { category, mode })
-    : null
-
   const initialRestoreRef = useRef<ReturnType<typeof rehydrateStudySession> | null | undefined>(
     undefined,
   )
