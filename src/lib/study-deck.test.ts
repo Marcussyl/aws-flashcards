@@ -10,6 +10,7 @@ import {
   isKnown,
   markStudyCard,
   selectStudyCards,
+  studyProgressPosition,
   studySessionHint,
   unknownCards,
 } from '@/lib/study-deck'
@@ -223,3 +224,18 @@ describe('markStudyCard', () => {
     expect(markStudyCard(empty, 'known')).toEqual(empty)
   })
 })
+
+describe('studyProgressPosition', () => {
+  it('caps visit index at original session size', () => {
+    expect(studyProgressPosition(0, 1)).toBe(1)
+    expect(studyProgressPosition(4, 1)).toBe(1)
+    expect(studyProgressPosition(2, 5)).toBe(3)
+    expect(studyProgressPosition(9, 5)).toBe(5)
+  })
+
+  it('returns 0 for empty sessions', () => {
+    expect(studyProgressPosition(0, 0)).toBe(0)
+    expect(studyProgressPosition(-1, 3)).toBe(0)
+  })
+})
+

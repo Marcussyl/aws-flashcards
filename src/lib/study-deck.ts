@@ -134,4 +134,15 @@ export function markStudyCard(
   return goStudyNext({ ...state, remaining })
 }
 
+/**
+ * Display position for the session progress pill.
+ * History grows when Still learning re-queues a card, so cap at the original
+ * session size to avoid counters like 5/1.
+ */
+export function studyProgressPosition(historyIndex: number, originalCount: number) {
+  if (originalCount <= 0 || historyIndex < 0) {
+    return 0
+  }
+  return Math.min(historyIndex + 1, originalCount)
+}
 

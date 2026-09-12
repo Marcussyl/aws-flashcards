@@ -37,6 +37,7 @@ import {
   goStudyPrev,
   markStudyCard,
   selectStudyCards,
+  studyProgressPosition,
   studySessionHint,
   type StudyDeckState,
 } from '@/lib/study-deck'
@@ -180,8 +181,12 @@ export function StudyView({ topicId, cards }: { topicId: TopicId; cards: Card[] 
     session?.key === persistKey
       ? (session.originalCount ?? session.original.length)
       : 0
-  // Visit position in session history (1-based). Denominator stays original session size.
-  const position = deck && deck.history.length > 0 ? deck.historyIndex + 1 : 0
+  // Visit position in session history (1-based), capped so Still learning re-queues
+  // cannot push the counter past the original session size (e.g. 5/1).
+  const position =
+    deck && deck.history.length > 0
+      ? studyProgressPosition(deck.historyIndex, originalCount)
+      : 0
   const prevEnabled = deck ? canGoPrev(deck) : false
   const nextEnabled = deck ? canGoNext(deck) : false
 
