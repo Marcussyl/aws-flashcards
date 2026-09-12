@@ -389,9 +389,9 @@ export function StudyView({ topicId, cards }: { topicId: TopicId; cards: Card[] 
               <IconX className="h-3.5 w-3.5" />
               End session
             </motion.button>
-            <div className="rounded-2xl border border-white/10 bg-slate-900/70 px-3 py-2 text-right">
-              <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Card</p>
-              <p className="text-sm font-semibold text-white">
+            <div className="inline-flex flex-col items-center justify-center rounded-full border border-white/10 bg-slate-900/70 px-4 py-2 text-center">
+              <p className="text-[10px] uppercase tracking-[0.16em] text-slate-500">Card</p>
+              <p className="text-sm font-semibold leading-tight text-white">
                 {position}
                 <span className="text-slate-500"> / {originalCount}</span>
               </p>
