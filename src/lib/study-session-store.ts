@@ -47,6 +47,8 @@ export type StudySessionSummary = {
   historyIndex: number
   originalCount: number
   remainingCount: number
+  /** Unique card ids in this session (history + remaining). */
+  cardIds: string[]
   completed: boolean
   createdAt: number | null
   updatedAt: number
@@ -143,6 +145,9 @@ export function listStudySessions(
         ? snapshot.createdAt
         : null
 
+    const cardIds = Array.from(
+      new Set([...snapshot.historyIds, ...snapshot.remainingIds]),
+    )
     summaries.push({
       sessionKey,
       topicId: parts.topicId,
@@ -151,6 +156,7 @@ export function listStudySessions(
       historyIndex: snapshot.historyIndex,
       originalCount,
       remainingCount: snapshot.remainingIds.length,
+      cardIds,
       completed: Boolean(snapshot.completed),
       createdAt,
       updatedAt,
