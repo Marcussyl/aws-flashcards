@@ -360,7 +360,7 @@ export function StudySessionPicker({
                       </div>
                     </div>
 
-                    <div className="mt-3 flex flex-col gap-2">
+                    <div className="flex flex-col gap-2">
                       <div className="flex items-center justify-between gap-3 text-xs">
                         <span className="text-white">
                           {position} / {session.originalCount}
