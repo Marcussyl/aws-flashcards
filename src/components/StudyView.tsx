@@ -83,7 +83,7 @@ export function StudyView({ topicId, cards }: { topicId: TopicId; cards: Card[] 
   const mode = params.get('mode')
   // Bare /study with no target → session picker (resume or start new).
   if (!category && !mode) {
-    return <StudySessionPicker topicId={topicId} />
+    return <StudySessionPicker topicId={topicId} cards={cards} />
   }
   return (
     <StudySessionRunner topicId={topicId} cards={cards} category={category} mode={mode} />

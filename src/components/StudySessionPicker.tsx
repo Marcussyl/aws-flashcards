@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { motion, useReducedMotion } from 'motion/react'
 import {
@@ -14,6 +14,7 @@ import {
 } from '@/components/icons'
 import { fadeUp, stagger } from '@/lib/motion'
 import { topicHref } from '@/lib/paths'
+import { countByStatus, useProgress } from '@/lib/progress'
 import {
   clearStudySession,
   getStudySessionStorage,
@@ -21,7 +22,7 @@ import {
   type StudySessionSummary,
 } from '@/lib/study-session-store'
 import { studyProgressPosition } from '@/lib/study-deck'
-import type { TopicId } from '@/data/types'
+import type { Card, TopicId } from '@/data/types'
 import { useTaxonomy } from '@/lib/taxonomy'
 
 const MODE_LABELS: Record<string, string> = {
@@ -44,6 +45,26 @@ function formatWhen(ms: number) {
   }
 }
 
+function formatRelative(ms: number, now = Date.now()) {
+  const delta = Math.max(0, now - ms)
+  const mins = Math.round(delta / 60_000)
+  if (mins < 1) return 'just now'
+  if (mins < 60) return `${mins}m ago`
+  const hours = Math.round(mins / 60)
+  if (hours < 48) return `${hours}h ago`
+  const days = Math.round(hours / 24)
+  return `${days}d ago`
+}
+
+function formatExpiresIn(expiresAt: number, now = Date.now()) {
+  const delta = Math.max(0, expiresAt - now)
+  const totalMins = Math.floor(delta / 60_000)
+  const hours = Math.floor(totalMins / 60)
+  const mins = totalMins % 60
+  if (hours <= 0) return `${mins}m`
+  return `${hours}h ${mins}m`
+}
+
 function sessionTitle(
   summary: StudySessionSummary,
   getCategoryEmoji: (name: string, topic?: TopicId) => string,
@@ -53,6 +74,9 @@ function sessionTitle(
       emoji: getCategoryEmoji(summary.category, summary.topicId as TopicId),
       label: summary.category,
     }
+  }
+  if (summary.mode === 'due') {
+    return { emoji: '⚡', label: 'Remaining due' }
   }
   if (summary.mode) {
     return {
@@ -73,13 +97,32 @@ function modeChip(summary: StudySessionSummary) {
   return 'Shuffled'
 }
 
-export function StudySessionPicker({ topicId }: { topicId: TopicId }) {
+export function StudySessionPicker({
+  topicId,
+  cards,
+}: {
+  topicId: TopicId
+  cards: Card[]
+}) {
   const reduce = useReducedMotion()
-  const { getCategoryEmoji } = useTaxonomy()
+  const { getCategoryEmoji, getCategoriesForTopic } = useTaxonomy()
+  const { map, ready } = useProgress()
   const [sessions, setSessions] = useState<StudySessionSummary[] | null>(null)
+  const [now, setNow] = useState(() => Date.now())
+
+  const categories = getCategoriesForTopic(topicId)
+  const totals = useMemo(
+    () => countByStatus(
+      map,
+      cards.map((card) => card.id),
+    ),
+    [map, cards],
+  )
+  const remainingCount = totals.learning + totals.unseen
 
   function refresh() {
     const storage = getStudySessionStorage()
+    setNow(Date.now())
     if (!storage) {
       setSessions([])
       return
@@ -92,6 +135,7 @@ export function StudySessionPicker({ topicId }: { topicId: TopicId }) {
   }, [topicId])
 
   const items = sessions ?? []
+  const inProgress = items.filter((item) => !item.completed).length
 
   function discard(sessionKey: string) {
     const storage = getStudySessionStorage()
@@ -103,54 +147,103 @@ export function StudySessionPicker({ topicId }: { topicId: TopicId }) {
 
   return (
     <motion.div
-      className="mx-auto flex w-full max-w-3xl flex-col gap-6"
+      className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-1 pb-8 sm:px-0"
       variants={reduce ? undefined : stagger}
       initial={false}
       animate="show"
     >
-      <motion.section variants={reduce ? undefined : fadeUp} className="space-y-2">
-        <h1 className="flex items-center gap-2 text-2xl font-semibold sm:text-3xl">
-          <IconBook className="h-6 w-6 text-accent" />
-          Study sessions
-        </h1>
-        <p className="text-sm text-slate-400 sm:text-base">
-          Pick up a saved run, or start a new one. Sessions stick around for 24 hours of
-          inactivity.
+      <motion.header variants={reduce ? undefined : fadeUp} className="space-y-2">
+        <div className="flex items-center gap-3">
+          <div className="flex size-8 items-center justify-center rounded-lg bg-accent/15 shadow-[0_0_16px_rgba(251,191,36,0.2)]">
+            <IconBook className="h-5 w-5 text-accent" />
+          </div>
+          <h1 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+            Study sessions
+          </h1>
+        </div>
+        <p className="max-w-2xl pl-11 text-sm leading-6 text-slate-400 sm:text-base">
+          Pick up a saved run, or start a new one. Sessions expire after 24h idle.
         </p>
-      </motion.section>
+      </motion.header>
 
       <motion.section
         variants={reduce ? undefined : fadeUp}
-        className="grid gap-2 sm:grid-cols-3"
+        className="grid grid-cols-1 gap-4 md:grid-cols-3"
       >
         <Link
           href={topicHref(topicId, 'study', { mode: 'due' })}
-          className="rounded-2xl border border-accent/30 bg-accent/10 px-4 py-3 text-center text-sm font-semibold text-accent hover:bg-accent/20"
+          className="group relative flex flex-col justify-between rounded-2xl bg-gradient-to-b from-accent/20 to-accent/5 p-5 shadow-[0_12px_32px_-12px_rgba(251,191,36,0.2)] transition hover:shadow-[0_16px_36px_-8px_rgba(251,191,36,0.28)]"
         >
-          Study remaining
+          <div>
+            <div className="mb-4 flex size-10 items-center justify-center rounded-xl bg-accent/20 text-accent transition group-hover:scale-105">
+              <IconSpark className="h-5 w-5" />
+            </div>
+            <p className="text-sm font-semibold text-accent">Study remaining</p>
+            <p className="mt-1 text-xs leading-5 text-slate-400">
+              {ready
+                ? `${remainingCount} due cards across ${categories.length} categories`
+                : 'Loading due counts…'}
+            </p>
+          </div>
+          <span className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-accent transition group-hover:translate-x-0.5">
+            Start run
+            <IconChevronRight className="h-4 w-4" />
+          </span>
         </Link>
+
         <Link
           href={topicHref(topicId, 'study', { mode: 'shuffle' })}
-          className="inline-flex items-center justify-center gap-1.5 rounded-2xl border border-white/15 bg-slate-900/70 px-4 py-3 text-sm font-semibold text-white hover:border-white/30"
+          className="group flex flex-col justify-between rounded-2xl border border-white/10 bg-slate-900/70 p-5 transition hover:border-white/20 hover:bg-slate-900"
         >
-          <IconShuffle className="h-4 w-4" />
-          Shuffle all
+          <div>
+            <div className="mb-4 flex size-10 items-center justify-center rounded-xl bg-white/5 text-slate-300 transition group-hover:text-white">
+              <IconShuffle className="h-5 w-5" />
+            </div>
+            <p className="text-sm font-semibold text-white">Shuffle all</p>
+            <p className="mt-1 text-xs leading-5 text-slate-400">
+              Randomize full deck of {cards.length} cards
+            </p>
+          </div>
+          <span className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-white">
+            Shuffle &amp; study
+            <IconChevronRight className="h-4 w-4" />
+          </span>
         </Link>
+
         <Link
           href={topicHref(topicId)}
-          className="rounded-2xl border border-white/15 bg-slate-900/70 px-4 py-3 text-center text-sm font-semibold text-white hover:border-white/30"
+          className="group flex flex-col justify-between rounded-2xl border border-white/10 bg-slate-900/70 p-5 transition hover:border-white/20 hover:bg-slate-900"
         >
-          Pick a category
+          <div>
+            <div className="mb-4 flex size-10 items-center justify-center rounded-xl bg-white/5 text-slate-300 transition group-hover:text-white">
+              <IconInbox className="h-5 w-5" />
+            </div>
+            <p className="text-sm font-semibold text-white">Pick a category</p>
+            <p className="mt-1 text-xs leading-5 text-slate-400">
+              Drill a module (Databases, IAM, Security…)
+            </p>
+          </div>
+          <span className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-white">
+            Choose pack
+            <IconChevronRight className="h-4 w-4" />
+          </span>
         </Link>
       </motion.section>
 
-      <motion.section variants={reduce ? undefined : fadeUp} className="space-y-3">
+      <motion.section variants={reduce ? undefined : fadeUp} className="space-y-4">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold">Saved sessions</h2>
+          <div className="flex items-center gap-2.5">
+            <h2 className="text-base font-semibold text-white">Saved sessions</h2>
+            {sessions && items.length > 0 ? (
+              <span className="rounded-full bg-white/5 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-400">
+                {inProgress} in-progress
+              </span>
+            ) : null}
+          </div>
           <button
             type="button"
             onClick={refresh}
-            className="inline-flex items-center gap-1 text-xs text-slate-400 hover:text-accent"
+            className="inline-flex items-center gap-1.5 text-xs text-slate-400 transition hover:text-accent"
           >
             <IconRefresh className="h-3.5 w-3.5" />
             Refresh
@@ -170,7 +263,7 @@ export function StudySessionPicker({ topicId }: { topicId: TopicId }) {
             </p>
           </div>
         ) : (
-          <ul className="space-y-3">
+          <ul className="flex flex-col gap-4">
             {items.map((session) => {
               const title = sessionTitle(session, getCategoryEmoji)
               const chip = modeChip(session)
@@ -179,94 +272,92 @@ export function StudySessionPicker({ topicId }: { topicId: TopicId }) {
                 session.originalCount,
               )
               const pct = session.originalCount
-                ? Math.min(
-                    100,
-                    Math.round((position / session.originalCount) * 100),
-                  )
+                ? Math.min(100, Math.round((position / session.originalCount) * 100))
                 : 0
               const href = topicHref(topicId, 'study', {
                 category: session.category,
                 mode: session.mode ?? (session.category ? null : 'shuffle'),
               })
-              const showCreated =
-                session.createdAt != null &&
-                Math.abs(session.createdAt - session.updatedAt) > 60_000
+              const chipClass =
+                session.mode === 'due'
+                  ? 'border-accent/20 bg-accent/10 text-accent'
+                  : 'border-sky-400/20 bg-sky-400/10 text-sky-200'
 
               return (
                 <li key={session.sessionKey}>
-                  <div className="group relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-slate-900/90 to-slate-950/90 p-4 shadow-sm transition hover:border-accent/35 hover:shadow-[0_0_0_1px_rgba(251,191,36,0.12)]">
-                    <button
-                      type="button"
-                      aria-label={`Discard session ${title.label}`}
-                      onClick={() => discard(session.sessionKey)}
-                      className="absolute right-3 top-3 z-10 inline-flex size-8 items-center justify-center rounded-full border border-white/10 bg-slate-950/70 text-slate-400 opacity-80 hover:border-rose-400/40 hover:bg-rose-500/10 hover:text-rose-100 group-hover:opacity-100"
-                    >
-                      <IconX className="h-3.5 w-3.5" />
-                    </button>
-
-                    <Link href={href} className="block pr-10">
-                      <div className="flex items-start gap-3">
-                        <div className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-xl">
+                  <article className="group relative rounded-2xl border border-white/10 bg-slate-900/70 p-5 shadow-[0_12px_28px_rgba(0,0,0,0.25)] transition hover:border-accent/25 hover:bg-slate-900 hover:shadow-[0_16px_36px_rgba(251,191,36,0.06)] sm:p-6">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex min-w-0 items-center gap-3.5">
+                        <div className="flex size-12 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-2xl shadow-inner">
                           <span aria-hidden="true">{title.emoji}</span>
                         </div>
-                        <div className="min-w-0 flex-1">
+                        <div className="min-w-0">
                           <div className="flex flex-wrap items-center gap-2">
                             <h3 className="truncate text-base font-semibold text-white">
                               {title.label}
                             </h3>
-                            <span className="inline-flex items-center gap-1 rounded-full border border-sky-400/20 bg-sky-400/10 px-2 py-0.5 text-[11px] font-medium text-sky-200">
+                            <span
+                              className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.06em] ${chipClass}`}
+                            >
                               <IconSpark className="h-3 w-3" />
                               {chip}
                             </span>
                             {session.completed ? (
-                              <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-medium text-emerald-200">
+                              <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-emerald-200">
                                 Completed
                               </span>
                             ) : null}
                           </div>
-                          <p className="mt-1 text-xs text-slate-500">
-                            Active {formatWhen(session.updatedAt)}
-                            {showCreated
-                              ? ` · Created ${formatWhen(session.createdAt!)}`
+                          <p className="mt-1 truncate text-[11px] text-slate-500">
+                            Active {formatRelative(session.updatedAt, now)} ·{' '}
+                            {formatWhen(session.updatedAt)}
+                            {session.createdAt
+                              ? ` · Created ${formatWhen(session.createdAt)}`
                               : null}
                           </p>
                         </div>
                       </div>
+                      <button
+                        type="button"
+                        aria-label={`Discard session ${title.label}`}
+                        onClick={() => discard(session.sessionKey)}
+                        className="inline-flex size-8 shrink-0 items-center justify-center rounded-full text-slate-400 transition hover:bg-rose-500/15 hover:text-rose-200"
+                      >
+                        <IconX className="h-4 w-4" />
+                      </button>
+                    </div>
 
-                      <div className="mt-4">
-                        <div className="mb-1.5 flex items-baseline justify-between gap-3">
-                          <p className="text-xs text-slate-400">
-                            <span className="font-semibold text-white">
-                              {position}
-                            </span>
-                            <span className="text-slate-500">
-                              {' '}
-                              / {session.originalCount}
-                            </span>
-                            <span className="ml-2 text-slate-500">
-                              · {session.remainingCount} left
-                            </span>
-                          </p>
-                          <span className="text-[11px] font-medium text-slate-500">
-                            {pct}%
+                    <div className="mt-5 flex flex-col gap-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-white">
+                          {position} / {session.originalCount}{' '}
+                          <span className="text-slate-500">
+                            · {session.remainingCount} left
                           </span>
-                        </div>
-                        <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
-                          <div
-                            className="h-full rounded-full bg-gradient-to-r from-accent to-sky-400"
-                            style={{ width: `${pct}%` }}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="mt-4 flex items-center justify-between gap-3">
-                        <span className="inline-flex items-center gap-1 text-sm font-semibold text-accent">
-                          {session.completed ? 'Review again' : 'Continue'}
-                          <IconChevronRight className="h-4 w-4" />
                         </span>
+                        <span className="font-medium text-accent">{pct}%</span>
                       </div>
-                    </Link>
-                  </div>
+                      <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-accent to-sky-400"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="mt-4 flex items-center justify-between gap-3 pt-1">
+                      <p className="inline-flex items-center gap-1.5 text-[11px] text-slate-500">
+                        Expires in {formatExpiresIn(session.expiresAt, now)}
+                      </p>
+                      <Link
+                        href={href}
+                        className="inline-flex items-center gap-1 text-sm font-semibold text-accent transition group-hover:translate-x-0.5"
+                      >
+                        {session.completed ? 'Review again' : 'Continue'}
+                        <IconChevronRight className="h-4 w-4" />
+                      </Link>
+                    </div>
+                  </article>
                 </li>
               )
             })}
