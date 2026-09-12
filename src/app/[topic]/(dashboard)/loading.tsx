@@ -1,3 +1,4 @@
+// Scopes to `/[topic]` (dashboard) only — not study/browse siblings.
 export default function TopicDashboardLoading() {
   return (
     <div className="space-y-10" aria-busy="true" aria-label="Loading topic dashboard">
