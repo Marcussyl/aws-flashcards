@@ -350,9 +350,9 @@ export function StudyView({ topicId, cards }: { topicId: TopicId; cards: Card[] 
   return (
     <div className="mx-auto flex h-full min-h-0 min-w-0 w-full max-w-3xl flex-1 flex-col gap-3 overflow-x-hidden sm:gap-4">
       <div className="shrink-0 space-y-3">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-1.5 rounded-full border border-accent/20 bg-accent/10 px-2.5 py-1 text-xs font-medium text-accent">
                 <span aria-hidden="true">{topicEmoji}</span>
                 <span className="truncate">{topicLabel}</span>
@@ -362,16 +362,10 @@ export function StudyView({ topicId, cards }: { topicId: TopicId; cards: Card[] 
                 {modeLabel}
               </span>
             </div>
-            <h1 className="mt-2 flex items-center gap-2 text-xl font-semibold sm:text-2xl">
-              <IconBook className="h-5 w-5 text-accent" />
-              Study session
-            </h1>
-          </div>
-          <div className="flex shrink-0 items-start gap-2">
             <motion.button
               type="button"
               onClick={endSession}
-              className="inline-flex items-center justify-center gap-1.5 rounded-full border border-white/15 bg-slate-900/70 px-3 py-2 text-xs font-semibold text-slate-200 hover:border-rose-400/40 hover:bg-rose-500/10 hover:text-rose-100"
+              className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-full border border-white/15 bg-slate-900/70 px-3 py-2 text-xs font-semibold text-slate-200 hover:border-rose-400/40 hover:bg-rose-500/10 hover:text-rose-100"
               whileHover={reduce ? undefined : { scale: 1.03 }}
               whileTap={reduce ? undefined : { scale: 0.97 }}
               transition={tapSpring}
@@ -380,7 +374,13 @@ export function StudyView({ topicId, cards }: { topicId: TopicId; cards: Card[] 
               <IconX className="h-3.5 w-3.5" />
               End session
             </motion.button>
-            <div className="inline-flex items-center justify-center rounded-full border border-white/10 bg-slate-900/70 px-4 py-2 text-sm font-semibold text-white">
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <h1 className="flex min-w-0 items-center gap-2 text-xl font-semibold sm:text-2xl">
+              <IconBook className="h-5 w-5 shrink-0 text-accent" />
+              Study session
+            </h1>
+            <div className="inline-flex shrink-0 items-center justify-center rounded-full border border-white/10 bg-slate-900/70 px-4 py-2 text-sm font-semibold text-white">
               {position}
               <span className="text-slate-500"> / {originalCount}</span>
             </div>
