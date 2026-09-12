@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  ensureBlankLineBeforeGfmTables,
   nestLooseOrderedListContent,
   normalizeMarkdown,
   normalizeUnicodeBullets,
@@ -64,5 +65,87 @@ describe('normalizeMarkdown', () => {
   it('applies unicode + nesting', () => {
     const out = normalizeMarkdown('1. A\n• b')
     expect(out).toBe('1. A\n   - b')
+  })
+})
+
+
+describe('ensureBlankLineBeforeGfmTables', () => {
+  it('inserts a blank line before a table that follows a list', () => {
+    const input = [
+      '- Unlimited Mode: can continue to burst for a fee.',
+      'When to Use (and When to Avoid) Burstable Instances',
+      '| Workload Type | Recommended? | Why? |',
+      '| --- | --- | --- |',
+      '| Development/Test Environments | Yes | Often idle. |',
+    ].join('\n')
+
+    const out = ensureBlankLineBeforeGfmTables(input)
+    expect(out).toContain(
+      'When to Use (and When to Avoid) Burstable Instances\n\n| Workload Type | Recommended? | Why? |',
+    )
+  })
+
+  it('does not double-insert when a blank line already exists', () => {
+    const input = [
+      '- item',
+      '',
+      '| A | B |',
+      '| --- | --- |',
+      '| 1 | 2 |',
+    ].join('\n')
+    expect(ensureBlankLineBeforeGfmTables(input)).toBe(input)
+  })
+
+  it('leaves fenced code tables alone', () => {
+    const input = ['```', '| A | B |', '| --- | --- |', '```'].join('\n')
+    expect(ensureBlankLineBeforeGfmTables(input)).toBe(input)
+  })
+})
+
+describe('normalizeMarkdown table + list', () => {
+  it('makes list-adjacent tables parseable without nesting pipe rows', () => {
+    const input = [
+      '- Unlimited Mode: fee.',
+      'When to Use',
+      '| A | B |',
+      '| --- | --- |',
+      '| 1 | 2 |',
+    ].join('\n')
+    const out = normalizeMarkdown(input)
+    expect(out).toContain('When to Use\n\n| A | B |')
+    expect(out).not.toContain('   | A | B |')
+  })
+})
+
+describe('normalizeMarkdown unlocks GFM tables after lists', () => {
+  it('parses as a table node after normalize', async () => {
+    const { fromMarkdown } = await import('mdast-util-from-markdown')
+    const { gfmTable } = await import('micromark-extension-gfm-table')
+    const { gfmTableFromMarkdown } = await import('mdast-util-gfm-table')
+
+    const broken = [
+      '- Unlimited Mode: can continue to burst for a fee.',
+      'When to Use (and When to Avoid) Burstable Instances',
+      '| Workload Type | Recommended? | Why? |',
+      '| --- | --- | --- |',
+      '| Development/Test Environments | Yes | Often idle. |',
+    ].join('\n')
+
+    const hasTable = (md: string) => {
+      const tree = fromMarkdown(md, {
+        extensions: [gfmTable()],
+        mdastExtensions: [gfmTableFromMarkdown()],
+      })
+      let found = false
+      const walk = (n: { type?: string; children?: unknown[] }) => {
+        if (n.type === 'table') found = true
+        for (const c of n.children || []) walk(c as { type?: string; children?: unknown[] })
+      }
+      walk(tree)
+      return found
+    }
+
+    expect(hasTable(broken)).toBe(false)
+    expect(hasTable(normalizeMarkdown(broken))).toBe(true)
   })
 })

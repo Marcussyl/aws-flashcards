@@ -6,12 +6,60 @@ const ORDERED_ITEM = /^(\d+)\.\s+\S/
 const ROOT_BULLET = /^([-*])\s+/
 const ATX_HEADING = /^#{1,6}\s/
 const FENCE = /^```/
+/** Pipe table row: | cells | */
+const TABLE_ROW = /^\|(.+)\|\s*$/
+/** GFM separator row under a header: | --- | --- | */
+const TABLE_SEPARATOR = /^\|?\s*:?-{3,}\s*(\|\s*:?-{3,}\s*)+\|?\s*$/
 
 /**
  * Notes sometimes use a unicode bullet instead of markdown list syntax.
  */
 export function normalizeUnicodeBullets(content: string) {
   return content.replace(/^[ \t]*•[ \t]+/gm, '- ')
+}
+
+function isGfmTableStart(lines: string[], index: number) {
+  const line = lines[index]
+  const next = lines[index + 1]
+  if (!next) {
+    return false
+  }
+  if (!TABLE_ROW.test(line) || TABLE_SEPARATOR.test(line.trim())) {
+    return false
+  }
+  return TABLE_SEPARATOR.test(next.trim())
+}
+
+/**
+ * GFM tables need a blank line before the header when they follow a list or
+ * paragraph; otherwise remark-gfm treats the pipes as lazy list/paragraph text
+ * (study shows a smashed "| --- |" blob; TipTap still shows an HTML table).
+ */
+export function ensureBlankLineBeforeGfmTables(content: string) {
+  const lines = content.split('\n')
+  const out: string[] = []
+  let inFence = false
+
+  for (let i = 0; i < lines.length; i += 1) {
+    const line = lines[i]
+
+    if (FENCE.test(line.trimStart())) {
+      inFence = !inFence
+      out.push(line)
+      continue
+    }
+
+    if (!inFence && isGfmTableStart(lines, i)) {
+      const prev = out.length > 0 ? out[out.length - 1] : ''
+      if (prev.trim() !== '') {
+        out.push('')
+      }
+    }
+
+    out.push(line)
+  }
+
+  return out.join('\n')
 }
 
 /**
@@ -66,6 +114,9 @@ export function nestLooseOrderedListContent(content: string) {
       if (ATX_HEADING.test(next)) {
         break
       }
+      if (isGfmTableStart(lines, i)) {
+        break
+      }
       if (next.startsWith('>')) {
         break
       }
@@ -84,7 +135,7 @@ export function nestLooseOrderedListContent(content: string) {
         i += 1
         continue
       }
-      // Root bullet or paragraph → nest under the list item (2 spaces + content).
+      // Root bullet or paragraph → nest under the list item.
       // Use 3 spaces so "- " / "* " stay list markers after indent (CommonMark).
       if (ROOT_BULLET.test(next)) {
         out.push(`   ${next}`)
@@ -100,5 +151,7 @@ export function nestLooseOrderedListContent(content: string) {
 }
 
 export function normalizeMarkdown(content: string) {
-  return nestLooseOrderedListContent(normalizeUnicodeBullets(content))
+  return nestLooseOrderedListContent(
+    ensureBlankLineBeforeGfmTables(normalizeUnicodeBullets(content)),
+  )
 }
