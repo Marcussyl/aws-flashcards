@@ -13,6 +13,8 @@ export type StudySessionStorage = {
   getItem(key: string): string | null
   setItem(key: string, value: string): void
   removeItem(key: string): void
+  readonly length?: number
+  key?(index: number): string | null
 }
 
 export type PersistedStudySession = {
@@ -25,6 +27,32 @@ export type PersistedStudySession = {
   originalCount?: number
   flipped?: boolean
   completed?: boolean
+  /** First time this session key was saved (ms). Older snapshots may omit it. */
+  createdAt?: number
+  /** Last activity save (ms). Older snapshots may omit it. */
+  updatedAt?: number
+}
+
+export type StudySessionKeyParts = {
+  topicId: string
+  category: string | null
+  mode: string | null
+}
+
+export type StudySessionSummary = {
+  sessionKey: string
+  topicId: string
+  category: string | null
+  mode: string | null
+  historyIndex: number
+  originalCount: number
+  remainingCount: number
+  /** Unique card ids in this session (history + remaining). */
+  cardIds: string[]
+  completed: boolean
+  createdAt: number | null
+  updatedAt: number
+  expiresAt: number
 }
 
 export type RehydratedStudySession = {
@@ -47,6 +75,97 @@ export function studySessionStorageKey(
 /** localStorage key for a logical session identity. */
 export function studySessionLocalStorageKey(sessionKey: string): string {
   return `${STORAGE_PREFIX}${sessionKey}`
+}
+
+/** Inverse of `studySessionStorageKey` (`topic|category|mode`). */
+export function parseStudySessionStorageKey(sessionKey: string): StudySessionKeyParts | null {
+  const parts = sessionKey.split('|')
+  if (parts.length !== 3 || !parts[0]) {
+    return null
+  }
+  const [topicId, category, mode] = parts
+  return {
+    topicId,
+    category: category || null,
+    mode: mode || null,
+  }
+}
+
+function storageKeys(storage: StudySessionStorage): string[] {
+  const keys: string[] = []
+  const length = storage.length
+  if (typeof length === 'number' && typeof storage.key === 'function') {
+    for (let i = 0; i < length; i += 1) {
+      const key = storage.key(i)
+      if (key) {
+        keys.push(key)
+      }
+    }
+    return keys
+  }
+  return keys
+}
+
+/**
+ * List non-expired study sessions for a topic (or all topics).
+ * Sorted by most recently updated first.
+ */
+export function listStudySessions(
+  storage: StudySessionStorage,
+  options: { topicId?: string; now?: number } = {},
+): StudySessionSummary[] {
+  const now = options.now ?? Date.now()
+  const summaries: StudySessionSummary[] = []
+
+  for (const storageKey of storageKeys(storage)) {
+    if (!storageKey.startsWith(STORAGE_PREFIX)) {
+      continue
+    }
+    const sessionKey = storageKey.slice(STORAGE_PREFIX.length)
+    const parts = parseStudySessionStorageKey(sessionKey)
+    if (!parts) {
+      continue
+    }
+    if (options.topicId && parts.topicId !== options.topicId) {
+      continue
+    }
+    const snapshot = loadStudySession(storage, sessionKey, now)
+    if (!snapshot) {
+      continue
+    }
+    const originalCount =
+      snapshot.originalCount ??
+      new Set([...snapshot.historyIds, ...snapshot.remainingIds]).size
+    const updatedAt =
+      typeof snapshot.updatedAt === 'number'
+        ? snapshot.updatedAt
+        : snapshot.expiresAt - STUDY_SESSION_TTL_MS
+    const createdAt =
+      typeof snapshot.createdAt === 'number'
+        ? snapshot.createdAt
+        : null
+
+    const cardIds = Array.from(
+      new Set([...snapshot.historyIds, ...snapshot.remainingIds]),
+    )
+    summaries.push({
+      sessionKey,
+      topicId: parts.topicId,
+      category: parts.category,
+      mode: parts.mode,
+      historyIndex: snapshot.historyIndex,
+      originalCount,
+      remainingCount: snapshot.remainingIds.length,
+      cardIds,
+      completed: Boolean(snapshot.completed),
+      createdAt,
+      updatedAt,
+      expiresAt: snapshot.expiresAt,
+    })
+  }
+
+  summaries.sort((a, b) => b.updatedAt - a.updatedAt)
+  return summaries
 }
 
 export function isStudySessionExpired(
@@ -109,6 +228,23 @@ export function saveStudySession(
   now = Date.now(),
   ttlMs = STUDY_SESSION_TTL_MS,
 ): PersistedStudySession {
+  let createdAt = now
+  try {
+    const raw = storage.getItem(studySessionLocalStorageKey(input.sessionKey))
+    if (raw) {
+      const prev: unknown = JSON.parse(raw)
+      if (
+        prev &&
+        typeof prev === 'object' &&
+        typeof (prev as PersistedStudySession).createdAt === 'number'
+      ) {
+        createdAt = (prev as PersistedStudySession).createdAt as number
+      }
+    }
+  } catch {
+    // ignore — treat as new session
+  }
+
   const snapshot: PersistedStudySession = {
     version: STUDY_SESSION_VERSION,
     expiresAt: now + ttlMs,
@@ -119,6 +255,8 @@ export function saveStudySession(
     originalCount: input.originalCount,
     flipped: input.flipped,
     completed: input.completed,
+    createdAt,
+    updatedAt: now,
   }
   try {
     storage.setItem(studySessionLocalStorageKey(input.sessionKey), JSON.stringify(snapshot))

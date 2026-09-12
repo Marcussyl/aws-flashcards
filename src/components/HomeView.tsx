@@ -78,7 +78,7 @@ export function HomeView({
             Study remaining
           </MotionLink>
           <MotionLink
-            href={topicHref(topicId, 'study')}
+            href={topicHref(topicId, 'study', { mode: 'shuffle' })}
             className="rounded-full border border-white/15 px-5 py-3 text-center text-sm font-semibold text-white hover:border-accent/60"
             whileHover={reduce ? undefined : { scale: 1.03 }}
             whileTap={reduce ? undefined : { scale: 0.97 }}

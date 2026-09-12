@@ -5,7 +5,9 @@ import {
   STUDY_SESSION_VERSION,
   clearStudySession,
   isStudySessionExpired,
+  listStudySessions,
   loadStudySession,
+  parseStudySessionStorageKey,
   rehydrateStudySession,
   saveStudySession,
   studySessionLocalStorageKey,
@@ -26,6 +28,12 @@ function memoryStorage(): StudySessionStorage & { data: Map<string, string> } {
     },
     removeItem(key) {
       data.delete(key)
+    },
+    get length() {
+      return data.size
+    },
+    key(index) {
+      return [...data.keys()][index] ?? null
     },
   }
 }
@@ -242,5 +250,95 @@ describe('rehydrateStudySession', () => {
     expect(restored).not.toBeNull()
     expect(restored!.deck).toEqual({ history: [], historyIndex: 0, remaining: [] })
     expect(restored!.original).toEqual([])
+  })
+})
+
+
+describe('parseStudySessionStorageKey', () => {
+  it('splits topic, category, and mode', () => {
+    expect(parseStudySessionStorageKey('aws|IAM|due')).toEqual({
+      topicId: 'aws',
+      category: 'IAM',
+      mode: 'due',
+    })
+    expect(parseStudySessionStorageKey('aws||shuffle')).toEqual({
+      topicId: 'aws',
+      category: null,
+      mode: 'shuffle',
+    })
+  })
+})
+
+describe('listStudySessions', () => {
+  it('lists non-expired sessions for a topic, newest first', () => {
+    const storage = memoryStorage()
+    saveStudySession(
+      storage,
+      {
+        sessionKey: 'aws|IAM|',
+        historyIds: ['a'],
+        remainingIds: ['b'],
+        historyIndex: 0,
+        originalCount: 2,
+      },
+      1_000,
+    )
+    saveStudySession(
+      storage,
+      {
+        sessionKey: 'aws||due',
+        historyIds: ['a'],
+        remainingIds: [],
+        historyIndex: 0,
+        originalCount: 1,
+      },
+      2_000,
+    )
+    saveStudySession(
+      storage,
+      {
+        sessionKey: 'pve|Labs|',
+        historyIds: ['x'],
+        remainingIds: [],
+        historyIndex: 0,
+        originalCount: 1,
+      },
+      3_000,
+    )
+
+    const listed = listStudySessions(storage, { topicId: 'aws', now: 2_500 })
+    expect(listed.map((item) => item.sessionKey)).toEqual(['aws||due', 'aws|IAM|'])
+    expect(listed[0]?.updatedAt).toBe(2_000)
+    expect(listed[0]?.createdAt).toBe(2_000)
+  })
+
+  it('preserves createdAt across later saves', () => {
+    const storage = memoryStorage()
+    saveStudySession(
+      storage,
+      {
+        sessionKey: 'aws|IAM|',
+        historyIds: ['a'],
+        remainingIds: [],
+        historyIndex: 0,
+        originalCount: 1,
+      },
+      1_000,
+    )
+    saveStudySession(
+      storage,
+      {
+        sessionKey: 'aws|IAM|',
+        historyIds: ['a'],
+        remainingIds: [],
+        historyIndex: 0,
+        originalCount: 1,
+      },
+      5_000,
+    )
+    const listed = listStudySessions(storage, { topicId: 'aws', now: 5_100 })
+    expect(listed).toHaveLength(1)
+    expect(listed[0]?.createdAt).toBe(1_000)
+    expect(listed[0]?.updatedAt).toBe(5_000)
   })
 })
