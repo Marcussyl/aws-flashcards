@@ -17,6 +17,7 @@ import {
   type CalloutType,
 } from '@/components/blocks'
 import { StudyTaskCheckbox } from '@/components/StudyTaskCheckbox'
+import { normalizeMarkdown } from '@/lib/normalize-markdown'
 
 const MermaidBlock = dynamic(
   () => import('@/components/MermaidBlock').then((mod) => mod.MermaidBlock),
@@ -33,11 +34,6 @@ const MermaidBlock = dynamic(
 type MarkdownContentProps = {
   content: string
   className?: string
-}
-
-// Notes sometimes use a unicode bullet instead of markdown list syntax.
-function normalizeMarkdown(content: string) {
-  return content.replace(/^[ \t]*•[ \t]+/gm, '- ')
 }
 
 function extractText(node: ReactNode): string {
