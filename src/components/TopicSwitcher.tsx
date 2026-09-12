@@ -65,14 +65,17 @@ export function TopicSwitcher({ topicId }: { topicId: TopicId }) {
   const pathname = usePathname()
   const { map, ready } = useProgress()
   const { topics, getTopic } = useTaxonomy()
-  const [openForPath, setOpenForPath] = useState<string | null>(null)
+  const [open, setOpen] = useState(false)
   const [idsByTopic, setIdsByTopic] = useState<IdsByTopic>(
     () => idsModuleCache?.data ?? {},
   )
-  const open = openForPath === pathname
   const menuId = useId()
   const reduce = useReducedMotion()
   const current = getTopic(topicId)
+
+  useEffect(() => {
+    setOpen(false)
+  }, [pathname])
 
   useEffect(() => {
     if (!open) {
@@ -80,7 +83,7 @@ export function TopicSwitcher({ topicId }: { topicId: TopicId }) {
     }
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') {
-        setOpenForPath(null)
+        setOpen(false)
       }
     }
     document.addEventListener('keydown', onKeyDown)
@@ -113,7 +116,7 @@ export function TopicSwitcher({ topicId }: { topicId: TopicId }) {
         className="inline-flex max-w-[11rem] items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs font-medium text-slate-200 hover:border-accent/40 hover:text-white sm:max-w-none sm:px-3 sm:text-sm"
         aria-expanded={open}
         aria-controls={menuId}
-        onClick={() => setOpenForPath((currentPath) => (currentPath === pathname ? null : pathname))}
+        onClick={() => setOpen((isOpen) => !isOpen)}
       >
         <span aria-hidden="true">{current.emoji}</span>
         <span className="truncate">{current.name}</span>
@@ -141,7 +144,7 @@ export function TopicSwitcher({ topicId }: { topicId: TopicId }) {
                   className={`flex items-start gap-3 rounded-xl px-3 py-2.5 hover:bg-white/10 ${
                     active ? 'bg-white/10' : ''
                   }`}
-                  onClick={() => setOpenForPath(null)}
+                  onClick={() => setOpen(false)}
                 >
                   <span className="text-lg" aria-hidden="true">
                     {topic.emoji}

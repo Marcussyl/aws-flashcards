@@ -39,12 +39,15 @@ function isActivePath(pathname: string, href: string) {
 
 export function SiteNav({ topicId }: { topicId: TopicId | null }) {
   const pathname = usePathname()
-  const [openPath, setOpenPath] = useState<string | null>(null)
+  const [open, setOpen] = useState(false)
   const isClient = useIsClient()
-  const open = openPath === pathname
   const menuId = useId()
   const reduce = useReducedMotion()
   const items = navItems(topicId)
+
+  useEffect(() => {
+    setOpen(false)
+  }, [pathname])
 
   useEffect(() => {
     if (!open) {
@@ -53,7 +56,7 @@ export function SiteNav({ topicId }: { topicId: TopicId | null }) {
 
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') {
-        setOpenPath(null)
+        setOpen(false)
       }
     }
 
@@ -93,7 +96,7 @@ export function SiteNav({ topicId }: { topicId: TopicId | null }) {
         aria-expanded={open}
         aria-controls={menuId}
         aria-label={open ? 'Close menu' : 'Open menu'}
-        onClick={() => setOpenPath((current) => (current === pathname ? null : pathname))}
+        onClick={() => setOpen((current) => !current)}
       >
         <MenuIcon open={open} />
       </button>
@@ -111,7 +114,7 @@ export function SiteNav({ topicId }: { topicId: TopicId | null }) {
                   animate={{ opacity: 1 }}
                   exit={reduce ? undefined : { opacity: 0 }}
                   transition={{ duration: 0.18 }}
-                  onClick={() => setOpenPath(null)}
+                  onClick={() => setOpen(false)}
                 />
               ) : null}
             </AnimatePresence>,
@@ -138,6 +141,7 @@ export function SiteNav({ topicId }: { topicId: TopicId | null }) {
                 className={`block rounded-lg px-3 py-2.5 hover:bg-white/10 hover:text-accent ${
                   isActivePath(pathname, item.href) ? 'bg-white/10 text-accent' : ''
                 }`}
+                onClick={() => setOpen(false)}
               >
                 {item.label}
               </Link>
