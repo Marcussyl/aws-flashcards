@@ -27,7 +27,7 @@ import {
   tapSpring,
 } from '@/lib/motion'
 import { topicHref } from '@/lib/paths'
-import { useProgress } from '@/lib/progress'
+import { countByStatus, useProgress } from '@/lib/progress'
 import {
   canGoNext,
   canGoPrev,
@@ -38,7 +38,6 @@ import {
   markStudyCard,
   selectStudyCards,
   studyProgressPosition,
-  studySessionHint,
   type StudyDeckState,
 } from '@/lib/study-deck'
 import { StudySessionPicker } from '@/components/StudySessionPicker'
@@ -120,10 +119,6 @@ function StudySessionRunner({
 
   const usesProgress = Boolean(mode) || Boolean(category)
   const persistKey = studySessionStorageKey(topicId, category, mode)
-  const sessionHint = ready
-    ? studySessionHint(baseList, map, { category, mode })
-    : null
-
   const initialRestoreRef = useRef<ReturnType<typeof rehydrateStudySession> | null | undefined>(
     undefined,
   )
@@ -436,11 +431,14 @@ function StudySessionRunner({
     : 0
   const topicEmoji = getCategoryEmoji(category ?? card.category, topicId)
   const topicLabel = category ?? topic?.name ?? 'All topics'
-  const modeLabel = sessionHint
-    ? MODE_LABELS[sessionHint] ?? sessionHint
-    : mode
-      ? MODE_LABELS[mode] ?? mode
-      : 'Shuffled'
+  // Skip "unseen & learning" / category hints — status pills already cover that.
+  const modeLabel = mode
+    ? MODE_LABELS[mode] ?? mode
+    : null
+  const statusCounts = countByStatus(
+    map,
+    (session?.original ?? []).map((item) => item.id),
+  )
 
   return (
     <div className="mx-auto flex h-full min-h-0 min-w-0 w-full max-w-3xl flex-1 flex-col gap-3 overflow-x-hidden sm:gap-4">
@@ -452,9 +450,23 @@ function StudySessionRunner({
                 <span aria-hidden="true">{topicEmoji}</span>
                 <span className="truncate">{topicLabel}</span>
               </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-slate-300">
-                <IconSpark className="h-3.5 w-3.5 text-sky-300" />
-                {modeLabel}
+              {modeLabel ? (
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-slate-300">
+                  <IconSpark className="h-3.5 w-3.5 text-sky-300" />
+                  {modeLabel}
+                </span>
+              ) : null}
+              <span className="inline-flex items-center gap-1 rounded-full border border-sky-400/20 bg-sky-400/10 px-2.5 py-1 text-xs font-medium text-sky-200">
+                <span className="tabular-nums">{ready ? statusCounts.learning : '—'}</span>
+                learning
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-full border border-slate-400/20 bg-slate-400/10 px-2.5 py-1 text-xs font-medium text-slate-300">
+                <span className="tabular-nums">{ready ? statusCounts.unseen : '—'}</span>
+                unseen
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2.5 py-1 text-xs font-medium text-emerald-200">
+                <span className="tabular-nums">{ready ? statusCounts.known : '—'}</span>
+                known
               </span>
             </div>
             <motion.button
