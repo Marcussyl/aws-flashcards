@@ -443,7 +443,7 @@ function StudySessionRunner({
       : 'Shuffled'
   const statusCounts = countByStatus(
     map,
-    session.original.map((item) => item.id),
+    (session?.original ?? []).map((item) => item.id),
   )
 
   return (
