@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { CelebrateBurst, type BurstKind } from '@/components/CelebrateBurst'
 import { DeckShuffling } from '@/components/DeckShuffling'
@@ -74,6 +74,7 @@ type Swipe = {
 }
 
 export function StudyView({ topicId, cards }: { topicId: TopicId; cards: Card[] }) {
+  const router = useRouter()
   const params = useSearchParams()
   const category = params.get('category')
   const mode = params.get('mode')
@@ -301,18 +302,8 @@ export function StudyView({ topicId, cards }: { topicId: TopicId; cards: Card[] 
     if (storage) {
       clearStudySession(storage, persistKey)
     }
-    const shuffled = shuffleCards(selectStudyCards(baseList, map, { category, mode }))
-    const state = createStudyDeck(shuffled)
-    hydratedKeyRef.current = persistKey
-    setSession({
-      key: persistKey,
-      deck: state,
-      original: [...shuffled],
-      completed: false,
-      originalCount: shuffled.length,
-    })
-    setFlipped(false)
-    setSwipe({ dir: 1, exit: 'next' })
+    // Leave study — do not reshuffle in place (that felt like a progress reset).
+    router.push(topicHref(topicId))
   }
 
   if (deck === null) {
@@ -389,12 +380,9 @@ export function StudyView({ topicId, cards }: { topicId: TopicId; cards: Card[] 
               <IconX className="h-3.5 w-3.5" />
               End session
             </motion.button>
-            <div className="inline-flex flex-col items-center justify-center rounded-full border border-white/10 bg-slate-900/70 px-4 py-2 text-center">
-              <p className="text-[10px] uppercase tracking-[0.16em] text-slate-500">Card</p>
-              <p className="text-sm font-semibold leading-tight text-white">
-                {position}
-                <span className="text-slate-500"> / {originalCount}</span>
-              </p>
+            <div className="inline-flex items-center justify-center rounded-full border border-white/10 bg-slate-900/70 px-4 py-2 text-sm font-semibold text-white">
+              {position}
+              <span className="text-slate-500"> / {originalCount}</span>
             </div>
           </div>
         </div>
@@ -603,9 +591,9 @@ function SessionComplete({
       <h1 className="mt-4 text-2xl font-semibold">You have finished the session</h1>
       <p className="mt-3 max-w-sm text-sm leading-6 text-slate-400">
         You marked all {count} {count === 1 ? 'card' : 'cards'} as known. Start over
-        shuffles every card in {category ? 'this category' : 'this topic'} again, not
-        only this session&apos;s pile. End session clears this saved run (not Mongo
-        progress) and reshuffles the current filters.
+        shuffles every card in {category ? 'this category' : 'this topic'} again.
+        End session clears this saved run (not Mongo progress) and returns to the
+        dashboard.
       </p>
       <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:justify-center">
         <motion.button
