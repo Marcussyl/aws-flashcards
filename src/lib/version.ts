@@ -1,2 +1,2 @@
 /** Display version shown in the app header badge (keep in sync with package.json). */
-export const APP_VERSION = '1.1'
+export const APP_VERSION = '1.2'

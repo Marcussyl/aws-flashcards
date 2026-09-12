@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { motion, useReducedMotion } from 'motion/react'
 import {
   IconBook,
+  IconChevronRight,
   IconInbox,
   IconRefresh,
   IconShuffle,
@@ -27,6 +28,7 @@ const MODE_LABELS: Record<string, string> = {
   due: 'Remaining',
   known: 'Known',
   learning: 'Still learning',
+  shuffle: 'Shuffled',
 }
 
 function formatWhen(ms: number) {
@@ -59,6 +61,16 @@ function sessionTitle(
     }
   }
   return { emoji: '📚', label: 'All topics (shuffled)' }
+}
+
+function modeChip(summary: StudySessionSummary) {
+  if (summary.mode) {
+    return MODE_LABELS[summary.mode] ?? summary.mode
+  }
+  if (summary.category) {
+    return 'Category'
+  }
+  return 'Shuffled'
 }
 
 export function StudySessionPicker({ topicId }: { topicId: TopicId }) {
@@ -113,22 +125,20 @@ export function StudySessionPicker({ topicId }: { topicId: TopicId }) {
       >
         <Link
           href={topicHref(topicId, 'study', { mode: 'due' })}
-          className="rounded-2xl border border-accent/30 bg-accent/10 px-4 py-3 text-sm font-semibold text-accent hover:bg-accent/20"
+          className="rounded-2xl border border-accent/30 bg-accent/10 px-4 py-3 text-center text-sm font-semibold text-accent hover:bg-accent/20"
         >
           Study remaining
         </Link>
         <Link
           href={topicHref(topicId, 'study', { mode: 'shuffle' })}
-          className="rounded-2xl border border-white/15 bg-slate-900/70 px-4 py-3 text-sm font-semibold text-white hover:border-white/30"
+          className="inline-flex items-center justify-center gap-1.5 rounded-2xl border border-white/15 bg-slate-900/70 px-4 py-3 text-sm font-semibold text-white hover:border-white/30"
         >
-          <span className="inline-flex items-center gap-1.5">
-            <IconShuffle className="h-4 w-4" />
-            Shuffle all
-          </span>
+          <IconShuffle className="h-4 w-4" />
+          Shuffle all
         </Link>
         <Link
           href={topicHref(topicId)}
-          className="rounded-2xl border border-white/15 bg-slate-900/70 px-4 py-3 text-sm font-semibold text-white hover:border-white/30"
+          className="rounded-2xl border border-white/15 bg-slate-900/70 px-4 py-3 text-center text-sm font-semibold text-white hover:border-white/30"
         >
           Pick a category
         </Link>
@@ -163,78 +173,99 @@ export function StudySessionPicker({ topicId }: { topicId: TopicId }) {
           <ul className="space-y-3">
             {items.map((session) => {
               const title = sessionTitle(session, getCategoryEmoji)
-              const modeLabel = session.mode
-                ? MODE_LABELS[session.mode] ?? session.mode
-                : session.category
-                  ? 'Category run'
-                  : 'Shuffled'
+              const chip = modeChip(session)
               const position = studyProgressPosition(
                 session.historyIndex,
                 session.originalCount,
               )
+              const pct = session.originalCount
+                ? Math.min(
+                    100,
+                    Math.round((position / session.originalCount) * 100),
+                  )
+                : 0
               const href = topicHref(topicId, 'study', {
                 category: session.category,
                 mode: session.mode ?? (session.category ? null : 'shuffle'),
               })
+              const showCreated =
+                session.createdAt != null &&
+                Math.abs(session.createdAt - session.updatedAt) > 60_000
+
               return (
                 <li key={session.sessionKey}>
-                  <div className="flex items-stretch gap-2 rounded-2xl border border-white/10 bg-slate-900/70 p-2">
-                    <Link
-                      href={href}
-                      className="min-w-0 flex-1 rounded-xl px-3 py-3 hover:bg-white/5"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold text-white">
-                            <span className="mr-1.5" aria-hidden="true">
-                              {title.emoji}
-                            </span>
-                            {title.label}
-                          </p>
-                          <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-400">
-                            <span className="inline-flex items-center gap-1">
-                              <IconSpark className="h-3 w-3 text-sky-300" />
-                              {modeLabel}
-                            </span>
-                            {session.completed ? (
-                              <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-emerald-200">
-                                Completed
-                              </span>
-                            ) : null}
-                          </p>
-                        </div>
-                        <span className="shrink-0 rounded-full border border-white/10 bg-slate-950/60 px-2.5 py-1 text-xs font-semibold text-white">
-                          {position}
-                          <span className="text-slate-500"> / {session.originalCount}</span>
-                        </span>
-                      </div>
-                      <dl className="mt-3 grid grid-cols-2 gap-2 text-[11px] text-slate-500 sm:grid-cols-3">
-                        <div>
-                          <dt className="uppercase tracking-wide">Progress</dt>
-                          <dd className="mt-0.5 text-slate-300">
-                            {session.remainingCount} left in queue
-                          </dd>
-                        </div>
-                        <div>
-                          <dt className="uppercase tracking-wide">Last active</dt>
-                          <dd className="mt-0.5 text-slate-300">{formatWhen(session.updatedAt)}</dd>
-                        </div>
-                        <div className="col-span-2 sm:col-span-1">
-                          <dt className="uppercase tracking-wide">Created</dt>
-                          <dd className="mt-0.5 text-slate-300">
-                            {session.createdAt ? formatWhen(session.createdAt) : '—'}
-                          </dd>
-                        </div>
-                      </dl>
-                    </Link>
+                  <div className="group relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-slate-900/90 to-slate-950/90 p-4 shadow-sm transition hover:border-accent/35 hover:shadow-[0_0_0_1px_rgba(251,191,36,0.12)]">
                     <button
                       type="button"
                       aria-label={`Discard session ${title.label}`}
                       onClick={() => discard(session.sessionKey)}
-                      className="inline-flex shrink-0 items-center justify-center rounded-xl border border-white/10 px-3 text-slate-400 hover:border-rose-400/40 hover:bg-rose-500/10 hover:text-rose-100"
+                      className="absolute right-3 top-3 z-10 inline-flex size-8 items-center justify-center rounded-full border border-white/10 bg-slate-950/70 text-slate-400 opacity-80 hover:border-rose-400/40 hover:bg-rose-500/10 hover:text-rose-100 group-hover:opacity-100"
                     >
-                      <IconX className="h-4 w-4" />
+                      <IconX className="h-3.5 w-3.5" />
                     </button>
+
+                    <Link href={href} className="block pr-10">
+                      <div className="flex items-start gap-3">
+                        <div className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-xl">
+                          <span aria-hidden="true">{title.emoji}</span>
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h3 className="truncate text-base font-semibold text-white">
+                              {title.label}
+                            </h3>
+                            <span className="inline-flex items-center gap-1 rounded-full border border-sky-400/20 bg-sky-400/10 px-2 py-0.5 text-[11px] font-medium text-sky-200">
+                              <IconSpark className="h-3 w-3" />
+                              {chip}
+                            </span>
+                            {session.completed ? (
+                              <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-medium text-emerald-200">
+                                Completed
+                              </span>
+                            ) : null}
+                          </div>
+                          <p className="mt-1 text-xs text-slate-500">
+                            Active {formatWhen(session.updatedAt)}
+                            {showCreated
+                              ? ` · Created ${formatWhen(session.createdAt!)}`
+                              : null}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mt-4">
+                        <div className="mb-1.5 flex items-baseline justify-between gap-3">
+                          <p className="text-xs text-slate-400">
+                            <span className="font-semibold text-white">
+                              {position}
+                            </span>
+                            <span className="text-slate-500">
+                              {' '}
+                              / {session.originalCount}
+                            </span>
+                            <span className="ml-2 text-slate-500">
+                              · {session.remainingCount} left
+                            </span>
+                          </p>
+                          <span className="text-[11px] font-medium text-slate-500">
+                            {pct}%
+                          </span>
+                        </div>
+                        <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+                          <div
+                            className="h-full rounded-full bg-gradient-to-r from-accent to-sky-400"
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="mt-4 flex items-center justify-between gap-3">
+                        <span className="inline-flex items-center gap-1 text-sm font-semibold text-accent">
+                          {session.completed ? 'Review again' : 'Continue'}
+                          <IconChevronRight className="h-4 w-4" />
+                        </span>
+                      </div>
+                    </Link>
                   </div>
                 </li>
               )
