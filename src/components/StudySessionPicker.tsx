@@ -329,6 +329,10 @@ export function StudySessionPicker({
                                 · Created {formatWhen(session.createdAt!)}
                               </span>
                             ) : null}
+                            <span className="text-slate-600">
+                              {' '}
+                              · Expires in {formatExpiresIn(session.expiresAt, now)}
+                            </span>
                           </p>
                           <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-slate-400">
                             <span>
@@ -357,11 +361,19 @@ export function StudySessionPicker({
                     </div>
 
                     <div className="mt-5 flex flex-col gap-2">
-                      <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center justify-between gap-3 text-xs">
                         <span className="text-white">
                           {position} / {session.originalCount}
                         </span>
-                        <span className="font-medium text-accent">{pct}%</span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-accent">{pct}%</span>
+                          <span
+                            className="inline-flex size-7 items-center justify-center rounded-full text-accent transition group-hover:translate-x-0.5 group-hover:bg-accent/10"
+                            aria-hidden="true"
+                          >
+                            <IconChevronRight className="h-4 w-4" />
+                          </span>
+                        </div>
                       </div>
                       <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
                         <div
@@ -369,18 +381,6 @@ export function StudySessionPicker({
                           style={{ width: `${pct}%` }}
                         />
                       </div>
-                    </div>
-
-                    <div className="mt-4 flex items-center justify-between gap-3 pt-1">
-                      <p className="text-[11px] text-slate-500">
-                        Expires in {formatExpiresIn(session.expiresAt, now)}
-                      </p>
-                      <span
-                        className="inline-flex size-8 items-center justify-center rounded-full text-accent transition group-hover:translate-x-0.5 group-hover:bg-accent/10"
-                        aria-hidden="true"
-                      >
-                        <IconChevronRight className="h-4 w-4" />
-                      </span>
                     </div>
                   </Link>
                   <button
