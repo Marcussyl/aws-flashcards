@@ -24,7 +24,7 @@ export function FlashCard({ card, flipped, onFlip, onSaved, onDeleted }: FlashCa
   const [ui, setUi] = useState({
     id: card.id,
     expanded: false,
-    showFull: false,
+    showFull: true,
     editing: false,
     // Defer markdown/mermaid on the back until the first flip so click → flip stays instant.
     revealed: false,
@@ -33,7 +33,7 @@ export function FlashCard({ card, flipped, onFlip, onSaved, onDeleted }: FlashCa
   const reduce = useReducedMotion()
 
   if (ui.id !== card.id) {
-    setUi({ id: card.id, expanded: false, showFull: false, editing: false, revealed: false })
+    setUi({ id: card.id, expanded: false, showFull: true, editing: false, revealed: false })
   }
 
   const expanded = ui.expanded
