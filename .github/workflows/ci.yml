@@ -7,6 +7,9 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      # Auth.js requires AUTH_SECRET when NODE_ENV=production (`next build`).
+      AUTH_SECRET: ci-placeholder-secret-do-not-use-in-prod
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

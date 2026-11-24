@@ -7,9 +7,12 @@ import {
   isStudySessionExpired,
   listStudySessions,
   loadStudySession,
+  mergeStudySessionSnapshots,
   parseStudySessionStorageKey,
+  pickNewerStudySession,
   rehydrateStudySession,
   saveStudySession,
+  sessionUpdatedAt,
   studySessionLocalStorageKey,
   studySessionStorageKey,
   type PersistedStudySession,
@@ -340,5 +343,70 @@ describe('listStudySessions', () => {
     expect(listed).toHaveLength(1)
     expect(listed[0]?.createdAt).toBe(1_000)
     expect(listed[0]?.updatedAt).toBe(5_000)
+  })
+})
+
+describe('pickNewerStudySession / mergeStudySessionSnapshots', () => {
+  it('picks the snapshot with the later updatedAt (last-write-wins)', () => {
+    const older = snapshot({ updatedAt: 1_000, historyIds: ['a'] })
+    const newer = snapshot({ updatedAt: 2_000, historyIds: ['a', 'b'] })
+    expect(pickNewerStudySession(older, newer).historyIds).toEqual(['a', 'b'])
+    expect(pickNewerStudySession(newer, older).historyIds).toEqual(['a', 'b'])
+    expect(sessionUpdatedAt(older)).toBe(1_000)
+  })
+
+  it('keeps the first snapshot on an updatedAt tie', () => {
+    const a = snapshot({ updatedAt: 5_000, historyIds: ['a'] })
+    const b = snapshot({ updatedAt: 5_000, historyIds: ['b'] })
+    expect(pickNewerStudySession(a, b).historyIds).toEqual(['a'])
+  })
+
+  it('merges local-only, remote-only, and conflicting keys', () => {
+    const localOnly = snapshot({
+      sessionKey: 'aws|IAM|',
+      updatedAt: 1_000,
+      expiresAt: 1_000 + STUDY_SESSION_TTL_MS,
+    })
+    const remoteOnly = snapshot({
+      sessionKey: 'aws||due',
+      updatedAt: 2_000,
+      expiresAt: 2_000 + STUDY_SESSION_TTL_MS,
+    })
+    const localConflict = snapshot({
+      sessionKey: 'aws|S3|',
+      updatedAt: 4_000,
+      historyIds: ['local'],
+      expiresAt: 4_000 + STUDY_SESSION_TTL_MS,
+    })
+    const remoteConflict = snapshot({
+      sessionKey: 'aws|S3|',
+      updatedAt: 3_000,
+      historyIds: ['remote'],
+      expiresAt: 3_000 + STUDY_SESSION_TTL_MS,
+    })
+    const expiredRemote = snapshot({
+      sessionKey: 'aws|VPC|',
+      updatedAt: 10,
+      expiresAt: 20,
+    })
+
+    const result = mergeStudySessionSnapshots(
+      [localOnly, localConflict],
+      [remoteOnly, remoteConflict, expiredRemote],
+      5_000,
+    )
+
+    expect(result.merged.map((item) => item.sessionKey).sort()).toEqual([
+      'aws|IAM|',
+      'aws|S3|',
+      'aws||due',
+    ])
+    expect(result.toRemote.map((item) => item.sessionKey).sort()).toEqual(
+      ['aws|IAM|', 'aws|S3|'].sort(),
+    )
+    expect(result.toLocal.map((item) => item.sessionKey)).toEqual(['aws||due'])
+    expect(
+      result.merged.find((item) => item.sessionKey === 'aws|S3|')?.historyIds,
+    ).toEqual(['local'])
   })
 })

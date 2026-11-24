@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { CelebrateBurst, type BurstKind } from '@/components/CelebrateBurst'
 import { DeckShuffling } from '@/components/DeckShuffling'
@@ -41,6 +42,8 @@ import {
   type StudyDeckState,
 } from '@/lib/study-deck'
 import { StudySessionPicker } from '@/components/StudySessionPicker'
+import { deleteRemoteStudySession, putStudySession } from '@/lib/study-session-api'
+import { resolveStudySession } from '@/lib/study-session-sync'
 import {
   clearStudySession,
   getStudySessionStorage,
@@ -76,7 +79,6 @@ type Swipe = {
 }
 
 export function StudyView({ topicId, cards }: { topicId: TopicId; cards: Card[] }) {
-  const router = useRouter()
   const params = useSearchParams()
   const category = params.get('category')
   const mode = params.get('mode')
@@ -101,6 +103,8 @@ function StudySessionRunner({
   mode: string | null
 }) {
   const router = useRouter()
+  const { status: authStatus } = useSession()
+  const signedIn = authStatus === 'authenticated'
   const { map, ready, mark } = useProgress()
   const [burstId, setBurstId] = useState(0)
   const [burstKind, setBurstKind] = useState<BurstKind>('known')
@@ -152,28 +156,31 @@ function StudySessionRunner({
   const [bootKind, setBootKind] = useState<'resume' | 'create' | 'wait' | null>(() =>
     initialRestore ? 'resume' : 'wait',
   )
-  const hydratedKeyRef = useRef<string | null>(initialRestore ? persistKey : null)
+  const hydratedKeyRef = useRef<string | null>(null)
+  const hydratedSignedInRef = useRef<boolean | null>(null)
+  const dirtyRef = useRef(false)
   const createTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [syncReady, setSyncReady] = useState(false)
 
-  // Restore a matching unexpired localStorage session, or shuffle a new deck.
-  // Wait for progress only when there is nothing to restore.
   useEffect(() => {
-    /* eslint-disable react-hooks/set-state-in-effect -- keyed hydrate from localStorage / shuffle; same pattern as the previous sessionKey rebuild */
+    dirtyRef.current = false
+  }, [persistKey])
+
+  // Restore a matching unexpired local (and remote, when signed in) session,
+  // or shuffle a new deck. Wait for progress only when there is nothing to restore.
+  useEffect(() => {
+    let cancelled = false
+
     if (createTimerRef.current) {
       clearTimeout(createTimerRef.current)
       createTimerRef.current = null
     }
 
-    if (hydratedKeyRef.current === persistKey) {
-      return
-    }
-
-    const storage = getStudySessionStorage()
-    const stored = storage ? loadStudySession(storage, persistKey) : null
-    const restored = stored ? rehydrateStudySession(stored, topicCards) : null
-
-    if (restored) {
-      hydratedKeyRef.current = persistKey
+    function applySnapshot(stored: NonNullable<ReturnType<typeof loadStudySession>>) {
+      const restored = rehydrateStudySession(stored, topicCards)
+      if (!restored) {
+        return false
+      }
       setBootKind('resume')
       setSession({
         key: persistKey,
@@ -184,44 +191,102 @@ function StudySessionRunner({
       })
       setFlipped(restored.flipped)
       setSwipe({ dir: 1, exit: 'next' })
-      return
+      return true
     }
 
-    if (usesProgress && !ready) {
-      setBootKind('wait')
+    async function hydrate() {
+      if (
+        hydratedKeyRef.current === persistKey
+        && hydratedSignedInRef.current === signedIn
+        && syncReady
+      ) {
+        return
+      }
+
+      setSyncReady(false)
+      const storage = getStudySessionStorage()
+      const local = storage ? loadStudySession(storage, persistKey) : null
+      if (local) {
+        applySnapshot(local)
+      }
+
+      if (authStatus === 'loading') {
+        if (!local) {
+          setBootKind('wait')
+          setSession({
+            key: persistKey,
+            deck: null,
+            original: [],
+            completed: false,
+          })
+        }
+        return
+      }
+
+      const winner = await resolveStudySession(storage, persistKey, { signedIn })
+      if (cancelled) {
+        return
+      }
+
+      if (dirtyRef.current) {
+        hydratedKeyRef.current = persistKey
+        hydratedSignedInRef.current = signedIn
+        setSyncReady(true)
+        return
+      }
+
+      if (winner && applySnapshot(winner)) {
+        hydratedKeyRef.current = persistKey
+        hydratedSignedInRef.current = signedIn
+        setSyncReady(true)
+        return
+      }
+
+      if (usesProgress && !ready) {
+        setBootKind('wait')
+        setSession({
+          key: persistKey,
+          deck: null,
+          original: [],
+          completed: false,
+        })
+        return
+      }
+
+      const shuffled = shuffleCards(selectStudyCards(baseList, map, { category, mode }))
+      const nextSession: StudySession = {
+        key: persistKey,
+        deck: createStudyDeck(shuffled),
+        original: [...shuffled],
+        completed: false,
+      }
+      setBootKind('create')
       setSession({
         key: persistKey,
         deck: null,
         original: [],
         completed: false,
       })
-      return
+      setFlipped(false)
+      setSwipe({ dir: 1, exit: 'next' })
+      createTimerRef.current = setTimeout(() => {
+        if (cancelled) {
+          return
+        }
+        hydratedKeyRef.current = persistKey
+        hydratedSignedInRef.current = signedIn
+        setSession(nextSession)
+        setSyncReady(true)
+        createTimerRef.current = null
+      }, 650)
     }
 
-    const shuffled = shuffleCards(selectStudyCards(baseList, map, { category, mode }))
-    const nextSession: StudySession = {
-      key: persistKey,
-      deck: createStudyDeck(shuffled),
-      original: [...shuffled],
-      completed: false,
+    void hydrate()
+    return () => {
+      cancelled = true
     }
-    setBootKind('create')
-    setSession({
-      key: persistKey,
-      deck: null,
-      original: [],
-      completed: false,
-    })
-    setFlipped(false)
-    setSwipe({ dir: 1, exit: 'next' })
-    createTimerRef.current = setTimeout(() => {
-      hydratedKeyRef.current = persistKey
-      setSession(nextSession)
-      createTimerRef.current = null
-    }, 650)
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- map/baseList captured at persistKey / ready only
-  }, [persistKey, ready, usesProgress])
-  /* eslint-enable react-hooks/set-state-in-effect */
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- map/baseList captured at persistKey / ready / auth only
+  }, [persistKey, ready, usesProgress, authStatus, signedIn])
 
   useEffect(() => {
     return () => {
@@ -232,15 +297,20 @@ function StudySessionRunner({
   }, [])
 
   // Persist after session mutations and bump TTL (last activity).
+  // Skip the initial paint until local/remote merge finishes unless the user
+  // already mutated the deck (so a remote fetch cannot clobber a live flip).
   useEffect(() => {
     if (!session || session.key !== persistKey || !session.deck) {
+      return
+    }
+    if (!syncReady && !dirtyRef.current) {
       return
     }
     const storage = getStudySessionStorage()
     if (!storage) {
       return
     }
-    saveStudySession(storage, {
+    const snapshot = saveStudySession(storage, {
       sessionKey: persistKey,
       historyIds: session.deck.history.map((item) => item.id),
       remainingIds: session.deck.remaining.map((item) => item.id),
@@ -249,7 +319,12 @@ function StudySessionRunner({
       flipped,
       completed: session.completed,
     })
-  }, [session, flipped, persistKey])
+    if (signedIn) {
+      void putStudySession(snapshot).catch((error) => {
+        console.error('Failed to sync study session', error)
+      })
+    }
+  }, [session, flipped, persistKey, syncReady, signedIn])
 
   const deck = session?.key === persistKey ? session.deck : null
   const card = deck ? currentStudyCard(deck) : undefined
@@ -276,6 +351,7 @@ function StudySessionRunner({
       }
       if (event.key === ' ' || event.key === 'Enter') {
         event.preventDefault()
+        dirtyRef.current = true
         setFlipped((value) => !value)
       } else if (event.key === 'ArrowUp') {
         go(-1)
@@ -296,6 +372,7 @@ function StudySessionRunner({
   })
 
   function updateDeck(next: StudyDeckState, completed?: boolean) {
+    dirtyRef.current = true
     setSession((current) =>
       current
         ? {
@@ -348,6 +425,7 @@ function StudySessionRunner({
   }
 
   function startOver() {
+    dirtyRef.current = true
     // Full category (or topic) deck — not the last session's filtered subset.
     const full = baseList
     if (!full.length) {
@@ -382,6 +460,11 @@ function StudySessionRunner({
     const storage = getStudySessionStorage()
     if (storage) {
       clearStudySession(storage, persistKey)
+    }
+    if (signedIn) {
+      void deleteRemoteStudySession(persistKey).catch((error) => {
+        console.error('Failed to delete remote study session', error)
+      })
     }
     // Leave study — do not reshuffle in place (that felt like a progress reset).
     router.push(topicHref(topicId))
@@ -525,7 +608,10 @@ function StudySessionRunner({
             <FlashCard
               card={card}
               flipped={flipped}
-              onFlip={() => setFlipped((value) => !value)}
+              onFlip={() => {
+                dirtyRef.current = true
+                setFlipped((value) => !value)
+              }}
               onSaved={(next) => {
                 setSession((current) => {
                   if (!current?.deck) {

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
+import { useSession } from 'next-auth/react'
 import { motion, useReducedMotion } from 'motion/react'
 import {
   IconBook,
@@ -15,12 +16,14 @@ import {
 import { fadeUp, stagger } from '@/lib/motion'
 import { topicHref } from '@/lib/paths'
 import { countByStatus, useProgress } from '@/lib/progress'
+import { deleteRemoteStudySession } from '@/lib/study-session-api'
 import {
   clearStudySession,
   getStudySessionStorage,
   listStudySessions,
   type StudySessionSummary,
 } from '@/lib/study-session-store'
+import { syncStudySessions } from '@/lib/study-session-sync'
 import { studyProgressPosition } from '@/lib/study-deck'
 import type { Card, TopicId } from '@/data/types'
 import { useTaxonomy } from '@/lib/taxonomy'
@@ -106,6 +109,8 @@ export function StudySessionPicker({
 }) {
   const reduce = useReducedMotion()
   const { getCategoryEmoji, getCategoriesForTopic } = useTaxonomy()
+  const { status: authStatus } = useSession()
+  const signedIn = authStatus === 'authenticated'
   const { map, ready } = useProgress()
   const [sessions, setSessions] = useState<StudySessionSummary[] | null>(null)
   const [now, setNow] = useState(() => Date.now())
@@ -127,12 +132,22 @@ export function StudySessionPicker({
       setSessions([])
       return
     }
-    setSessions(listStudySessions(storage, { topicId }))
+    if (authStatus === 'loading') {
+      return
+    }
+    void syncStudySessions(storage, { topicId, signedIn }).then((listed) => {
+      setSessions(listed)
+    }).catch((error) => {
+      console.error('Failed to sync study sessions', error)
+      setSessions(listStudySessions(storage, { topicId }))
+    })
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- load saved sessions for this topic / auth
     refresh()
-  }, [topicId])
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reload when topic or auth changes
+  }, [topicId, authStatus, signedIn])
 
   const items = sessions ?? []
   const inProgress = items.filter((item) => !item.completed).length
@@ -141,6 +156,14 @@ export function StudySessionPicker({
     const storage = getStudySessionStorage()
     if (storage) {
       clearStudySession(storage, sessionKey)
+    }
+    if (signedIn) {
+      void deleteRemoteStudySession(sessionKey).catch((error) => {
+        console.error('Failed to delete remote study session', error)
+      }).finally(() => {
+        refresh()
+      })
+      return
     }
     refresh()
   }

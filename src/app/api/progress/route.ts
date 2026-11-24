@@ -5,7 +5,7 @@ import {
   writeProgressMap,
 } from '@/lib/progress-db'
 import type { ProgressEntry, ProgressMap } from '@/data/types'
-import { LOCAL_PROGRESS_USER_ID } from '@/data/types'
+import { getProgressUserId } from '@/lib/auth-session'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -29,7 +29,8 @@ function isProgressMap(value: unknown): value is ProgressMap {
 
 export async function GET() {
   try {
-    const map = await readProgressMap(LOCAL_PROGRESS_USER_ID)
+    const userId = await getProgressUserId()
+    const map = await readProgressMap(userId)
     return NextResponse.json(map)
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to load progress'
@@ -44,7 +45,8 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: 'Invalid progress payload' }, { status: 400 })
   }
   try {
-    await writeProgressMap(body, LOCAL_PROGRESS_USER_ID)
+    const userId = await getProgressUserId()
+    await writeProgressMap(body, userId)
     return NextResponse.json({ ok: true })
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to save progress'
@@ -63,7 +65,8 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: 'Invalid progress payload' }, { status: 400 })
   }
   try {
-    await upsertProgressEntry(cardId, entry, LOCAL_PROGRESS_USER_ID)
+    const userId = await getProgressUserId()
+    await upsertProgressEntry(cardId, entry, userId)
     return NextResponse.json({ ok: true })
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to save progress'

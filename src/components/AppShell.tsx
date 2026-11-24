@@ -1,16 +1,38 @@
 'use client'
 
-import type { CSSProperties, ReactNode } from 'react'
+import { useEffect, type CSSProperties, type ReactNode } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import { AmbientBackdrop } from '@/components/AmbientBackdrop'
+import { AuthButton } from '@/components/AuthButton'
 import { MemoriMark } from '@/components/MemoriMark'
 import { SiteNav } from '@/components/SiteNav'
 import { TopicSwitcher } from '@/components/TopicSwitcher'
 import { topicFromPath } from '@/data/topics'
 import { ProgressProvider } from '@/lib/progress'
+import { getStudySessionStorage } from '@/lib/study-session-store'
+import { syncStudySessions } from '@/lib/study-session-sync'
 import { TaxonomyProvider, useTaxonomy } from '@/lib/taxonomy'
 import { APP_VERSION } from '@/lib/version'
+
+/** Push local sessions and pull remote ones once the user is signed in. */
+function StudySessionAuthSync() {
+  const { status } = useSession()
+  useEffect(() => {
+    if (status !== 'authenticated') {
+      return
+    }
+    const storage = getStudySessionStorage()
+    if (!storage) {
+      return
+    }
+    void syncStudySessions(storage, { signedIn: true }).catch((error) => {
+      console.error('Failed to sync study sessions after sign-in', error)
+    })
+  }, [status])
+  return null
+}
 
 function ShellInner({ children }: { children: ReactNode }) {
   const pathname = usePathname()
@@ -21,6 +43,7 @@ function ShellInner({ children }: { children: ReactNode }) {
 
   return (
     <ProgressProvider>
+      <StudySessionAuthSync />
       <div
         data-topic={topicId ?? 'library'}
         style={
@@ -48,7 +71,10 @@ function ShellInner({ children }: { children: ReactNode }) {
                 </div>
               ) : null}
             </div>
-            <SiteNav topicId={topicId} />
+            <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+              <SiteNav topicId={topicId} />
+              <AuthButton />
+            </div>
           </div>
         </header>
         <main className="mx-auto flex min-h-0 min-w-0 w-full max-w-6xl flex-1 flex-col overflow-x-hidden overflow-y-auto px-3 py-4 sm:px-4 sm:py-6">
