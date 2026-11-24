@@ -7,6 +7,10 @@ import type {
 import { LOCAL_PROGRESS_USER_ID } from '@/data/types'
 import { getDb } from '@/lib/mongo'
 import { readProgressFile } from '@/lib/progress-file'
+import {
+  isMigratableProgressUserId,
+  shouldCopyLocalProgress,
+} from '@/lib/progress-migrate'
 
 export const PROGRESS_COLLECTION = 'progress'
 export const LEGACY_PROGRESS_DOCUMENT_ID = 'default' as const
@@ -14,6 +18,7 @@ export const LEGACY_PROGRESS_DOCUMENT_ID = 'default' as const
 const globalForProgress = globalThis as typeof globalThis & {
   _progressIndexesReady?: Promise<void>
   _progressMigrated?: Promise<void>
+  _localProgressCopied?: Set<string>
 }
 
 async function getProgressCollection() {
@@ -103,10 +108,64 @@ export async function migrateLegacyDefaultDocIfNeeded(userId = LOCAL_PROGRESS_US
   await globalForProgress._progressMigrated
 }
 
+/**
+ * One-time copy of `userId: "local"` per-card docs onto a GitHub user when
+ * that user has none (or fewer) than local. Does not delete local docs.
+ */
+export async function migrateLocalProgressToUserIfNeeded(userId: string) {
+  if (!isMigratableProgressUserId(userId)) {
+    return
+  }
+  if (!globalForProgress._localProgressCopied) {
+    globalForProgress._localProgressCopied = new Set()
+  }
+  if (globalForProgress._localProgressCopied.has(userId)) {
+    return
+  }
+
+  await ensureIndexes()
+  const collection = await getProgressCollection()
+  const localCount = await collection.countDocuments({
+    userId: LOCAL_PROGRESS_USER_ID,
+  })
+  const userCount = await collection.countDocuments({ userId })
+  if (!shouldCopyLocalProgress(localCount, userCount)) {
+    globalForProgress._localProgressCopied.add(userId)
+    return
+  }
+
+  const localDocs = await collection.find({ userId: LOCAL_PROGRESS_USER_ID }).toArray()
+  if (localDocs.length === 0) {
+    globalForProgress._localProgressCopied.add(userId)
+    return
+  }
+
+  await collection.bulkWrite(
+    localDocs.map((doc) => ({
+      updateOne: {
+        filter: { userId, cardId: doc.cardId },
+        update: {
+          $setOnInsert: {
+            userId,
+            cardId: doc.cardId,
+            status: doc.status,
+            seen: doc.seen,
+            updatedAt: doc.updatedAt,
+          },
+        },
+        upsert: true as const,
+      },
+    })),
+    { ordered: false },
+  )
+  globalForProgress._localProgressCopied.add(userId)
+}
+
 export async function readProgressMap(
   userId = LOCAL_PROGRESS_USER_ID,
 ): Promise<ProgressMap> {
-  await migrateLegacyDefaultDocIfNeeded(userId)
+  await migrateLegacyDefaultDocIfNeeded(LOCAL_PROGRESS_USER_ID)
+  await migrateLocalProgressToUserIfNeeded(userId)
   const collection = await getProgressCollection()
   const docs = await collection.find({ userId }).toArray()
   const map: ProgressMap = {}
@@ -121,7 +180,8 @@ export async function upsertProgressEntry(
   entry: ProgressEntry,
   userId = LOCAL_PROGRESS_USER_ID,
 ) {
-  await migrateLegacyDefaultDocIfNeeded(userId)
+  await migrateLegacyDefaultDocIfNeeded(LOCAL_PROGRESS_USER_ID)
+  await migrateLocalProgressToUserIfNeeded(userId)
   const collection = await getProgressCollection()
   const updatedAt = new Date().toISOString()
   await collection.updateOne(
@@ -147,7 +207,8 @@ export async function writeProgressMap(
   cards: ProgressMap,
   userId = LOCAL_PROGRESS_USER_ID,
 ) {
-  await migrateLegacyDefaultDocIfNeeded(userId)
+  await migrateLegacyDefaultDocIfNeeded(LOCAL_PROGRESS_USER_ID)
+  await migrateLocalProgressToUserIfNeeded(userId)
   const collection = await getProgressCollection()
   const updatedAt = new Date().toISOString()
   const cardIds = Object.keys(cards)

@@ -106,16 +106,145 @@ function storageKeys(storage: StudySessionStorage): string[] {
   return keys
 }
 
+/** Last-activity timestamp used for last-write-wins and list sort. */
+export function sessionUpdatedAt(snapshot: PersistedStudySession): number {
+  if (typeof snapshot.updatedAt === 'number' && Number.isFinite(snapshot.updatedAt)) {
+    return snapshot.updatedAt
+  }
+  return snapshot.expiresAt - STUDY_SESSION_TTL_MS
+}
+
+/** Last-write-wins: the snapshot with the later `updatedAt` wins. Ties keep `a`. */
+export function pickNewerStudySession(
+  a: PersistedStudySession,
+  b: PersistedStudySession,
+): PersistedStudySession {
+  return sessionUpdatedAt(b) > sessionUpdatedAt(a) ? b : a
+}
+
+export type MergeStudySessionsResult = {
+  merged: PersistedStudySession[]
+  toLocal: PersistedStudySession[]
+  toRemote: PersistedStudySession[]
+}
+
 /**
- * List non-expired study sessions for a topic (or all topics).
- * Sorted by most recently updated first.
+ * Merge local and remote snapshots by `sessionKey` using last-write-wins.
+ * Expired entries are dropped. `toLocal` / `toRemote` are the writes needed
+ * so both stores match `merged`.
  */
-export function listStudySessions(
+export function mergeStudySessionSnapshots(
+  local: PersistedStudySession[],
+  remote: PersistedStudySession[],
+  now = Date.now(),
+): MergeStudySessionsResult {
+  const byKey = new Map<
+    string,
+    { local?: PersistedStudySession; remote?: PersistedStudySession }
+  >()
+
+  for (const snapshot of local) {
+    if (isStudySessionExpired(snapshot, now)) {
+      continue
+    }
+    const current = byKey.get(snapshot.sessionKey) ?? {}
+    current.local = snapshot
+    byKey.set(snapshot.sessionKey, current)
+  }
+  for (const snapshot of remote) {
+    if (isStudySessionExpired(snapshot, now)) {
+      continue
+    }
+    const current = byKey.get(snapshot.sessionKey) ?? {}
+    current.remote = snapshot
+    byKey.set(snapshot.sessionKey, current)
+  }
+
+  const merged: PersistedStudySession[] = []
+  const toLocal: PersistedStudySession[] = []
+  const toRemote: PersistedStudySession[] = []
+
+  for (const pair of byKey.values()) {
+    const localSnap = pair.local
+    const remoteSnap = pair.remote
+    if (localSnap && remoteSnap) {
+      const winner = pickNewerStudySession(localSnap, remoteSnap)
+      merged.push(winner)
+      if (sessionUpdatedAt(winner) === sessionUpdatedAt(localSnap)
+        && sessionUpdatedAt(winner) === sessionUpdatedAt(remoteSnap)) {
+        continue
+      }
+      if (winner === remoteSnap) {
+        toLocal.push(remoteSnap)
+      } else {
+        toRemote.push(localSnap)
+      }
+    } else if (localSnap) {
+      merged.push(localSnap)
+      toRemote.push(localSnap)
+    } else if (remoteSnap) {
+      merged.push(remoteSnap)
+      toLocal.push(remoteSnap)
+    }
+  }
+
+  merged.sort((a, b) => sessionUpdatedAt(b) - sessionUpdatedAt(a))
+  return { merged, toLocal, toRemote }
+}
+
+/** Write a snapshot as-is (does not bump TTL / updatedAt). */
+export function writeStudySessionSnapshot(
+  storage: StudySessionStorage,
+  snapshot: PersistedStudySession,
+): void {
+  try {
+    storage.setItem(
+      studySessionLocalStorageKey(snapshot.sessionKey),
+      JSON.stringify(snapshot),
+    )
+  } catch {
+    // Quota exceeded or storage blocked.
+  }
+}
+
+export function snapshotToSummary(
+  snapshot: PersistedStudySession,
+): StudySessionSummary | null {
+  const parts = parseStudySessionStorageKey(snapshot.sessionKey)
+  if (!parts) {
+    return null
+  }
+  const originalCount =
+    snapshot.originalCount ??
+    new Set([...snapshot.historyIds, ...snapshot.remainingIds]).size
+  const cardIds = Array.from(
+    new Set([...snapshot.historyIds, ...snapshot.remainingIds]),
+  )
+  const createdAt =
+    typeof snapshot.createdAt === 'number' ? snapshot.createdAt : null
+  return {
+    sessionKey: snapshot.sessionKey,
+    topicId: parts.topicId,
+    category: parts.category,
+    mode: parts.mode,
+    historyIndex: snapshot.historyIndex,
+    originalCount,
+    remainingCount: snapshot.remainingIds.length,
+    cardIds,
+    completed: Boolean(snapshot.completed),
+    createdAt,
+    updatedAt: sessionUpdatedAt(snapshot),
+    expiresAt: snapshot.expiresAt,
+  }
+}
+
+/** Load non-expired snapshots for a topic (or all topics). */
+export function loadAllStudySessions(
   storage: StudySessionStorage,
   options: { topicId?: string; now?: number } = {},
-): StudySessionSummary[] {
+): PersistedStudySession[] {
   const now = options.now ?? Date.now()
-  const summaries: StudySessionSummary[] = []
+  const snapshots: PersistedStudySession[] = []
 
   for (const storageKey of storageKeys(storage)) {
     if (!storageKey.startsWith(STORAGE_PREFIX)) {
@@ -130,40 +259,29 @@ export function listStudySessions(
       continue
     }
     const snapshot = loadStudySession(storage, sessionKey, now)
-    if (!snapshot) {
-      continue
+    if (snapshot) {
+      snapshots.push(snapshot)
     }
-    const originalCount =
-      snapshot.originalCount ??
-      new Set([...snapshot.historyIds, ...snapshot.remainingIds]).size
-    const updatedAt =
-      typeof snapshot.updatedAt === 'number'
-        ? snapshot.updatedAt
-        : snapshot.expiresAt - STUDY_SESSION_TTL_MS
-    const createdAt =
-      typeof snapshot.createdAt === 'number'
-        ? snapshot.createdAt
-        : null
-
-    const cardIds = Array.from(
-      new Set([...snapshot.historyIds, ...snapshot.remainingIds]),
-    )
-    summaries.push({
-      sessionKey,
-      topicId: parts.topicId,
-      category: parts.category,
-      mode: parts.mode,
-      historyIndex: snapshot.historyIndex,
-      originalCount,
-      remainingCount: snapshot.remainingIds.length,
-      cardIds,
-      completed: Boolean(snapshot.completed),
-      createdAt,
-      updatedAt,
-      expiresAt: snapshot.expiresAt,
-    })
   }
 
+  return snapshots
+}
+
+/**
+ * List non-expired study sessions for a topic (or all topics).
+ * Sorted by most recently updated first.
+ */
+export function listStudySessions(
+  storage: StudySessionStorage,
+  options: { topicId?: string; now?: number } = {},
+): StudySessionSummary[] {
+  const summaries: StudySessionSummary[] = []
+  for (const snapshot of loadAllStudySessions(storage, options)) {
+    const summary = snapshotToSummary(snapshot)
+    if (summary) {
+      summaries.push(summary)
+    }
+  }
   summaries.sort((a, b) => b.updatedAt - a.updatedAt)
   return summaries
 }
@@ -189,7 +307,7 @@ export function getStudySessionStorage(): StudySessionStorage | null {
   }
 }
 
-function isPersistedStudySession(value: unknown): value is PersistedStudySession {
+export function isPersistedStudySession(value: unknown): value is PersistedStudySession {
   if (!value || typeof value !== 'object') {
     return false
   }

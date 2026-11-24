@@ -1,7 +1,9 @@
 import type { ReactNode } from 'react'
 import type { Metadata, Viewport } from 'next'
 import { Geist } from 'next/font/google'
+import { auth } from '@/auth'
 import { AppShell } from '@/components/AppShell'
+import { AuthSessionProvider } from '@/components/AuthSessionProvider'
 import './globals.css'
 
 const geistSans = Geist({
@@ -26,11 +28,14 @@ export const viewport: Viewport = {
   themeColor: '#020617',
 }
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  const session = await auth()
   return (
     <html lang="en" className={`${geistSans.variable} h-dvh antialiased`}>
       <body className="h-dvh overflow-hidden bg-slate-950 font-sans">
-        <AppShell>{children}</AppShell>
+        <AuthSessionProvider session={session}>
+          <AppShell>{children}</AppShell>
+        </AuthSessionProvider>
       </body>
     </html>
   )

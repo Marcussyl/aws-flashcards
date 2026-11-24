@@ -10,7 +10,9 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import { useSession } from 'next-auth/react'
 import type { CardStatus, ProgressEntry, ProgressMap } from '@/data/types'
+import { LOCAL_PROGRESS_USER_ID } from '@/data/types'
 
 const LEGACY_STORAGE_KEY = 'aws-flashcards-progress-v1'
 const PROGRESS_CACHE_KEY = 'memori-progress-cache-v1'
@@ -40,9 +42,15 @@ function isProgressMap(value: unknown): value is ProgressMap {
   return Object.values(value).every(isProgressEntry)
 }
 
-function readCachedProgress(): ProgressMap | null {
+function progressCacheStorageKey(userKey: string) {
+  return userKey === LOCAL_PROGRESS_USER_ID
+    ? PROGRESS_CACHE_KEY
+    : `${PROGRESS_CACHE_KEY}:${userKey}`
+}
+
+function readCachedProgress(userKey: string): ProgressMap | null {
   try {
-    const raw = window.localStorage.getItem(PROGRESS_CACHE_KEY)
+    const raw = window.localStorage.getItem(progressCacheStorageKey(userKey))
     if (!raw) {
       return null
     }
@@ -53,9 +61,9 @@ function readCachedProgress(): ProgressMap | null {
   }
 }
 
-function writeCachedProgress(map: ProgressMap) {
+function writeCachedProgress(userKey: string, map: ProgressMap) {
   try {
-    window.localStorage.setItem(PROGRESS_CACHE_KEY, JSON.stringify(map))
+    window.localStorage.setItem(progressCacheStorageKey(userKey), JSON.stringify(map))
   } catch {
     // Quota / private mode — ignore; network remains source of truth.
   }
@@ -149,18 +157,29 @@ type ProgressContextValue = {
 const ProgressContext = createContext<ProgressContextValue | null>(null)
 
 export function ProgressProvider({ children }: { children: ReactNode }) {
+  const { data: session, status: authStatus } = useSession()
+  const userKey =
+    authStatus === 'authenticated' && session?.user?.id
+      ? session.user.id
+      : LOCAL_PROGRESS_USER_ID
   const [map, setMap] = useState<ProgressMap>({})
   const [ready, setReady] = useState(false)
   const writes = useRef(Promise.resolve())
   const mapRef = useRef<ProgressMap>({})
   const loadingRef = useRef(false)
+  const userKeyRef = useRef(userKey)
 
   useEffect(() => {
     mapRef.current = map
   }, [map])
 
+  useEffect(() => {
+    userKeyRef.current = userKey
+    loadingRef.current = false
+  }, [userKey])
+
   const persistMap = useCallback((next: ProgressMap) => {
-    writeCachedProgress(next)
+    writeCachedProgress(userKeyRef.current, next)
     writes.current = writes.current
       .then(() => saveProgress(next))
       .catch((error) => {
@@ -170,7 +189,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
 
   const persistEntry = useCallback((cardId: string, entry: ProgressEntry) => {
     // Keep cache aligned with optimistic mark() so resume hydration stays correct.
-    writeCachedProgress({ ...mapRef.current, [cardId]: entry })
+    writeCachedProgress(userKeyRef.current, { ...mapRef.current, [cardId]: entry })
     writes.current = writes.current
       .then(() => saveProgressEntry(cardId, entry))
       .catch((error) => {
@@ -179,7 +198,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const applySuccessfulMap = useCallback((next: ProgressMap) => {
-    writeCachedProgress(next)
+    writeCachedProgress(userKeyRef.current, next)
     setMap(next)
     mapRef.current = next
   }, [])
@@ -222,20 +241,27 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
   )
 
   useEffect(() => {
+    if (authStatus === 'loading') {
+      return
+    }
+
     let cancelled = false
 
     async function initialLoad() {
-      const cached = readCachedProgress()
+      const cached = readCachedProgress(userKey)
       if (cached && Object.keys(cached).length > 0) {
         if (!cancelled) {
           setMap(cached)
           mapRef.current = cached
           setReady(true)
         }
+      } else if (!cancelled) {
+        setMap({})
+        mapRef.current = {}
       }
 
       try {
-        await loadFromNetwork({ allowLegacyMigrate: true })
+        await loadFromNetwork({ allowLegacyMigrate: userKey === LOCAL_PROGRESS_USER_ID })
       } catch (error) {
         console.error('Failed to load progress', error)
       } finally {
@@ -251,7 +277,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true
     }
-  }, [loadFromNetwork])
+  }, [loadFromNetwork, authStatus, userKey])
 
   useEffect(() => {
     const refetchOnResume = () => {

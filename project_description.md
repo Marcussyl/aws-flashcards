@@ -135,7 +135,7 @@ Progress in MongoDB collection `progress` — **one document per card** (collect
 { "userId": "local", "cardId": "c001", "status": "known", "seen": 3, "updatedAt": "..." }
 ```
 
-- `userId`: `"local"` until real auth lands
+- `userId`: GitHub user id when signed in; `"local"` when logged out
 - `cardId`: stable card id
 - `status`: `unseen` | `learning` | `known`
 - `seen`: how many times the card was rated
@@ -145,6 +145,10 @@ Progress in MongoDB collection `progress` — **one document per card** (collect
 `GET /api/progress` still returns a `ProgressMap` (`cardId → { status, seen }`) for the client. `PATCH` upserts one card; `PUT` bulk-syncs the whole map (used for reset).
 
 On first load, `migrateLegacyDefaultDocIfNeeded` expands any legacy mega-doc (`_id: "default"` with a nested `cards` map) into per-card upserts for `userId: "local"`, then deletes the legacy doc. If neither legacy nor per-card docs exist and `data/progress.json` still has data, that file is copied in once. An older browser `localStorage` copy is also migrated once if the API map is empty.
+
+After the first GitHub sign-in, `migrateLocalProgressToUserIfNeeded` copies `userId: "local"` docs onto the GitHub user when that user has no progress (or fewer cards than local). Existing GitHub-user cards are kept. Local docs stay so logged-out study still works.
+
+Signed-in study sessions sync to Mongo `study-sessions` (unique `{ userId, sessionKey }`, last-write-wins on `updatedAt`, 24h idle TTL via `expiresAtDate`). Logged-out sessions stay in `localStorage` only (`memori.study-session.*`).
 
 ## How to run
 
@@ -164,7 +168,7 @@ npm run build
 npm start
 ```
 
-On Vercel, set the same `MONGODB_URI` (and optional `MONGODB_DB`) environment variables.
+On Vercel, set `MONGODB_URI` (and optional `MONGODB_DB`) plus Auth.js vars: `AUTH_SECRET`, `AUTH_GITHUB_ID`, `AUTH_GITHUB_SECRET`, and `AUTH_TRUST_HOST=true`. See README for GitHub OAuth callback URLs.
 
 ## Project layout
 
@@ -190,7 +194,7 @@ recall/
 
 - Full WYSIWYG editor (markdown textarea + preview is supported)
 - Topic metadata editor
-- User accounts or sharing decks (progress uses `userId: "local"` until auth)
+- Sharing decks or multi-user collaboration (GitHub login is personal sync, not sharing)
 - Spaced-repetition algorithm (SM-2 / Anki)
 - Importing new Notion exports from the UI
 - Official AWS practice-exam scoring
